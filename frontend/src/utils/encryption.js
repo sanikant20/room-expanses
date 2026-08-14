@@ -16,6 +16,9 @@ export const encryptData = (Data) => {
 export const decryptData = (encryptedData) => {
     try {
         const decoded = decodeURIComponent(encryptedData);
+        if (/^[{[]/.test(decoded.trim())) {
+            return decoded;
+        }
         const bytes = CryptoJS.AES.decrypt(decoded, SECRET_KEY);
         const decrypted = bytes.toString(CryptoJS.enc.Utf8);
         return decrypted || null;

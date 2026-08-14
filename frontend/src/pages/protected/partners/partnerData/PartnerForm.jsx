@@ -1,25 +1,32 @@
 import { Form, Formik } from 'formik';
-import React from 'react';
+import React, { useState } from 'react';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
-import { showFormikErrorsAsToast } from '../../../utils/formikHelpers';
+import { showFormikErrorsAsToast } from '../../../../utils/formikHelpers';
 import {
+    Box,
     Button,
     Grid,
+    IconButton,
+    InputAdornment,
     InputLabel,
-    MenuItem,
     Stack,
     TextField,
     Typography,
 } from '@mui/material';
-import CustomFileUpload from '../../../components/custom/CustomFileUpload';
-import { useCreatePartner, useUpdatePartner } from '../../../apis/partnerAPI/PartnerAPI';
-import { NepaliDatePickerComponent } from '../../../components/date/NepaliDatePicker';
-import { convertToBSFormat } from '../../../utils/dateConverter';
+import { VisibilityOffRounded, VisibilityRounded } from '@mui/icons-material';
+import CustomFileUpload from '../../../../components/custom/CustomFileUpload';
+import { useCreatePartner, useUpdatePartner } from '../../../../apis/partnerAPI/PartnerAPI';
+import { NepaliDatePickerComponent } from '../../../../components/date/NepaliDatePicker';
+import { convertToBSFormat } from '../../../../utils/dateConverter';
+import { getCurrentBsDate } from '../../../../utils/nepaliDate';
+import { isPartnerAccount } from '../../../../helper/getAuthData';
 
 const PartnerForm = ({ selectedData, mode, onClose }) => {
     const queryClient = useQueryClient();
+    const isPartner = isPartnerAccount();
+    const [showPassword, setShowPassword] = useState(false);
 
     const { mutate: createPartner, isPending: isCreating } = useCreatePartner();
     const { mutate: updatePartner, isPending: isUpdating } = useUpdatePartner();
@@ -29,8 +36,8 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
         phone: yup.string(),
         email: yup.string().email('Invalid email address'),
         bsJoiningDate: yup.string(),
-        status: yup.string().required('Status is required'),
         notes: yup.string(),
+        password: yup.string().min(6, 'Password must be at least 6 characters'),
     });
 
     const initialValues = {
@@ -38,12 +45,18 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
         phone: selectedData?.phone || '',
         email: selectedData?.email || '',
         image: selectedData?.image || '',
-        bsJoiningDate: selectedData?.bsJoiningDate || '',
-        status: selectedData?.status || 'active',
+        bsJoiningDate: selectedData?.bsJoiningDate || (mode !== 'edit' ? getCurrentBsDate() : ''),
         notes: selectedData?.notes || '',
+        password: '',
     };
 
     const handleSubmit = (values, { setSubmitting }) => {
+        if (isPartner) {
+            setSubmitting(false);
+            toast.error('You do not have permission to manage partners');
+            onClose();
+            return;
+        }
         const onSuccess = (response) => {
             setSubmitting(false);
             if (response?.success) {
@@ -106,6 +119,7 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
                                 onChange={(val) => setFieldValue('image', val)}
                                 onBlur={handleBlur}
                                 compact
+                                maxSize={500 * 1024}
                             />
                         </Grid>
 
@@ -160,25 +174,6 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
 
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Stack spacing={1}>
-                                <InputLabel htmlFor="status" required>Status</InputLabel>
-                                <TextField
-                                    id="status"
-                                    name="status"
-                                    select
-                                    value={values.status}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={touched.status && Boolean(errors.status)}
-                                    helperText={touched.status && errors.status}
-                                >
-                                    <MenuItem value="active">Active</MenuItem>
-                                    <MenuItem value="inactive">Inactive</MenuItem>
-                                </TextField>
-                            </Stack>
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <Stack spacing={1}>
                                 <InputLabel required={false}>Joining Date</InputLabel>
                                 <NepaliDatePickerComponent
                                     value={values.bsJoiningDate || ''}
@@ -195,13 +190,45 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
                                     error={touched.bsJoiningDate && Boolean(errors.bsJoiningDate)}
                                     helperText={touched.bsJoiningDate && errors.bsJoiningDate}
                                 />
-                                {values.bsJoiningDate && (
-                                    <Typography variant="caption" color="primary.main">
-                                        BS Date: {values.bsJoiningDate}
-                                    </Typography>
-                                )}
                             </Stack>
                         </Grid>
+
+                        {mode !== 'edit' && (
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <Stack spacing={1}>
+                                    <InputLabel htmlFor="password">Password</InputLabel>
+                                    <TextField
+                                        id="password"
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="Leave blank to auto-set to phone number"
+                                        value={values.password}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={touched.password && Boolean(errors.password)}
+                                        helperText={
+                                            (touched.password && errors.password) ||
+                                            "Defaults to the partner's phone number."
+                                        }
+                                        slotProps={{
+                                            input: {
+                                                endAdornment: (
+                                                    <InputAdornment position="end">
+                                                        <IconButton
+                                                            onClick={() => setShowPassword((prev) => !prev)}
+                                                            edge="end"
+                                                            tabIndex={-1}
+                                                        >
+                                                            {showPassword ? <VisibilityOffRounded /> : <VisibilityRounded />}
+                                                        </IconButton>
+                                                    </InputAdornment>
+                                                ),
+                                            },
+                                        }}
+                                    />
+                                </Stack>
+                            </Grid>
+                        )}
 
                         <Grid size={{ xs: 12 }}>
                             <Stack spacing={1}>
@@ -218,25 +245,38 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
                                 />
                             </Stack>
                         </Grid>
-
-                        <Grid size={{ xs: 12 }}>
-                            <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                <Button variant="outlined" onClick={onClose}>Cancel</Button>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    disabled={isCreating || isUpdating || isSubmitting || !dirty}
-                                >
-                                    {mode === 'edit' ? (
-                                        isCreating || isUpdating ? 'Updating...' : 'Update'
-                                    ) : (
-                                        isCreating || isUpdating ? 'Creating...' : 'Create'
-                                    )}
-                                </Button>
-                            </Stack>
-                        </Grid>
                     </Grid>
+
+                    <Box
+                        sx={{
+                            position: 'sticky',
+                            bottom: 0,
+                            zIndex: 1,
+                            mx: { xs: -1, md: -2 },
+                            px: { xs: 1, md: 2 },
+                            py: 1,
+                            mt: 1,
+                            backgroundColor: 'background.paper',
+                            borderTop: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
+                            <Button variant="outlined" onClick={onClose}>Cancel</Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                disabled={isCreating || isUpdating || isSubmitting || !dirty}
+                            >
+                                {mode === 'edit' ? (
+                                    isCreating || isUpdating ? 'Updating...' : 'Update'
+                                ) : (
+                                    isCreating || isUpdating ? 'Creating...' : 'Create'
+                                )}
+                            </Button>
+                        </Stack>
+                    </Box>
                 </Form>
             )}
         </Formik>

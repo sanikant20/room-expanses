@@ -6,18 +6,20 @@ import {
   updatePartner,
   deletePartner,
   togglePartnerStatus,
+  resetPartnerPassword,
   getPartnerExpenses,
 } from "../controllers/partner.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, verifyUserOnly } from "../middlewares/auth.middleware.js";
 
 export const partnerRouter = Router();
 
 partnerRouter.use(verifyJWT);
 
-partnerRouter.post("/", createPartner);
+partnerRouter.post("/", verifyUserOnly, createPartner);
 partnerRouter.get("/", getPartners);
 partnerRouter.get("/:id/expenses", getPartnerExpenses);
 partnerRouter.get("/:id", getPartner);
-partnerRouter.put("/:id", updatePartner);
-partnerRouter.put("/:id/toggle", togglePartnerStatus);
-partnerRouter.delete("/:id", deletePartner);
+partnerRouter.put("/:id", verifyUserOnly, updatePartner);
+partnerRouter.put("/:id/toggle", verifyUserOnly, togglePartnerStatus);
+partnerRouter.put("/:id/reset-password", verifyUserOnly, resetPartnerPassword);
+partnerRouter.delete("/:id", verifyUserOnly, deletePartner);

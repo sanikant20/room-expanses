@@ -33,10 +33,12 @@ export const useGetSettlementReport = ({ bsYear, bsMonth, enabled = true } = {})
     enabled: !!bsYear && !!bsMonth && enabled,
 });
 
-export const useGetCategoryReport = ({ category, bsYear, bsMonth, enabled = true } = {}) => useQuery({
-    queryKey: ["getCategoryReport", category, bsYear, bsMonth],
+export const useGetCategoryReport = ({ category, group, bsYear, bsMonth, enabled = true } = {}) => useQuery({
+    queryKey: ["getCategoryReport", category, group, bsYear, bsMonth],
     queryFn: async () => {
-        const response = await AxiosConfig.get(`${endpoint}/category`, { params: { category, bsYear, bsMonth } });
+        const params = { category, bsYear, bsMonth };
+        if (group) params.group = group;
+        const response = await AxiosConfig.get(`${endpoint}/category`, { params });
         return response?.data;
     },
     enabled: !!category && !!bsYear && !!bsMonth && enabled,

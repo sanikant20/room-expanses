@@ -19,6 +19,26 @@ import ColumnVisibilityPopover from './ColumnVisibilityPopover';
 import useColumnVisibility from './useColumnVisibility';
 import { StyledTableCell } from './StyledTableCell';
 
+// Extract a searchable/filterable scalar (or array of scalars) from a row for
+// a given column. Handles plain values, object values (e.g. paidBy/group) and
+// array values (e.g. applicablePartners) so filters display real data.
+const getCellValueForFilter = (row, col) => {
+    if (typeof col.filterValue === 'function') {
+        return col.filterValue(row);
+    }
+    const value = row?.[col.key];
+    if (value === null || value === undefined) return undefined;
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => (item && typeof item === 'object' ? (item.name ?? item._id) : item))
+            .filter((item) => item !== null && item !== undefined);
+    }
+    if (typeof value === 'object') {
+        return value.name ?? value._id ?? String(value);
+    }
+    return value;
+};
+
 const DataTable = ({
     columns = [],
     data = [],
@@ -73,15 +93,32 @@ const DataTable = ({
         return filteredColumns.some(col => col.footer || col.footerRenderer);
     }, [filteredColumns]);
 
+    const filterExcludeColumns = useMemo(() => {
+        const excluded = new Set(['actions', 'sn']);
+        filteredColumns.forEach((col) => {
+            if (col.filterable === false || col.filterType === false) {
+                excluded.add(col.key);
+            }
+        });
+        return [...excluded];
+    }, [filteredColumns]);
+
     const uniqueValues = useMemo(() => {
         const map = {};
         filteredColumns.forEach(col => {
-            if (col.filterType === 'select') {
-                map[col.key] = [...new Set(data?.map(item => item[col.key]))].filter(Boolean);
-            }
+            if (col.filterType === false || filterExcludeColumns.includes(col.key)) return;
+            const values = (data || []).flatMap((row) => {
+                const extracted = getCellValueForFilter(row, col);
+                return Array.isArray(extracted) ? extracted : [extracted];
+            });
+            map[col.key] = [...new Set(
+                values
+                    .filter((v) => v !== undefined && v !== null && v !== '')
+                    .map((v) => String(v))
+            )];
         });
         return map;
-    }, [filteredColumns, data]);
+    }, [filteredColumns, data, filterExcludeColumns]);
 
     const processedData = useMemo(() => {
         let result = data !== null ? [...data] : [];
@@ -89,25 +126,34 @@ const DataTable = ({
         if (searchTerm) {
             result = result.filter(row =>
                 filteredColumns.some(col => {
-                    const value = row[col.key];
-                    return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+                    const extracted = getCellValueForFilter(row, col);
+                    const values = Array.isArray(extracted) ? extracted : [extracted];
+                    return values.some(v =>
+                        v !== undefined && v !== null &&
+                        String(v).toLowerCase().includes(searchTerm.toLowerCase())
+                    );
                 })
             );
         }
 
         Object.entries(filterConfig).forEach(([key, filter]) => {
             if (filter?.value && filteredColumns.some(col => col.key === key)) {
+                const col = filteredColumns.find(c => c.key === key);
                 result = result.filter(row => {
-                    const cellValue = row[key];
+                    const cellValue = getCellValueForFilter(row, col);
                     if (filter.type === 'text') {
-                        return cellValue?.toString().toLowerCase().includes(filter.value.toLowerCase());
+                        return cellValue !== undefined && cellValue !== null &&
+                            String(cellValue).toLowerCase().includes(String(filter.value).toLowerCase());
                     } else if (filter.type === 'boolean') {
-                        return cellValue === filter.value;
+                        return String(cellValue) === String(filter.value);
                     } else if (filter.type === 'select') {
                         if (Array.isArray(filter.value) && filter.value.length === 0) {
                             return true;
                         }
-                        return filter.value.includes(cellValue);
+                        const values = Array.isArray(cellValue) ? cellValue : [cellValue];
+                        return values.some(v =>
+                            v !== undefined && v !== null && filter.value.includes(String(v))
+                        );
                     } else if (filter.type === 'date') {
                         const rowDateObj = new Date(cellValue);
                         const filterDateObj = new Date(filter.value);
@@ -372,10 +418,12 @@ const DataTable = ({
                     {extra && (
                         <Box sx={{
                             display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
+                            flexDirection: { xs: 'column', md: 'row' },
+                            alignItems: { xs: 'stretch', md: 'center' },
+                            gap: 1,
                             flexShrink: 0,
-                            minWidth: 0
+                            minWidth: 0,
+                            width: { xs: '100%', md: 'auto' }
                         }}>
                             {typeof extra === 'function'
                                 ? extra({ selectedRows: selected, data: paginatedData })
@@ -415,29 +463,31 @@ const DataTable = ({
                                     setSearchTerm(e.target.value);
                                     setPage(1);
                                 }}
-                                InputProps={{
-                                    startAdornment: <Search fontSize="small" />,
-                                    endAdornment: searchTerm && (
-                                        <InputAdornment position="end">
-                                            <Tooltip title="Clear search" arrow>
-                                                <IconButton
-                                                    aria-label="clear search"
-                                                    onClick={() => setSearchTerm('')}
-                                                    onMouseDown={(e) => e.preventDefault()} edge="end"
-                                                    size="small"
-                                                >
-                                                    <Close />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </InputAdornment>
-                                    ),
-                                    sx: {
-                                        borderRadius: 1,
-                                        width: { xs: '100%', md: 220 },
-                                        height: 36,
-                                        '& input': {
-                                            py: 0.75,
-                                            fontSize: '0.8125rem'
+                                slotProps={{
+                                    input: {
+                                        startAdornment: <Search fontSize="small" />,
+                                        endAdornment: searchTerm && (
+                                            <InputAdornment position="end">
+                                                <Tooltip title="Clear search" arrow>
+                                                    <IconButton
+                                                        aria-label="clear search"
+                                                        onClick={() => setSearchTerm('')}
+                                                        onMouseDown={(e) => e.preventDefault()} edge="end"
+                                                        size="small"
+                                                    >
+                                                        <Close />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </InputAdornment>
+                                        ),
+                                        sx: {
+                                            borderRadius: 1,
+                                            width: { xs: '100%', md: 220 },
+                                            height: 36,
+                                            '& input': {
+                                                py: 0.75,
+                                                fontSize: '0.8125rem'
+                                            },
                                         },
                                     },
                                 }}
@@ -571,6 +621,7 @@ const DataTable = ({
                     clearAllFilters={clearAllFilters}
                     filterConfig={filterConfig}
                     uniqueValues={uniqueValues}
+                    excludeColumns={filterExcludeColumns}
                 />
             </Popover>
 

@@ -9,7 +9,7 @@ import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../constant/constant';
 import { convertToBSFormat } from '../../../utils/dateConverter';
-import { SettlementMonthPicker } from './SettlementShared';
+import { GroupSelector, SettlementMonthPicker } from './SettlementShared';
 
 const PartnerCell = ({ partner }) => (
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -18,14 +18,17 @@ const PartnerCell = ({ partner }) => (
     </Stack>
 );
 
-const SettlementTransactions = ({ selectedMonth, onMonthChange }) => {
+const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
     const [category, setCategory] = useState('');
 
     const monthObj = parseYearMonthString(selectedMonth);
 
+    const groupFilter = group === 'all' ? undefined : group;
+
     const { data, isLoading } = useGetSettlement({
         ...monthObj,
         category: category || undefined,
+        ...(groupFilter ? { group: groupFilter } : {}),
     });
 
     const settlement = data?.settlement;
@@ -73,7 +76,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange }) => {
                         loading={isLoading}
                         download={{ enabled: true, filename: 'Settlement Transactions', excludeColumns: ['sn'] }}
                         extra={
-                            <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                            <Stack direction="row" spacing={1} alignItems="flex-end" sx={{ flexWrap: 'wrap' }}>
                                 <SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />
                                 <Stack spacing={0.25} alignItems="center">
                                     <InputLabel>Category</InputLabel>
@@ -89,6 +92,9 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange }) => {
                                         <MenuItem value="secondary">Secondary</MenuItem>
                                     </TextField>
                                 </Stack>
+                                {category === 'secondary' && (
+                                    <GroupSelector value={group} onChange={onGroupChange} label="Group" allLabel="All Groups" />
+                                )}
                             </Stack>
                         }
                         footer={transactions.length > 0 ? (

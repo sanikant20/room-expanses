@@ -41,6 +41,8 @@ export const ReportMonthPicker = ({ value, onChange }) => (
 );
 
 export const ExpenseTable = ({ data, isLoading, filename, extra }) => {
+    const hasGroup = (data || []).some((row) => row.group);
+
     const columns = useMemo(() => [
         { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
         { key: 'bsDate', label: 'BS Date' },
@@ -54,12 +56,18 @@ export const ExpenseTable = ({ data, isLoading, filename, extra }) => {
                 <Chip label={row.category === 'primary' ? 'Primary' : 'Secondary'} color={row.category === 'primary' ? 'primary' : 'warning'} size="small" />
             )
         },
+        ...(hasGroup ? [{
+            key: 'group', label: 'Group',
+            render: (row) => row.group ? (
+                <Chip label={row.group?.name || row.group} size="small" variant="outlined" color="primary" />
+            ) : '—',
+        }] : []),
         { key: 'paidBy', label: 'Paid By', render: (row) => row.paidBy?.name || '—' },
         {
             key: 'amount', label: 'Amount',
             render: (row) => <Typography variant="body2" fontWeight={700}>{formatToNepaliCurrency(row.amount)}</Typography>,
         },
-    ], []);
+    ], [hasGroup]);
 
     const total = (data || []).reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
 

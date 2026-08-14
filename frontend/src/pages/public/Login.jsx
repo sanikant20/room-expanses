@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Grid, Card, TextField, Button, Typography, InputAdornment, IconButton, Divider, Alert, InputLabel, Stack, useTheme, useMediaQuery, keyframes, alpha } from '@mui/material';
-import { FormatQuote, LoginRounded, PeopleAltTwoTone, ReceiptLongTwoTone, AccountBalanceWalletTwoTone, BarChartTwoTone, PersonTwoTone, VisibilityOffTwoTone, VisibilityTwoTone, LockTwoTone } from '@mui/icons-material';
+import { Box, Grid, Card, TextField, Button, Typography, InputAdornment, IconButton, Divider, Alert, InputLabel, Stack, ToggleButton, ToggleButtonGroup, useTheme, useMediaQuery, keyframes, alpha } from '@mui/material';
+import { FormatQuote, LoginRounded, PeopleAltTwoTone, ReceiptLongTwoTone, AccountBalanceWalletTwoTone, BarChartTwoTone, PersonTwoTone, VisibilityOffTwoTone, VisibilityTwoTone, LockTwoTone, AdminPanelSettingsRounded } from '@mui/icons-material';
 import { Formik, Form } from 'formik';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
-import { useLogin } from '../../apis/authApi/AuthAPI';
+import { useLogin, usePartnerLogin } from '../../apis/authApi/AuthAPI';
 import { toast } from 'react-toastify';
 import { encryptData } from '../../utils/encryption';
 import { useAuth } from '../../context/AuthContext';
@@ -55,6 +55,8 @@ const Login = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [loginMode, setLoginMode] = useState('user');
+    const isPartnerMode = loginMode === 'partner';
 
     const { isAuthenticated, setIsAuthenticated } = useAuth();
 
@@ -64,6 +66,7 @@ const Login = () => {
     });
 
     const { mutate: login, isPending } = useLogin();
+    const { mutate: partnerLogin, isPending: isPartnerPending } = usePartnerLogin();
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -72,7 +75,8 @@ const Login = () => {
     }, [isAuthenticated, navigate]);
 
     const handleSubmit = async (values, { setSubmitting }) => {
-        login({ values }, {
+        const mutate = isPartnerMode ? partnerLogin : login;
+        mutate({ values }, {
             onSuccess: (response) => {
                 if (response?.success) {
                     const { token, user } = response;
@@ -363,12 +367,39 @@ const Login = () => {
                             overflow: 'hidden',
                         }}>
                             <Formik
-                                initialValues={initialValues}
+                                key={loginMode}
+                                initialValues={isPartnerMode ? { email: '', password: '' } : initialValues}
                                 validationSchema={validationSchema}
                                 onSubmit={handleSubmit}
                             >
                                 {({ errors, touched, handleChange, handleBlur, values, isSubmitting, dirty }) => (
                                     <Form>
+                                        <ToggleButtonGroup
+                                            value={loginMode}
+                                            exclusive
+                                            size="small"
+                                            fullWidth
+                                            onChange={(e, val) => { if (val) setLoginMode(val); }}
+                                            sx={{
+                                                mb: 3,
+                                                '& .MuiToggleButton-root': {
+                                                    textTransform: 'none',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 600,
+                                                    py: 0.75,
+                                                },
+                                            }}
+                                        >
+                                            <ToggleButton value="user">
+                                                <AdminPanelSettingsRounded fontSize="small" sx={{ mr: 1 }} />
+                                                Admin / Staff
+                                            </ToggleButton>
+                                            <ToggleButton value="partner">
+                                                <PersonTwoTone fontSize="small" sx={{ mr: 1 }} />
+                                                Partner
+                                            </ToggleButton>
+                                        </ToggleButtonGroup>
+
                                         <Grid container spacing={3}>
                                             <Grid size={{ xs: 12 }}>
                                                 <Stack spacing={1}>
@@ -477,7 +508,7 @@ const Login = () => {
                                                     fullWidth
                                                     variant="contained"
                                                     size="medium"
-                                                    disabled={isSubmitting || isPending || !dirty}
+                                                    disabled={isSubmitting || isPending || isPartnerPending || !dirty}
                                                     sx={{
                                                         py: 1.5,
                                                         mb: 3,
@@ -502,7 +533,7 @@ const Login = () => {
                                                     }}
                                                     startIcon={<LoginRounded />}
                                                 >
-                                                    {(isSubmitting || isPending) ? t('login.signingIn', 'Signing in...') : t('login.signIn', 'Sign in')}
+                                                    {(isSubmitting || isPending || isPartnerPending) ? t('login.signingIn', 'Signing in...') : t('login.signIn', 'Sign in')}
                                                 </Button>
                                             </Grid>
                                         </Grid>
@@ -512,6 +543,13 @@ const Login = () => {
                                                 {t('login.secureAccess', 'Secure Access')}
                                             </Typography>
                                         </Divider>
+
+                                        {isPartnerMode && (
+                                            <Alert severity="info" sx={{ mb: 2, animation: `${fadeIn} 0.5s ease-out` }}>
+                                                Partners sign in with the email set by the admin. The default password is
+                                                the partner's phone number, and can be reset by the admin anytime.
+                                            </Alert>
+                                        )}
 
                                         <Box sx={{ mt: 4, textAlign: 'center' }}>
                                             <Typography variant="body2" color="text.secondary">

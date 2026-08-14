@@ -8,9 +8,9 @@ import { useGetSettlement, useSettleSettlement, useUnsettleSettlement } from '..
 import { parseYearMonthString } from '../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../constant/constant';
 import { convertToBSFormat } from '../../../utils/dateConverter';
-import { SettlementMonthPicker, SettlementSummaryCards, SettlementTable } from './SettlementShared';
+import { SettlementMonthPicker, SettlementSummaryCards, SettlementTable, GroupSelector } from './SettlementShared';
 
-const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, allowSettle, selectedMonth, onMonthChange }) => {
+const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, allowSettle, selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [revertOpen, setRevertOpen] = useState(false);
     const queryClient = useQueryClient();
@@ -19,17 +19,24 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
 
     const monthObj = parseYearMonthString(selectedMonth);
 
-    const { data, isLoading } = useGetSettlement({ ...monthObj, category });
+    const groupFilter = group === 'all' ? undefined : group;
+
+    const { data, isLoading } = useGetSettlement({
+        ...monthObj,
+        category,
+        ...(groupFilter ? { group: groupFilter } : {}),
+    });
 
     const settlement = data?.settlement;
     const isSettled = settlement?.status === 'settled';
+    const settleLocked = category === 'secondary' && !groupFilter;
 
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
 
     const handleSettle = () => {
-        settleMutation.mutate({ ...monthObj, category }, {
+        settleMutation.mutate({ ...monthObj, category, ...(groupFilter ? { group: groupFilter } : {}) }, {
             onSuccess: (res) => {
                 toast.success(res?.message || 'Settlement marked as settled');
                 setConfirmOpen(false);
@@ -44,7 +51,7 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
     };
 
     const handleRevert = () => {
-        revertMutation.mutate({ ...monthObj, category }, {
+        revertMutation.mutate({ ...monthObj, category, ...(groupFilter ? { group: groupFilter } : {}) }, {
             onSuccess: (res) => {
                 toast.success(res?.message || 'Settlement reverted');
                 setRevertOpen(false);
@@ -84,7 +91,13 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
                 size="small"
                 color="success"
                 startIcon={<CheckCircleRounded />}
-                onClick={() => setConfirmOpen(true)}
+                onClick={() => {
+                    if (settleLocked) {
+                        toast.error('Select a group to settle secondary expenses');
+                        return;
+                    }
+                    setConfirmOpen(true);
+                }}
                 disabled={settleMutation.isPending}
             >
                 {settleMutation.isPending ? 'Settling...' : 'Settle Month'}
@@ -105,7 +118,14 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
                     data={data?.rows || []}
                     isLoading={isLoading}
                     filename={filename}
-                    extra={<SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />}
+                    extra={
+                        <Stack direction="row" spacing={1} alignItems="flex-end" sx={{ flexWrap: 'wrap' }}>
+                            {category === 'secondary' && (
+                                <GroupSelector value={group} onChange={onGroupChange} label="Group" allLabel="All Groups" />
+                            )}
+                            <SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />
+                        </Stack>
+                    }
                 />
             </Box>
 

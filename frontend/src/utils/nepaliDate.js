@@ -49,6 +49,22 @@ export const getCurrentBsYearMonth = () => {
 };
 
 /**
+ * Returns the current BS date as a "YYYY/MM/DD" string.
+ */
+export const getCurrentBsDate = () => {
+    try {
+        const now = new Date();
+        const nepaliDate = NepaliDate.fromAD(now);
+        const bs = nepaliDate.getBS();
+        const month = String(bs.month + 1).padStart(2, '0');
+        const day = String(bs.date).padStart(2, '0');
+        return `${bs.year}/${month}/${day}`;
+    } catch {
+        return '';
+    }
+};
+
+/**
  * Formats { bsYear, bsMonth } into a "YYYY/MM" string (month zero-padded).
  * Used with NepaliYearMonthPicker, which works with string values.
  */

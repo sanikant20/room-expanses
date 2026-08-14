@@ -4,6 +4,7 @@ import AxiosConfig from "../../configurations/axiosConfig";
 const endpoint = {
     auth: "auth",
     login: "login",
+    partnerLogin: "partner-login",
     register: "register",
     me: "me",
     changePassword: "change-password",
@@ -13,6 +14,14 @@ export const useLogin = () => useMutation({
     mutationKey: ["login"],
     mutationFn: async ({ values }) => {
         const response = await AxiosConfig.post(`${endpoint.auth}/${endpoint.login}`, values);
+        return response?.data;
+    }
+});
+
+export const usePartnerLogin = () => useMutation({
+    mutationKey: ["partnerLogin"],
+    mutationFn: async ({ values }) => {
+        const response = await AxiosConfig.post(`${endpoint.auth}/${endpoint.partnerLogin}`, values);
         return response?.data;
     }
 });

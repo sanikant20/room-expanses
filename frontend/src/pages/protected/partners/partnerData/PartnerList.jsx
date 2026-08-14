@@ -1,27 +1,30 @@
 import React, { useMemo } from 'react';
-import CustomCard from '../../../components/custom/CustomCard';
+import CustomCard from '../../../../components/custom/CustomCard';
 import {
     AddRounded,
     DeleteRounded,
     EditRounded,
     GroupsRounded,
+    PasswordRounded,
     ToggleOffRounded,
     ToggleOnRounded,
     VisibilityRounded,
 } from '@mui/icons-material';
-import DataTable from '../../../components/table/DataTable';
+import DataTable from '../../../../components/table/DataTable';
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { useDialogState, useModalState, usePreviewState } from '../../../hooks/useUIState';
-import CustomModal from '../../../components/custom/CustomModal';
-import CustomDialog from '../../../components/custom/CustomDialog';
-import CustomImagePreview from '../../../components/custom/CustomImagePreview';
+import { useDialogState, useModalState, usePreviewState } from '../../../../hooks/useUIState';
+import CustomModal from '../../../../components/custom/CustomModal';
+import CustomDialog from '../../../../components/custom/CustomDialog';
+import CustomImagePreview from '../../../../components/custom/CustomImagePreview';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
+import { isPartnerAccount } from '../../../../helper/getAuthData';
 import {
     useDeletePartner,
     useGetPartners,
+    useResetPartnerPassword,
     useTogglePartnerStatus,
-} from '../../../apis/partnerAPI/PartnerAPI';
+} from '../../../../apis/partnerAPI/PartnerAPI';
 import PartnerForm from './PartnerForm';
 import PartnerDetails from './PartnerDetails';
 
@@ -30,10 +33,12 @@ const Partners = () => {
     const modal = useModalState();
     const dialog = useDialogState();
     const preview = usePreviewState();
+    const isPartner = isPartnerAccount();
 
     const { data: partners, isLoading } = useGetPartners({ status: 'all' });
     const { mutate: deletePartner, isPending: isDeleting } = useDeletePartner();
     const { mutate: togglePartnerStatus, isPending: isToggling } = useTogglePartnerStatus();
+    const { mutate: resetPartnerPassword, isPending: isResetting } = useResetPartnerPassword();
 
     const columns = useMemo(() => [
         {
@@ -45,25 +50,34 @@ const Partners = () => {
                             <VisibilityRounded sx={{ color: 'primary.main' }} />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => modal.openEdit(row)}>
-                            <EditRounded sx={{ color: 'primary.main' }} />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => dialog.show(row, 'delete')}>
-                            <DeleteRounded sx={{ color: 'error.main' }} />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title={row?.status === 'active' ? 'Click to Inactivate' : 'Click to Activate'} arrow>
-                        <IconButton size="small" onClick={() => dialog.show(row, 'toggle')}>
-                            {row?.status === 'active' ? (
-                                <ToggleOnRounded sx={{ color: 'primary.main' }} />
-                            ) : (
-                                <ToggleOffRounded sx={{ color: 'error.main' }} />
-                            )}
-                        </IconButton>
-                    </Tooltip>
+                    {!isPartner && (
+                        <>
+                            <Tooltip title="Edit">
+                                <IconButton size="small" onClick={() => modal.openEdit(row)}>
+                                    <EditRounded sx={{ color: 'primary.main' }} />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                                <IconButton size="small" onClick={() => dialog.show(row, 'delete')}>
+                                    <DeleteRounded sx={{ color: 'error.main' }} />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title={row?.status === 'active' ? 'Click to Inactivate' : 'Click to Activate'} arrow>
+                                <IconButton size="small" onClick={() => dialog.show(row, 'toggle')}>
+                                    {row?.status === 'active' ? (
+                                        <ToggleOnRounded sx={{ color: 'primary.main' }} />
+                                    ) : (
+                                        <ToggleOffRounded sx={{ color: 'error.main' }} />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reset password to phone number" arrow>
+                                <IconButton size="small" onClick={() => dialog.show(row, 'reset')}>
+                                    <PasswordRounded sx={{ color: 'warning.main' }} />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
                 </Stack>
             )
         },
@@ -104,7 +118,7 @@ const Partners = () => {
                 />
             )
         },
-    ], [dialog, modal, preview]);
+    ], [dialog, modal, preview, isPartner]);
 
     const handleDialog = () => {
         const onSuccess = (response) => {
@@ -125,6 +139,8 @@ const Partners = () => {
                 id: dialog.data?._id,
                 status: dialog.data?.status === 'active' ? 'inactive' : 'active',
             }, { onSuccess, onError });
+        } else if (dialog.dialogueType === 'reset') {
+            resetPartnerPassword({ id: dialog.data?._id }, { onSuccess, onError });
         }
     };
 
@@ -133,14 +149,16 @@ const Partners = () => {
             icon={<GroupsRounded />}
             title="Room Partners"
             extra={
-                <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AddRounded />}
-                    onClick={modal.openAdd}
-                >
-                    Add Partner
-                </Button>
+                !isPartner && (
+                    <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<AddRounded />}
+                        onClick={modal.openAdd}
+                    >
+                        Add Partner
+                    </Button>
+                )
             }
         >
             <DataTable
@@ -174,13 +192,18 @@ const Partners = () => {
             <CustomDialog
                 open={dialog.open}
                 title={
-                    dialog.dialogueType === 'delete' ? 'Delete Partner' : (
-                        dialog.data?.status === 'active' ? 'Inactivate Partner' : 'Activate Partner'
-                    )
+                    dialog.dialogueType === 'delete' ? 'Delete Partner'
+                        : dialog.dialogueType === 'reset' ? 'Reset Partner Password'
+                            : (dialog.data?.status === 'active' ? 'Inactivate Partner' : 'Activate Partner')
                 }
                 content={
                     dialog.dialogueType === 'delete' ? (
                         <>Are you sure you want to delete <strong>"{dialog.data?.name}"</strong>? This action cannot be undone.</>
+                    ) : dialog.dialogueType === 'reset' ? (
+                        <>
+                            Reset the password for <strong>"{dialog.data?.name}"</strong>? The new password will be
+                            their phone number (<strong>{dialog.data?.phone || 'no phone set'}</strong>).
+                        </>
                     ) : dialog.data?.status === 'active' ? (
                         <>Are you sure you want to inactivate <strong>"{dialog.data?.name}"</strong>? Inactive partners are excluded from new expenses.</>
                     ) : (
@@ -188,14 +211,18 @@ const Partners = () => {
                     )
                 }
                 confirmText={
-                    dialog.dialogueType === 'delete' ? 'Delete' : (dialog.data?.status === 'active' ? 'Inactivate' : 'Activate')
+                    dialog.dialogueType === 'delete' ? 'Delete'
+                        : dialog.dialogueType === 'reset' ? 'Reset Password'
+                            : (dialog.data?.status === 'active' ? 'Inactivate' : 'Activate')
                 }
                 cancelText="Cancel"
                 onConfirm={handleDialog}
                 onCancel={dialog.close}
-                loading={isDeleting || isToggling}
+                loading={isDeleting || isToggling || isResetting}
                 type={
-                    dialog.dialogueType === 'delete' ? 'error' : (dialog.data?.status === 'active' ? 'error' : 'info')
+                    dialog.dialogueType === 'delete' ? 'error'
+                        : dialog.dialogueType === 'reset' ? 'warning'
+                            : (dialog.data?.status === 'active' ? 'error' : 'info')
                 }
             />
 

@@ -70,7 +70,7 @@ export const NepaliYearMonthPicker = ({ value, onChange, size = 'small', fullWid
 
     return (
         <Box sx={{ ...sx }}>
-            <Stack spacing={0.25} alignItems="center">
+            <Stack spacing={0.25} alignItems="stretch">
                 <InputLabel>Year & Month</InputLabel>
                 <TextField
                     size={size}

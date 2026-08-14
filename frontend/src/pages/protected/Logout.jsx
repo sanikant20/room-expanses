@@ -1,14 +1,17 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/loader';
 
 const Logout = () => {
     const navigate = useNavigate();
     const { setIsAuthenticated } = useAuth();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         sessionStorage.clear();
+        queryClient.clear();
         setIsAuthenticated(false);
 
         const timer = setTimeout(() => {
@@ -16,7 +19,7 @@ const Logout = () => {
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [navigate, setIsAuthenticated]);
+    }, [navigate, setIsAuthenticated, queryClient]);
 
     return (
         <Loader message="Logging out..." />

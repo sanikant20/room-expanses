@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Tabs, Tab, Box, useTheme, useMediaQuery } from '@mui/material';
 
@@ -33,6 +33,12 @@ const CustomTab = ({ tabs, initialValue = 0, sx = {}, stickyOffset = 0, value: c
             setInternalValue(newValue);
         }
     };
+
+    useEffect(() => {
+        if (controlledValue === undefined) {
+            setInternalValue(initialValue);
+        }
+    }, [initialValue, controlledValue]);
 
     return (
         <Box sx={{ width: '100%', ...sx }}>

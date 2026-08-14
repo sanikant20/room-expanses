@@ -9,6 +9,7 @@ const populateOptions = () => [
   { path: "paidBy", select: "name image" },
   { path: "applicablePartners", select: "name image" },
   { path: "excludedPartners", select: "name image" },
+  { path: "group", select: "name" },
 ];
 
 const withPopulates = (query) => query.populate(populateOptions());
@@ -21,11 +22,12 @@ const requireMonth = (req) => {
 
 export const monthlyReport = asyncHandler(async (req, res) => {
   const { bsYear, bsMonth } = requireMonth(req);
-  const { category, paidBy } = req.query;
+  const { category, paidBy, group } = req.query;
 
   const filter = { bsYear, bsMonth };
   if (category) filter.category = category;
   if (paidBy) filter.paidBy = paidBy;
+  if (group) filter.group = group;
 
   const expenses = await withPopulates(Expense.find(filter)).sort({ bsDate: -1 });
   const summary = computeSummary(expenses);
@@ -69,14 +71,17 @@ export const partnerReport = asyncHandler(async (req, res) => {
 
 export const categoryReport = asyncHandler(async (req, res) => {
   const { bsYear, bsMonth } = requireMonth(req);
-  const { category } = req.query;
+  const { category, group } = req.query;
 
   if (!["primary", "secondary"].includes(category)) {
     throw new ApiError(400, "Category must be primary or secondary");
   }
 
+  const filter = { bsYear, bsMonth, category };
+  if (group) filter.group = group;
+
   const expenses = await withPopulates(
-    Expense.find({ bsYear, bsMonth, category })
+    Expense.find(filter)
   ).sort({ bsDate: -1 });
 
   const summary = computeSummary(expenses);

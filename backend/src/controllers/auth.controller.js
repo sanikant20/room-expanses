@@ -1,4 +1,5 @@
 import { User } from "../models/user.model.js";
+import { Partner } from "../models/partner.model.js";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -12,6 +13,17 @@ const publicUser = (user) => ({
   role: user.role,
   image: user.image,
   isActive: user.isActive,
+  accountType: "user",
+});
+
+const publicPartner = (partner) => ({
+  _id: partner._id,
+  name: partner.name,
+  email: partner.email,
+  phone: partner.phone,
+  image: partner.image,
+  status: partner.status,
+  accountType: "partner",
 });
 
 export const register = asyncHandler(async (req, res) => {
@@ -75,6 +87,37 @@ export const login = asyncHandler(async (req, res) => {
   });
 });
 
+export const partnerLogin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
+  }
+
+  const partner = await Partner.findOne({ email: email.toLowerCase() }).select("+password");
+  if (!partner) {
+    throw new ApiError(404, "Partner not found with this email");
+  }
+
+  if (partner.status !== "active") {
+    throw new ApiError(403, "Account is deactivated. Contact an administrator.");
+  }
+
+  const isValid = await partner.isPasswordCorrect(password);
+  if (!isValid) {
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  const accessToken = partner.generateAccessToken();
+
+  return res.status(200).json({
+    success: true,
+    message: "Login successful",
+    token: accessToken,
+    user: publicPartner(partner),
+  });
+});
+
 export const logout = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } });
 
@@ -97,6 +140,21 @@ export const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
     throw new ApiError(400, "Old password and new password are required");
+  }
+
+  if (req.userType === "partner") {
+    const partner = await Partner.findById(req.user._id).select("+password");
+    if (!partner) throw new ApiError(404, "Partner not found");
+
+    const isValid = await partner.isPasswordCorrect(oldPassword);
+    if (!isValid) throw new ApiError(401, "Current password is incorrect");
+
+    partner.password = newPassword;
+    await partner.save();
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
   }
 
   const user = await User.findById(req.user._id).select("+password");

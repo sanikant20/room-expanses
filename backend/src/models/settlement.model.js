@@ -38,6 +38,11 @@ const settlementSchema = new Schema(
       enum: ["primary", "secondary", null],
       default: null,
     },
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
     status: {
       type: String,
       enum: ["pending", "settled"],
@@ -58,6 +63,6 @@ const settlementSchema = new Schema(
   { timestamps: true }
 );
 
-settlementSchema.index({ bsYear: 1, bsMonth: 1, category: 1 }, { unique: true });
+settlementSchema.index({ bsYear: 1, bsMonth: 1, category: 1, group: 1 }, { unique: true });
 
 export const Settlement = mongoose.model("Settlement", settlementSchema);

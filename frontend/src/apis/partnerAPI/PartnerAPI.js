@@ -52,6 +52,14 @@ export const useTogglePartnerStatus = () => useMutation({
     }
 });
 
+export const useResetPartnerPassword = () => useMutation({
+    mutationKey: ["resetPartnerPassword"],
+    mutationFn: async ({ id }) => {
+        const response = await AxiosConfig.put(`${endpoint}/${id}/reset-password`);
+        return response?.data;
+    }
+});
+
 export const useGetPartnerExpenses = ({ id, bsYear, bsMonth, enabled = true }) => useQuery({
     queryKey: ["getPartnerExpenses", id, bsYear, bsMonth],
     queryFn: async () => {

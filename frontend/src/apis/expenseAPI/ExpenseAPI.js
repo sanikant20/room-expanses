@@ -3,19 +3,21 @@ import AxiosConfig from "../../configurations/axiosConfig";
 
 const endpoint = "expenses";
 
-export const useGetExpenses = ({ bsYear, bsMonth, category, paidBy, search, enabled = true } = {}) => useQuery({
-    queryKey: ["getExpenses", bsYear, bsMonth, category, paidBy, search],
+export const useGetExpenses = ({ bsYear, bsMonth, category, group, paidBy, search, enabled = true } = {}) => useQuery({
+    queryKey: ["getExpenses", bsYear, bsMonth, category, group, paidBy, search],
     queryFn: async () => {
         const params = {};
         if (bsYear) params.bsYear = bsYear;
         if (bsMonth) params.bsMonth = bsMonth;
         if (category) params.category = category;
+        if (group) params.group = group;
         if (paidBy) params.paidBy = paidBy;
         if (search) params.search = search;
         const response = await AxiosConfig.get(endpoint, { params });
         return response?.data?.expenses;
     },
     enabled,
+    refetchInterval: 15000,
 });
 
 export const useGetExpense = ({ id, enabled = true }) => useQuery({

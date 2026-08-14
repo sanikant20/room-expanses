@@ -14,7 +14,8 @@ import {
     AdminPanelSettingsRounded,
     LogoutTwoTone,
     KeyRounded,
-    PaletteRounded
+    PaletteRounded,
+    PersonRounded
 } from '@mui/icons-material';
 import { Avatar, Badge, Tooltip, useMediaQuery } from '@mui/material';
 import ChangeLanguage from './ChangeLanguage';
@@ -147,7 +148,7 @@ export default function OptionsMenu() {
     const userData = {
         name: `${authData?.FullName}`,
         email: authData?.Email || authData?.Phone || '',
-        role: t('user.admin'),
+        role: authData?.accountType === 'partner' ? 'Partner' : t('user.admin'),
         avatar: '',
         username: `${authData?.ComID}`
     };
@@ -157,7 +158,7 @@ export default function OptionsMenu() {
         {
             id: 'profile',
             label: t('menu.myProfile'),
-            icon: <AdminPanelSettingsRounded fontSize={isMobile ? "small" : "small"} />,
+            icon: <PersonRounded fontSize={isMobile ? "small" : "small"} />,
             action: () => handleNavigation('/profile')
         },
         {

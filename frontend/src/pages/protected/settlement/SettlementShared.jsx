@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { Box, Card, CardContent, Chip, Stack, Typography, alpha, useTheme } from '@mui/material';
+import { Box, Card, CardContent, Chip, InputLabel, MenuItem, Stack, TextField, Typography, alpha, useTheme } from '@mui/material';
 import { AccountBalanceWalletRounded, BalanceRounded, CompareArrowsRounded } from '@mui/icons-material';
 import DataTable from '../../../components/table/DataTable';
 import { NepaliYearMonthPicker } from '../../../components/date/NepaliYearMonthPicker';
 import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
+import { useGetActiveGroups } from '../../../apis/groupAPI/GroupAPI';
 import { SETTLEMENT_STATUS } from '../../../constant/constant';
 
 export const SettlementMonthPicker = ({ value, onChange }) => (
@@ -15,6 +16,28 @@ export const SettlementMonthPicker = ({ value, onChange }) => (
         sx={{ minWidth: 210 }}
     />
 );
+
+export const GroupSelector = ({ value, onChange, label = 'Group', allLabel = 'All Groups', minWidth = 180 }) => {
+    const { data: groups = [] } = useGetActiveGroups();
+    const activeGroups = groups.filter((g) => g.status === 'active');
+    return (
+        <Stack spacing={0.25} alignItems="center">
+            <InputLabel>{label}</InputLabel>
+            <TextField
+                select
+                size="small"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                sx={{ minWidth }}
+            >
+                <MenuItem value="all">{allLabel}</MenuItem>
+                {activeGroups.map((g) => (
+                    <MenuItem key={g._id} value={g._id}>{g.name}</MenuItem>
+                ))}
+            </TextField>
+        </Stack>
+    );
+};
 
 export const SettlementSummaryCard = ({ title, value, subtitle, color }) => {
     const theme = useTheme();

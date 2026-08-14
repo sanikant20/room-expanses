@@ -2,15 +2,18 @@ import React, { useState } from 'react';
 import { BalanceRounded, CalculateRounded, CompareArrowsRounded, StarOutlineRounded, StarRounded } from '@mui/icons-material';
 import CustomTab from '../../../components/custom/CustomTab';
 import { formatYearMonthString, getCurrentBsYearMonth } from '../../../utils/nepaliDate';
+import { isPartnerAccount } from '../../../helper/getAuthData';
 import SettlementSummary from './SettlementSummary';
 import SettlementCalculation from './SettlementCalculation';
 import SettlementTransactions from './SettlementTransactions';
 
 const SettlementTabs = () => {
+    const isPartner = isPartnerAccount();
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const current = getCurrentBsYearMonth();
         return formatYearMonthString(current);
     });
+    const [group, setGroup] = useState('all');
 
     const tabs = [
         {
@@ -22,7 +25,7 @@ const SettlementTabs = () => {
                     icon={<BalanceRounded />}
                     subtitlePrefix="Total settlement summary"
                     filename="Settlement Summary"
-                    allowSettle
+                    allowSettle={!isPartner}
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
                 />
@@ -37,8 +40,8 @@ const SettlementTabs = () => {
                     icon={<StarRounded />}
                     subtitlePrefix="Settlement for primary expenses"
                     filename="Primary Settlement Summary"
+                    allowSettle={!isPartner}
                     category="primary"
-                    allowSettle
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
                 />
@@ -53,10 +56,12 @@ const SettlementTabs = () => {
                     icon={<StarOutlineRounded />}
                     subtitlePrefix="Settlement for secondary expenses"
                     filename="Secondary Settlement Summary"
+                    allowSettle={!isPartner}
                     category="secondary"
-                    allowSettle
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
+                    group={group}
+                    onGroupChange={setGroup}
                 />
             ),
         },
@@ -77,6 +82,8 @@ const SettlementTabs = () => {
                 <SettlementTransactions
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
+                    group={group}
+                    onGroupChange={setGroup}
                 />
             ),
         },

@@ -18,6 +18,11 @@ const expenseSchema = new Schema(
       required: true,
       default: "primary",
     },
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
     paidBy: {
       type: Schema.Types.ObjectId,
       ref: "Partner",

@@ -8,21 +8,29 @@ import { useGetSettlementCalculations } from '../../../apis/settlementAPI/Settle
 import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../constant/constant';
-import { SettlementMonthPicker } from './SettlementShared';
+import { GroupSelector, SettlementMonthPicker } from './SettlementShared';
 
 const SettlementCalculation = ({ selectedMonth, onMonthChange }) => {
     const [category, setCategory] = useState('');
+    const [group, setGroup] = useState('all');
 
     const monthObj = parseYearMonthString(selectedMonth);
+
+    const groupFilter = group === 'all' ? undefined : group;
 
     const { data, isLoading } = useGetSettlementCalculations({
         ...monthObj,
         category: category || undefined,
+        ...(groupFilter ? { group: groupFilter } : {}),
     });
 
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
+
+    const rows = data?.rows || [];
+
+    const hasGroup = rows.some((row) => row.group);
 
     const columns = useMemo(() => [
         { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
@@ -37,6 +45,12 @@ const SettlementCalculation = ({ selectedMonth, onMonthChange }) => {
                 <Chip label={row.category === 'primary' ? 'Primary' : 'Secondary'} color={row.category === 'primary' ? 'primary' : 'warning'} size="small" />
             )
         },
+        ...(hasGroup ? [{
+            key: 'group', label: 'Group',
+            render: (row) => row.group ? (
+                <Chip label={row.group?.name || row.group} size="small" variant="outlined" color="primary" />
+            ) : '—',
+        }] : []),
         { key: 'paidBy', label: 'Paid By', render: (row) => row.paidBy?.name || '—' },
         {
             key: 'split', label: 'Split Among',
@@ -57,9 +71,8 @@ const SettlementCalculation = ({ selectedMonth, onMonthChange }) => {
             key: 'amount', label: 'Amount',
             render: (row) => <Typography variant="body2" fontWeight={700}>{formatToNepaliCurrency(row.amount)}</Typography>,
         },
-    ], []);
+    ], [hasGroup]);
 
-    const rows = data?.rows || [];
     const total = rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
 
     return (
@@ -90,6 +103,9 @@ const SettlementCalculation = ({ selectedMonth, onMonthChange }) => {
                                 <MenuItem value="secondary">Secondary</MenuItem>
                             </TextField>
                         </Stack>
+                        {category === 'secondary' && (
+                            <GroupSelector value={group} onChange={setGroup} label="Group" allLabel="All Groups" />
+                        )}
                     </Stack>
                 }
                 footer={rows.length > 0 ? (

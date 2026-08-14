@@ -32,7 +32,7 @@ const CustomFileUpload = ({
     value,
     onChange,
     accept = 'image/*',
-    maxSize = 2 * 1024 * 1024,
+    maxSize = 500 * 1024,
     label,
     required = false,
     error,
@@ -59,9 +59,9 @@ const CustomFileUpload = ({
         }
 
         if (isImage) {
-            const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+            const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
             if (!validImageTypes.includes(file.type)) {
-                toast.warning('Please upload a valid image file (JPEG, PNG, GIF, or WEBP)');
+                toast.warning('Please upload a valid image file (PNG, JPG, or JPEG)');
                 return;
             }
         }
@@ -253,7 +253,7 @@ const CustomFileUpload = ({
                         {' '}or drag and drop
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                        {isPdf ? 'PDF' : isImage ? 'PNG, JPG, GIF, WEBP' : accept} • Max {formatFileSize(maxSize)}
+                        {isPdf ? 'PDF' : isImage ? 'PNG, JPG, JPEG' : accept} • Max {formatFileSize(maxSize)}
                     </Typography>
                 </Box>
             )}

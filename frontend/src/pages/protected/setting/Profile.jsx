@@ -25,7 +25,7 @@ import {
     AdminPanelSettingsRounded,
     BusinessRounded,
 } from '@mui/icons-material';
-import { getAuthData } from '../../../helper/getAuthData';
+import { getAuthData, isPartnerAccount } from '../../../helper/getAuthData';
 import CustomCard from '../../../components/custom/CustomCard';
 import { dateFormatToToggledDate } from '../../../utils/dateFormatToToggleDate';
 import { useDateContext } from '../../../context/DateContext';
@@ -34,8 +34,12 @@ import { useTranslation } from 'react-i18next';
 const Profile = () => {
     const theme = useTheme();
     const authData = getAuthData();
+    const isPartner = isPartnerAccount();
     const { useNepaliDate } = useDateContext();
     const { t } = useTranslation();
+    const roleLabel = isPartner ? t('user.partner', 'Partner') : t('user.admin', 'Admin');
+    const RoleChipIcon = isPartner ? PersonPinTwoTone : AdminPanelSettingsRounded;
+    const roleRowIcon = isPartner ? PersonPinTwoTone : AdminPanelSettingsTwoTone;
 
     const InfoRow = ({ label, value, icon: Icon }) => (
         <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mb: 1.5 }}>
@@ -104,8 +108,8 @@ const Profile = () => {
                         </Typography>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent={{ xs: 'center', md: 'flex-start' }} alignItems="center">
                             <Chip
-                                icon={<AdminPanelSettingsRounded sx={{ fontSize: 16 }} />}
-                                label={t('user.admin', 'Admin')}
+                                icon={<RoleChipIcon sx={{ fontSize: 16 }} />}
+                                label={roleLabel}
                                 size="small"
                                 sx={{ fontWeight: 600 }}
                             />
@@ -143,7 +147,7 @@ const Profile = () => {
                     <CustomCard icon={<FingerprintTwoTone fontSize="small" />} title={t('profile.accountDetails', 'Account Details')}>
                         {/* <InfoRow label="User ID" value={authData?.UserID} icon={FingerprintTwoTone} /> */}
                         {/* <InfoRow label="Auth Code" value={authData?.AuthCode} icon={BadgeTwoTone} /> */}
-                        <InfoRow label={t('profile.role', 'Role')} value={t('user.admin', 'Admin')} icon={AdminPanelSettingsTwoTone} />
+                        <InfoRow label={t('profile.role', 'Role')} value={roleLabel} icon={roleRowIcon} />
                         <InfoRow label={t('profile.todaysDate', "Today's Date")} value={dateFormatToToggledDate(new Date(), useNepaliDate)} icon={CalendarTodayTwoTone} />
                         <InfoRow label={t('profile.currentTime', 'Current Time')} value={new Date().toLocaleTimeString()} icon={AccessTimeTwoTone} />
                     </CustomCard>
