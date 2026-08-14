@@ -1,0 +1,6 @@
+# Root-level ignores
+atlas-credentials.env
+.env
+.env.*
+*.env
+*.log
