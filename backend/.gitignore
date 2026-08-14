@@ -1,0 +1,10 @@
+# Backend-specific ignores
+public/temp/
+
+node_modules
+package-lock.json
+
+# Environment files
+.env
+.env.local
+.env.*.local

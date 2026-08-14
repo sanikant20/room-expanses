@@ -1,0 +1,18 @@
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import { corsOptions } from "./config/cors.js";
+import { baseRoutes } from "./index.js";
+import { errorHandler } from "./utils/errorHandler.js";
+
+const app = express();
+
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
+
+baseRoutes(app);
+
+app.use(errorHandler);
+
+export default app;
