@@ -26,6 +26,7 @@ import { RenderRoutes } from './routes/RenderRoutes';
 import { useGetNetworkStatus } from './hooks/useNetworkStatus';
 import { OfflineContainer } from './components/offlineContainer';
 import { setAuthExpirationHandler } from './configurations/axiosConfig';
+import AxiosConfig from './configurations/axiosConfig';
 
 // Theme imports
 import AppTheme from './theme/AppTheme';
@@ -59,6 +60,19 @@ const AxiosInterceptorSetup = () => {
   return null;
 };
 
+const HealthPoller = () => {
+  useEffect(() => {
+    const ping = () => {
+      AxiosConfig.get('/health').catch(() => {});
+    };
+    ping();
+    const interval = setInterval(ping, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return null;
+};
+
 const App = () => {
   return (
     <ThemeModeProvider>
@@ -84,6 +98,7 @@ const App = () => {
                 <Router>
                   <Suspense fallback={<Loader />}>
                     <AxiosInterceptorSetup />
+                    <HealthPoller />
                     <ErrorBoundary>
                       <AppRoutes />
                     </ErrorBoundary>
