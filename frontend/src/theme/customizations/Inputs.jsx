@@ -5,7 +5,7 @@ import { svgIconClasses } from '@mui/material/SvgIcon';
 import { toggleButtonGroupClasses } from '@mui/material/ToggleButtonGroup';
 import { toggleButtonClasses } from '@mui/material/ToggleButton';
 import { CheckBoxOutlineBlankRounded, CheckRounded, RemoveRounded } from '@mui/icons-material';
-import { brand, gray } from '../themePrimitives';
+import { brand, gray } from '../ThemePrimitives';
 
 const getNeumorphShadow = (mode) =>
     mode === 'dark'

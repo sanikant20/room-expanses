@@ -1,5 +1,5 @@
 import { alpha, svgIconClasses, typographyClasses, buttonBaseClasses, chipClasses, iconButtonClasses } from '@mui/material';
-import { gray, brand } from '../themePrimitives';
+import { gray, brand } from '../ThemePrimitives';
 import { defaultSuccessColor, defaultErrorColor, defaultWarningColor } from '../ThemeColors';
 
 const getNeumorphShadow = (mode) =>
