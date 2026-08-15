@@ -78,7 +78,7 @@ const PrimaryExpansesForm = ({ mode, selectedData, onClose, activePartners = [] 
             amount: Number(values.amount),
             category: 'primary',
             paidBy: isPartner ? selfId : values.paidBy,
-            applicablePartners: isPartner ? [selfId] : activePartners.map((p) => p._id),
+            applicablePartners: activePartners.map((p) => p._id),
             bsDate: values.bsDate,
         };
 

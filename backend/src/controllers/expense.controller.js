@@ -87,7 +87,7 @@ const validateExpenseGrouping = async (payload) => {
   return payload;
 };
 
-const enforcePartnerExpenseRules = (payload, partnerId) => {
+const enforcePartnerExpenseRules = async (payload, partnerId) => {
   const { category, group, applicablePartners, paidBy } = payload;
 
   if (String(paidBy) !== String(partnerId)) {
@@ -95,8 +95,12 @@ const enforcePartnerExpenseRules = (payload, partnerId) => {
   }
 
   if (category === "primary") {
-    if (applicablePartners.length !== 1 || String(applicablePartners[0]) !== String(partnerId)) {
-      throw new ApiError(403, "Primary expenses must apply only to yourself");
+    const activePartners = await Partner.find({ status: "active" }).select("_id");
+    const activeIds = new Set(activePartners.map((p) => String(p._id)));
+    const appliedIds = new Set(applicablePartners.map((id) => String(id)));
+    const matchesActive = appliedIds.size === activeIds.size && [...activeIds].every((id) => appliedIds.has(id));
+    if (!matchesActive) {
+      throw new ApiError(403, "Primary expenses must apply to all active partners");
     }
   }
 
@@ -129,7 +133,7 @@ export const createExpense = asyncHandler(async (req, res) => {
   await validateExpenseGrouping(payload);
 
   if (req.userType === "partner") {
-    enforcePartnerExpenseRules(payload, req.user._id);
+    await enforcePartnerExpenseRules(payload, req.user._id);
   }
 
   const expense = await Expense.create({ ...payload, createdBy: req.user._id });
@@ -207,7 +211,7 @@ export const updateExpense = asyncHandler(async (req, res) => {
     if (String(existing.createdBy) !== String(req.user._id)) {
       throw new ApiError(403, "You can only edit your own expenses");
     }
-    enforcePartnerExpenseRules(payload, req.user._id);
+    await enforcePartnerExpenseRules(payload, req.user._id);
   }
 
   const updated = await Expense.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
