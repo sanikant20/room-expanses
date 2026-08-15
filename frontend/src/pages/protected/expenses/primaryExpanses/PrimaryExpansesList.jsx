@@ -55,11 +55,13 @@ const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
         queryClient.invalidateQueries({ queryKey: ['getMonthlyReport'] });
     };
 
-    const data = useMemo(() => (
-        isPartner
-            ? (expenses || []).filter((row) => String(row.createdBy) === String(selfId))
-            : (expenses || [])
-    ), [expenses, isPartner, selfId]);
+    const data = useMemo(() => {
+        if (!isPartner) return (expenses || []);
+        return (expenses || []).filter((row) => {
+            const payerId = row.paidBy?._id || row.paidBy || '';
+            return String(payerId) === String(selfId);
+        });
+    }, [expenses, isPartner, selfId]);
 
     const handleDelete = () => {
         deleteExpense(

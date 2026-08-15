@@ -78,10 +78,11 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
     };
 
     const data = useMemo(() => {
-        const scopedExpenses = isPartner
-            ? (expenses || []).filter((row) => String(row.createdBy) === String(selfId))
-            : (expenses || []);
-        return scopedExpenses;
+        if (!isPartner) return (expenses || []);
+        return (expenses || []).filter((row) => {
+            const payerId = row.paidBy?._id || row.paidBy || '';
+            return String(payerId) === String(selfId);
+        });
     }, [expenses, isPartner, selfId]);
 
     const handleDelete = () => {

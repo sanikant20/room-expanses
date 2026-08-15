@@ -156,6 +156,10 @@ export const getExpenses = asyncHandler(async (req, res) => {
     filter.title = { $regex: search, $options: "i" };
   }
 
+  if (req.userType === "partner") {
+    filter.paidBy = req.user._id;
+  }
+
   const expenses = await withPopulates(Expense.find(filter))
     .sort({ bsYear: -1, bsMonth: -1, createdAt: -1 });
 

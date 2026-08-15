@@ -196,9 +196,7 @@ const PrimaryExpansesForm = ({ mode, selectedData, onClose, activePartners = [] 
                             <Stack spacing={1}>
                                 <InputLabel>Apply To</InputLabel>
                                 <Typography variant="body2" color="text.secondary">
-                                    {isPartner
-                                        ? 'Applies only to you'
-                                        : `Applies to all active partners (${activePartners.length})`}
+                                    {`Applies to all active partners (${activePartners.length})`}
                                 </Typography>
                             </Stack>
                         </Grid>
