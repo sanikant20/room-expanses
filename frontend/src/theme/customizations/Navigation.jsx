@@ -5,7 +5,7 @@ import { dividerClasses } from '@mui/material/Divider';
 import { menuItemClasses } from '@mui/material/MenuItem';
 import { selectClasses } from '@mui/material/Select';
 import { tabClasses } from '@mui/material/Tab';
-import { gray, brand } from '../themePrimitives';
+import { gray, brand } from '../ThemePrimitives';
 import { UnfoldMoreRounded } from '@mui/icons-material';
 
 const getNeumorphShadow = (mode) =>

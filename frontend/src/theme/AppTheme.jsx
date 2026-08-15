@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { inputsCustomizations } from './customizations/inputs';
-import { dataDisplayCustomizations } from './customizations/dataDisplay';
-import { feedbackCustomizations } from './customizations/feedback';
-import { navigationCustomizations } from './customizations/navigation';
-import { surfacesCustomizations } from './customizations/surfaces';
-import { getDesignTokens } from './themePrimitives';
-import { datePickersCustomizations } from './customizations/datePicker';
+import { inputsCustomizations } from './customizations/Inputs';
+import { dataDisplayCustomizations } from './customizations/DataDisplay';
+import { feedbackCustomizations } from './customizations/Feedback';
+import { navigationCustomizations } from './customizations/Navigation';
+import { surfacesCustomizations } from './customizations/Surfaces';
+
+import { datePickersCustomizations } from './customizations/DatePicker';
 import { useThemeMode } from '../context/useThemeMode';
+import { getDesignTokens } from './ThemePrimitives';
 
 export default function AppTheme(props) {
     const { children, disableCustomTheme, themeComponents } = props;

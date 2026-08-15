@@ -1,5 +1,5 @@
 import { alpha } from '@mui/material/styles';
-import { gray } from '../themePrimitives';
+import { gray } from '../ThemePrimitives';
 
 const getNeumorphShadow = (mode) =>
     mode === 'dark'
