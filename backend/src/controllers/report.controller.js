@@ -54,7 +54,7 @@ export const partnerReport = asyncHandler(async (req, res) => {
   const filter = {
     bsYear,
     bsMonth,
-    $or: [{ paidBy: partnerId }, { applicablePartners: partnerId }],
+    paidBy: partnerId,
   };
 
   const expenses = await withPopulates(Expense.find(filter)).sort({ bsDate: -1 });
@@ -73,11 +73,12 @@ export const categoryReport = asyncHandler(async (req, res) => {
   const { bsYear, bsMonth } = requireMonth(req);
   const { category, group } = req.query;
 
-  if (!["primary", "secondary"].includes(category)) {
-    throw new ApiError(400, "Category must be primary or secondary");
+  if (category && !["all", "primary", "secondary"].includes(category)) {
+    throw new ApiError(400, "Category must be all, primary or secondary");
   }
 
-  const filter = { bsYear, bsMonth, category };
+  const filter = { bsYear, bsMonth };
+  if (category && category !== "all") filter.category = category;
   if (group) filter.group = group;
 
   const expenses = await withPopulates(

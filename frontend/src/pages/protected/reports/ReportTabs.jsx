@@ -45,7 +45,7 @@ const ReportTabs = () => {
         },
     ];
 
-    return <CustomTab tabs={tabs} />;
+    return <CustomTab tabs={tabs} storageKey="reportActiveTab" />;
 };
 
 export default ReportTabs;

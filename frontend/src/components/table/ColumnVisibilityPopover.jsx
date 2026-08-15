@@ -58,7 +58,7 @@ const ColumnVisibilityPopover = ({
             <Paper
                 elevation={0}
                 sx={{
-                    width: 270,
+                    width: { xs: 'min(270px, calc(100vw - 48px))', sm: 270 },
                     maxHeight: 520,
                     overflow: 'hidden',
                     borderRadius: 2.5,
@@ -165,7 +165,16 @@ const ColumnVisibilityPopover = ({
                     },
                 }}>
                     {visibleColumns.length > 0 ? (
-                        <List dense disablePadding sx={{ py: 0.5 }}>
+                        <List
+                            dense
+                            disablePadding
+                            sx={{
+                                py: 0.5,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: { xs: 0.5, sm: 0 },
+                            }}
+                        >
                             {visibleColumns.map((column) => {
                                 const hidden = isHidden(column.key);
 
@@ -182,8 +191,9 @@ const ColumnVisibilityPopover = ({
                                             onClick={() => onToggleColumn(column.key)}
                                             dense
                                             sx={{
-                                                py: 0.875, px: 2,
-                                                minHeight: 38,
+                                                py: { xs: 1, sm: 0.875 },
+                                                px: 2,
+                                                minHeight: { xs: 44, sm: 38 },
                                                 borderRadius: 0,
                                                 transition: 'all 0.15s',
                                             }}

@@ -166,6 +166,7 @@ const CustomCard = ({
                     <Box sx={{
                         display: 'flex',
                         alignItems: 'center',
+                        flexWrap: 'wrap',
                         gap: 1,
                         mr: 0.5
                     }}>
@@ -176,6 +177,20 @@ const CustomCard = ({
                 onClick={handleToggle}
                 sx={{
                     ...(collapsible && { cursor: 'pointer' }),
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    '& .MuiCardHeader-content': {
+                        flex: '1 1 220px',
+                        minWidth: 0,
+                    },
+                    '& .MuiCardHeader-action': {
+                        flex: '1 1 auto',
+                        minWidth: 0,
+                        m: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                    },
                 }}
             />
 

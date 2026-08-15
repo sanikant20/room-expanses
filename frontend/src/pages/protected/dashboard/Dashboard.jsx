@@ -22,14 +22,18 @@ import {
     TrendingUpRounded,
     TrendingDownRounded,
     CategoryRounded,
+    CheckCircleRounded,
+    ScheduleRounded,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import CustomCard from '../../../components/custom/CustomCard';
+import AutoSettleBanner from '../../../components/custom/AutoSettleBanner';
 import DataTable from '../../../components/table/DataTable';
 import { NepaliYearMonthPicker } from '../../../components/date/NepaliYearMonthPicker';
 import { useGetDashboardSummary } from '../../../apis/dashboardAPI/DashboardAPI';
 import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
+import { convertToBSFormat } from '../../../utils/dateConverter';
 import { formatYearMonthString, getCurrentBsYearMonth, parseYearMonthString } from '../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../constant/constant';
 
@@ -53,7 +57,7 @@ const StatCard = ({ title, value, subtitle, icon, color }) => {
             }}
         >
             <CardContent sx={{ p: 2.25 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography color="text.secondary" variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
                             {title}
@@ -222,38 +226,78 @@ const Dashboard = () => {
                 }}
             >
                 <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
-                        <Box>
-                            <Typography variant="overline" sx={{ letterSpacing: 1.5, opacity: 0.9 }}>
-                                404RoomNotFound
-                            </Typography>
-                            <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-                                Room Expenses Dashboard
-                            </Typography>
-                            <Typography variant="body1" sx={{ maxWidth: 640, opacity: 0.95 }}>
-                                Track shared expenses, compare contributions, and settle balances — grouped by Nepali month.
-                            </Typography>
-                        </Box>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 2, p: 1, backdropFilter: 'blur(4px)' }}>
-                            <NepaliYearMonthPicker
-                                value={selectedMonth}
-                                onChange={setSelectedMonth}
-                                size="small"
-                                fullWidth={false}
-                                sx={{
-                                    minWidth: 210,
-                                    '& .MuiOutlinedInput-root': {
-                                        color: 'common.white',
-                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
-                                    },
-                                    '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.7)' },
-                                    '& .MuiSvgIcon-root': { color: 'common.white' },
-                                }}
-                            />
-                        </Stack>
-                    </Stack>
+                    <Grid
+                        container
+                        rowSpacing={2}
+                        sx={{ flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between' }}
+                    >
+                        <Grid size={{ xs: 12, sm: 'auto' }}>
+                            <Stack spacing={1}>
+                                <Typography variant="overline" sx={{ letterSpacing: 1.5, opacity: 0.9 }}>
+                                    404RoomNotFound
+                                </Typography>
+                                <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
+                                    Room Expenses Dashboard
+                                </Typography>
+                                <Typography variant="body1" sx={{ maxWidth: 640, opacity: 0.95 }}>
+                                    Track shared expenses, compare contributions, and settle balances — grouped by Nepali month.
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 'auto' }}>
+                            <Stack spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 2, p: 1, backdropFilter: 'blur(4px)' }}>
+                                <NepaliYearMonthPicker
+                                    value={selectedMonth}
+                                    onChange={setSelectedMonth}
+                                    size="small"
+                                    fullWidth={false}
+                                    sx={{
+                                        width: { xs: '100%', sm: 'auto' },
+                                        '& .MuiOutlinedInput-root': {
+                                            color: 'common.white',
+                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                                        },
+                                        '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.7)' },
+                                        '& .MuiSvgIcon-root': { color: 'common.white' },
+                                    }}
+                                />
+                            </Stack>
+                        </Grid>
+                    </Grid>
                 </CardContent>
             </Card>
+
+            {/* Auto-settle countdown + settlement status */}
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ mb: 2, alignItems: 'stretch' }}>
+                <AutoSettleBanner sx={{ mb: 0, flex: 1 }} />
+                {!isLoading && data?.settlementStatus && (
+                    <Box
+                        sx={{
+                            px: 1.5,
+                            py: 1,
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            flex: 1,
+                            backgroundColor: alpha(data.settlementStatus.status === 'settled' ? theme.palette.success.main : theme.palette.grey[500], 0.08),
+                            border: `1px solid ${alpha(data.settlementStatus.status === 'settled' ? theme.palette.success.main : theme.palette.grey[500], 0.25)}`,
+                        }}
+                    >
+                        {data.settlementStatus.status === 'settled' ? (
+                            <CheckCircleRounded fontSize="small" color="success" />
+                        ) : (
+                            <ScheduleRounded fontSize="small" color="disabled" />
+                        )}
+                        <Typography variant="body2" color="text.secondary">
+                            {monthLabel || 'This month'} settlement: <strong>{data.settlementStatus.status === 'settled' ? 'Settled' : 'Not settled yet'}</strong>
+                            {data.settlementStatus.status === 'settled' && data.settlementStatus.settledAt && (
+                                ` — Settled by ${data.settlementStatus.settledBy?.name || 'Auto System'} on ${convertToBSFormat(data.settlementStatus.settledAt)}`
+                            )}
+                        </Typography>
+                    </Box>
+                )}
+            </Stack>
 
             {/* Summary Cards */}
             <Grid container spacing={2} sx={{ mb: 2 }}>

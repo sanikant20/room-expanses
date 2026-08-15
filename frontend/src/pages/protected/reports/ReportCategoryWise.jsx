@@ -12,16 +12,21 @@ import { ExpenseTable, ReportMonthPicker, StatBadges } from './ReportShared';
 
 const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
     const theme = useTheme();
-    const [category, setCategory] = useState('primary');
+    const [category, setCategory] = useState('all');
     const [group, setGroup] = useState('all');
 
     const { data: groups = [] } = useGetActiveGroups();
 
     const selectedMonthObj = parseYearMonthString(selectedMonth);
 
+    const handleCategoryChange = (e) => {
+        setCategory(e.target.value);
+        if (e.target.value !== 'secondary') setGroup('all');
+    };
+
     const { data: categoryData, isLoading } = useGetCategoryReport({
         category,
-        group: group === 'all' ? undefined : group,
+        group: category === 'secondary' && group !== 'all' ? group : undefined,
         ...selectedMonthObj,
     });
     const summary = categoryData?.summary || {};
@@ -38,6 +43,8 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
             extra={
                 <StatBadges items={[
                     { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },
+                    { label: 'Primary', value: formatToNepaliCurrency(summary.primaryTotal || 0), color: theme.palette.success.main },
+                    { label: 'Secondary', value: formatToNepaliCurrency(summary.secondaryTotal || 0), color: theme.palette.warning.main },
                 ]} />
             }
         >
@@ -46,24 +53,30 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
                 isLoading={isLoading}
                 filename="Category Expense Report"
                 extra={
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={1}
+                        alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                        sx={{ flexWrap: 'wrap', width: '100%' }}
+                    >
                         <ReportMonthPicker value={selectedMonth} onChange={onMonthChange} />
-                        <Stack spacing={0.25} alignItems="center">
+                        <Stack spacing={0.25} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
                             <InputLabel>Category</InputLabel>
                             <TextField
                                 select
                                 size="small"
                                 value={category}
-                                onChange={(e) => setCategory(e.target.value)}
+                                onChange={handleCategoryChange}
                                 placeholder="Select category"
-                                sx={{ minWidth: 160 }}
+                                sx={{ minWidth: { xs: 0, md: 160 }, width: { xs: '100%', md: 'auto' } }}
                             >
+                                <MenuItem value="all">All</MenuItem>
                                 <MenuItem value="primary">Primary</MenuItem>
                                 <MenuItem value="secondary">Secondary</MenuItem>
                             </TextField>
                         </Stack>
                         {category === 'secondary' && (
-                            <Stack spacing={0.25} alignItems="center">
+                            <Stack spacing={0.25} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
                                 <InputLabel>Group</InputLabel>
                                 <TextField
                                     select
@@ -71,7 +84,7 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
                                     value={group}
                                     onChange={(e) => setGroup(e.target.value)}
                                     placeholder="Select group"
-                                    sx={{ minWidth: 180 }}
+                                    sx={{ minWidth: { xs: 0, md: 180 }, width: { xs: '100%', md: 'auto' } }}
                                 >
                                     <MenuItem value="all">All Groups</MenuItem>
                                     {groups.map((g) => (

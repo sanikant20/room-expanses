@@ -98,6 +98,19 @@ export const subtractBsMonths = (bsYear, bsMonth, n) => {
 };
 
 /**
+ * Adds `n` months to a BS year/month pair, rolling over years correctly.
+ */
+export const addBsMonths = (bsYear, bsMonth, n = 1) => {
+    let year = Number(bsYear);
+    let month = Number(bsMonth) + n;
+    while (month > 12) {
+        month -= 12;
+        year += 1;
+    }
+    return { bsYear: year, bsMonth: month };
+};
+
+/**
  * Builds the last `count` BS months ending at (bsYear, bsMonth) inclusive.
  * Each entry: { bsYear, bsMonth, label }
  */
@@ -117,4 +130,64 @@ export const isValidBsDate = (bsDate) => {
     if (!bsDate) return false;
     const normalized = String(bsDate).replace(/\//g, '-');
     return /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+};
+
+/**
+ * Days remaining until the next auto-settle run (BS day 1, 00:30 Asia/Kathmandu).
+ * The current BS month is the one the next run will settle automatically.
+ * Returns null on failure.
+ */
+export const getDaysRemainingUntilAutoSettle = () => {
+    try {
+        const now = new NepaliDate();
+        const year = now.getYear();
+        const month = now.getMonth();
+        let daysInMonth = 1;
+        const probe = new NepaliDate(year, month, 1);
+        while (true) {
+            probe.setDate(daysInMonth + 1);
+            if (probe.getYear() === year && probe.getMonth() === month) {
+                daysInMonth++;
+            } else {
+                break;
+            }
+        }
+        return {
+            daysRemaining: daysInMonth - now.getDate() + 1,
+            bsYear: year,
+            bsMonth: month + 1,
+        };
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * Epoch timestamp (ms) of the next auto-settle run (BS day 1, 00:30 Asia/Kathmandu).
+ * Uses the machine-local date as the app's "today" convention; returns null on failure.
+ */
+export const getNextAutoSettleTimestamp = () => {
+    try {
+        const now = new Date();
+        const today = NepaliDate.fromAD(now);
+        const year = today.getYear();
+        const month = today.getMonth();
+        let daysInMonth = 1;
+        const probe = new NepaliDate(year, month, 1);
+        while (true) {
+            probe.setDate(daysInMonth + 1);
+            if (probe.getYear() === year && probe.getMonth() === month) {
+                daysInMonth++;
+            } else {
+                break;
+            }
+        }
+        const daysRemaining = daysInMonth - today.getDate() + 1;
+        const target = new Date(now);
+        target.setDate(target.getDate() + daysRemaining);
+        target.setHours(0, 30, 0, 0);
+        return target.getTime();
+    } catch {
+        return null;
+    }
 };

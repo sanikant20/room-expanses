@@ -37,7 +37,7 @@ const ExpansesTab = () => {
         },
     ];
 
-    return <CustomTab tabs={tabs} />;
+    return <CustomTab tabs={tabs} storageKey="expensesActiveTab" />;
 };
 
 export default ExpansesTab;

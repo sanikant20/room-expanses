@@ -21,7 +21,7 @@ export const parseBsDate = (bsDate) => {
 const normalizeExpensePayload = (body) => {
   const { title, amount, category, group, paidBy, applicablePartners = [], excludedPartners = [], bsDate, description, notes } = body;
 
-  if (!title) throw new ApiError(400, "Expense title is required");
+  if (!title) throw new ApiError(400, "Item name is required");
   if (amount === undefined || Number(amount) <= 0) {
     throw new ApiError(400, "Amount must be greater than zero");
   }
@@ -187,6 +187,10 @@ export const updateExpense = asyncHandler(async (req, res) => {
   const existing = await Expense.findById(id);
   if (!existing) throw new ApiError(404, "Expense not found");
 
+  if (existing.settled) {
+    throw new ApiError(400, "Cannot edit a settled expense. Revert the settlement first.");
+  }
+
   const payload = normalizeExpensePayload(req.body);
 
   if (payload.applicablePartners.length === 0) {
@@ -224,8 +228,13 @@ export const deleteExpense = asyncHandler(async (req, res) => {
     }
   }
 
-  const expense = await Expense.findByIdAndDelete(id);
+  const expense = await Expense.findById(id);
   if (!expense) throw new ApiError(404, "Expense not found");
+  if (expense.settled) {
+    throw new ApiError(400, "Cannot delete a settled expense. Revert the settlement first.");
+  }
+
+  await Expense.findByIdAndDelete(id);
 
   return res.status(200).json({
     success: true,

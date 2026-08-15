@@ -4,7 +4,7 @@ const Dashboard = lazy(() => import('../pages/protected/dashboard/Dashboard'));
 const Expenses = lazy(() => import('../pages/protected/expenses/ExpansesTab'));
 const Partners = lazy(() => import('../pages/protected/partners/PartnerTab'));
 const Reports = lazy(() => import('../pages/protected/reports/ReportTabs'));
-const Settlement = lazy(() => import('../pages/protected/settlement/Settlement'));
+const Settlement = lazy(() => import('../pages/protected/settlement/SettlementTabs'));
 const ChangePassword = lazy(() => import('../pages/protected/setting/ChangePassword'));
 const SettingTab = lazy(() => import('../pages/protected/setting/SettingTab'));
 const Profile = lazy(() => import('../pages/protected/setting/Profile'));

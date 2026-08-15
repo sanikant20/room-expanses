@@ -29,8 +29,11 @@ export const useGetSettlementCalculations = ({ bsYear, bsMonth, category, group,
 
 export const useSettleSettlement = () => useMutation({
     mutationKey: ["settleSettlement"],
-    mutationFn: async ({ bsYear, bsMonth, category, group }) => {
-        const response = await AxiosConfig.post(`${endpoint}/settle`, { bsYear, bsMonth, category, group });
+    mutationFn: async ({ bsYear, bsMonth, category, group, fromDate, toDate }) => {
+        const body = { bsYear, bsMonth, category, group };
+        if (fromDate) body.fromDate = fromDate;
+        if (toDate) body.toDate = toDate;
+        const response = await AxiosConfig.post(`${endpoint}/settle`, body);
         return response?.data;
     },
 });

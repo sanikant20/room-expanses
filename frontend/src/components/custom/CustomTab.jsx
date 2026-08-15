@@ -20,10 +20,22 @@ CustomTabPanel.propTypes = {
     index: PropTypes.number.isRequired,
 };
 
-const CustomTab = ({ tabs, initialValue = 0, sx = {}, stickyOffset = 0, value: controlledValue, onChange }) => {
+const getStoredValue = (storageKey, fallback) => {
+    if (!storageKey) return fallback;
+    try {
+        const raw = window.localStorage.getItem(storageKey);
+        if (raw === null) return fallback;
+        const parsed = parseInt(raw, 10);
+        return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
+    } catch {
+        return fallback;
+    }
+};
+
+const CustomTab = ({ tabs, initialValue = 0, sx = {}, stickyOffset = 0, value: controlledValue, onChange, storageKey }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const [internalValue, setInternalValue] = useState(initialValue);
+    const [internalValue, setInternalValue] = useState(() => getStoredValue(storageKey, initialValue));
 
     const value = controlledValue !== undefined ? controlledValue : internalValue;
     const handleChange = (event, newValue) => {
@@ -31,14 +43,21 @@ const CustomTab = ({ tabs, initialValue = 0, sx = {}, stickyOffset = 0, value: c
             onChange?.(newValue);
         } else {
             setInternalValue(newValue);
+            if (storageKey) {
+                try {
+                    window.localStorage.setItem(storageKey, String(newValue));
+                } catch {
+                    /* ignore storage errors */
+                }
+            }
         }
     };
 
     useEffect(() => {
-        if (controlledValue === undefined) {
+        if (controlledValue === undefined && !storageKey) {
             setInternalValue(initialValue);
         }
-    }, [initialValue, controlledValue]);
+    }, [initialValue, controlledValue, storageKey]);
 
     return (
         <Box sx={{ width: '100%', ...sx }}>
@@ -140,6 +159,7 @@ CustomTab.propTypes = {
     initialValue: PropTypes.number,
     value: PropTypes.number,
     onChange: PropTypes.func,
+    storageKey: PropTypes.string,
     sx: PropTypes.object,
     stickyOffset: PropTypes.number,
 };

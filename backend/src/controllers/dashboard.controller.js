@@ -1,5 +1,6 @@
 import { Expense } from "../models/expense.model.js";
 import { Partner } from "../models/partner.model.js";
+import { Settlement } from "../models/settlement.model.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import {
@@ -40,6 +41,21 @@ export const getSummary = asyncHandler(async (req, res) => {
 
   const monthlyTrend = aggregateMonthlyTrend(trendExpenses);
 
+  const settlementRecord = await Settlement.findOne({
+    bsYear: year,
+    bsMonth: month,
+    category: null,
+    group: null,
+  }).populate("settledBy", "name email");
+
+  const settlementStatus = settlementRecord
+    ? {
+        status: settlementRecord.status,
+        settledBy: settlementRecord.settledBy,
+        settledAt: settlementRecord.settledAt,
+      }
+    : null;
+
   return res.status(200).json({
     success: true,
     message: "Dashboard summary fetched successfully",
@@ -55,5 +71,6 @@ export const getSummary = asyncHandler(async (req, res) => {
     highestSpender: findHighestSpender(partnerSummaries),
     lowestSpender: findLowestSpender(partnerSummaries),
     monthlyTrend,
+    settlementStatus,
   });
 });

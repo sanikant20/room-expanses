@@ -20,7 +20,7 @@ const SettingTab = () => {
     ];
 
     return (
-        <CustomTab tabs={tabs} />
+        <CustomTab tabs={tabs} storageKey="settingActiveTab" />
     )
 }
 

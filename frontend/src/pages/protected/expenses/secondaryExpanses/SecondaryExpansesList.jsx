@@ -14,9 +14,11 @@ import {
 } from '@mui/material';
 import {
     AddRounded,
+    CheckCircleRounded,
     DeleteRounded,
     EditRounded,
     GroupWorkRounded,
+    LockRounded,
     StarOutlineRounded,
 } from '@mui/icons-material';
 import CustomCard from '../../../../components/custom/CustomCard';
@@ -111,8 +113,17 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
     const columns = [
         {
             key: 'actions', label: 'Actions', fixed: 'left',
-            render: (row) => (
-                isOwnRow(row) ? (
+            render: (row) => {
+                if (row.settled) {
+                    return (
+                        <Tooltip title="Settled — revert the settlement to edit or delete">
+                            <IconButton size="small" disabled>
+                                <LockRounded fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    );
+                }
+                return isOwnRow(row) ? (
                     <Stack direction="row" spacing={0.5}>
                         <Tooltip title="Edit expense">
                             <IconButton size="small" onClick={() => modal.openEdit(row)}>
@@ -125,8 +136,8 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
                             </IconButton>
                         </Tooltip>
                     </Stack>
-                ) : null
-            ),
+                ) : null;
+            },
         },
         { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
         {
@@ -188,6 +199,24 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
                     />
                 );
             },
+        },
+        {
+            key: 'status', label: 'Status',
+            filterValue: (row) => (row.settled ? 'Settled' : 'Pending'),
+            render: (row) => (
+                row.settled
+                    ? (
+                        <Chip
+                            size="small"
+                            color="success"
+                            icon={<CheckCircleRounded />}
+                            label="Settled"
+                        />
+                    )
+                    : (
+                        <Chip size="small" variant="outlined" label="Pending" />
+                    )
+            ),
         },
     ];
 

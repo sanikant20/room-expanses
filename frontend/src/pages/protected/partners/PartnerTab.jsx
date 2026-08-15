@@ -19,7 +19,7 @@ const PartnerTab = ({ initialTab = 0 }) => {
     ];
 
     return (
-        <CustomTab tabs={tabs} initialValue={initialTab} />
+        <CustomTab tabs={tabs} initialValue={initialTab} storageKey="partnersActiveTab" />
     );
 };
 

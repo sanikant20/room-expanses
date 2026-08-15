@@ -9,6 +9,7 @@ import {
     Box,
     Button,
     Chip,
+    FormHelperText,
     Grid,
     InputLabel,
     MenuItem,
@@ -117,6 +118,14 @@ const SecondaryExpansesForm = ({
                     ? (groups.find((g) => g._id === values.group)?.partners || [])
                     : [];
                 const availablePartners = groupPartners.length ? groupPartners : activePartners;
+                const applicablePartnerDocs = (values.applicablePartners || [])
+                    .map((id) => availablePartners.find((p) => p._id === id))
+                    .filter(Boolean);
+                const paidByOptions = [...applicablePartnerDocs];
+                if (values.paidBy && !paidByOptions.some((p) => p._id === values.paidBy)) {
+                    const fallback = activePartners.find((p) => p._id === values.paidBy);
+                    if (fallback) paidByOptions.push(fallback);
+                }
 
                 return (
                     <Form
@@ -235,7 +244,7 @@ const SecondaryExpansesForm = ({
                                             helperText={touched.paidBy && errors.paidBy}
                                         >
                                             <MenuItem value="" disabled>Paid by…</MenuItem>
-                                            {activePartners.map((p) => (
+                                            {paidByOptions.map((p) => (
                                                 <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>
                                             ))}
                                         </TextField>
@@ -246,40 +255,35 @@ const SecondaryExpansesForm = ({
                             <Grid size={{ xs: 12 }}>
                                 <Stack spacing={1}>
                                     <InputLabel htmlFor="applicablePartners" required>Apply To</InputLabel>
-                                    <TextField
+                                    <Box
                                         id="applicablePartners"
-                                        name="applicablePartners"
-                                        select
-                                        slotProps={{
-                                            select: {
-                                                multiple: true,
-                                                renderValue: (selected) => (
-                                                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                                                        {selected.map((id) => {
-                                                            const partner = availablePartners.find((p) => p._id === id);
-                                                            return (
-                                                                <Chip key={id} size="small" label={partner?.name || id} />
-                                                            );
-                                                        })}
-                                                    </Stack>
-                                                ),
-                                                MenuProps: {
-                                                    PaperProps: {
-                                                        style: { maxHeight: 220, width: 280 },
-                                                    },
-                                                },
-                                            },
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: 0.5,
+                                            alignItems: 'center',
+                                            minHeight: 40,
+                                            px: 1.5,
+                                            py: 1,
+                                            borderRadius: 1,
+                                            border: '1px solid',
+                                            borderColor: errors.applicablePartners ? 'error.main' : 'divider',
+                                            bgcolor: 'action.hover',
                                         }}
-                                        value={values.applicablePartners}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        error={touched.applicablePartners && Boolean(errors.applicablePartners)}
-                                        helperText={touched.applicablePartners && errors.applicablePartners}
                                     >
-                                        {availablePartners.map((p) => (
-                                            <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>
-                                        ))}
-                                    </TextField>
+                                        {applicablePartnerDocs.length ? (
+                                            applicablePartnerDocs.map((p) => (
+                                                <Chip key={p._id} size="small" label={p.name} />
+                                            ))
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary">
+                                                No partners selected
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    {(touched.applicablePartners && errors.applicablePartners) && (
+                                        <FormHelperText error>{errors.applicablePartners}</FormHelperText>
+                                    )}
                                 </Stack>
                             </Grid>
                         </Grid>

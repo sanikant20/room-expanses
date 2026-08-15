@@ -1,15 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Avatar, Box, Chip, InputLabel, MenuItem, Stack, TableRow, TextField, Typography } from '@mui/material';
-import { CheckCircleRounded, CompareArrowsRounded } from '@mui/icons-material';
-import CustomCard from '../../../components/custom/CustomCard';
-import DataTable from '../../../components/table/DataTable';
-import { StyledTableCell } from '../../../components/table/StyledTableCell';
-import { useGetSettlement } from '../../../apis/settlementAPI/SettlementAPI';
-import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
-import { parseYearMonthString } from '../../../utils/nepaliDate';
-import { getNepaliMonthLabel } from '../../../constant/constant';
-import { convertToBSFormat } from '../../../utils/dateConverter';
-import { GroupSelector, SettlementMonthPicker } from './SettlementShared';
+import { Avatar, Box, InputLabel, MenuItem, Stack, TableRow, TextField, Typography } from '@mui/material';
+import { CompareArrowsRounded } from '@mui/icons-material';
+import CustomCard from '../../../../components/custom/CustomCard';
+import DataTable from '../../../../components/table/DataTable';
+import { StyledTableCell } from '../../../../components/table/StyledTableCell';
+import { useGetSettlement } from '../../../../apis/settlementAPI/SettlementAPI';
+import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
+import { parseYearMonthString } from '../../../../utils/nepaliDate';
+import { getNepaliMonthLabel } from '../../../../constant/constant';
+import { GroupSelector, SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
 
 const PartnerCell = ({ partner }) => (
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -19,15 +18,16 @@ const PartnerCell = ({ partner }) => (
 );
 
 const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
-    const [category, setCategory] = useState('');
+    const [category, setCategory] = useState('all');
 
     const monthObj = parseYearMonthString(selectedMonth);
 
-    const groupFilter = group === 'all' ? undefined : group;
+    const categoryFilter = category === 'all' ? undefined : category;
+    const groupFilter = category === 'secondary' && group !== 'all' ? group : undefined;
 
     const { data, isLoading } = useGetSettlement({
         ...monthObj,
-        category: category || undefined,
+        category: categoryFilter,
         ...(groupFilter ? { group: groupFilter } : {}),
     });
 
@@ -58,16 +58,8 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
             icon={<CompareArrowsRounded />}
             title="Settlement Transactions"
             subtitle={isSettled ? `Who pays whom for ${monthLabel || 'this month'} · ${categoryLabel}.` : `Not settled yet for ${monthLabel || 'this month'} · ${categoryLabel}.`}
-            extra={
-                <Stack direction="column" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
-                    {isSettled && <Chip icon={<CheckCircleRounded />} label="Settled" color="success" size="small" />}
-                    <Typography variant="caption" color="text.secondary">
-                        Settled by {settlement?.settledBy?.name || '—'} on {settlement?.settledAt
-                            ? `${convertToBSFormat(settlement.settledAt)}, ${new Date(settlement.settledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
-                            : '—'}
-                    </Typography>
-                </Stack>
-            }>
+            extra={<SettlementStatus settlement={settlement} />}
+        >
             {isSettled ? (
                 <>
                     <DataTable
@@ -76,18 +68,23 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
                         loading={isLoading}
                         download={{ enabled: true, filename: 'Settlement Transactions', excludeColumns: ['sn'] }}
                         extra={
-                            <Stack direction="row" spacing={1} alignItems="flex-end" sx={{ flexWrap: 'wrap' }}>
+                            <Stack
+                                direction={{ xs: 'column', md: 'row' }}
+                                spacing={1}
+                                alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                                sx={{ flexWrap: 'wrap', width: '100%' }}
+                            >
                                 <SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />
-                                <Stack spacing={0.25} alignItems="center">
+                                <Stack spacing={0.25} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
                                     <InputLabel>Category</InputLabel>
                                     <TextField
                                         select
                                         size="small"
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value)}
-                                        sx={{ minWidth: 140 }}
+                                        sx={{ minWidth: { xs: 0, md: 140 }, width: { xs: '100%', md: 'auto' } }}
                                     >
-                                        <MenuItem value="">All</MenuItem>
+                                        <MenuItem value="all">All</MenuItem>
                                         <MenuItem value="primary">Primary</MenuItem>
                                         <MenuItem value="secondary">Secondary</MenuItem>
                                     </TextField>

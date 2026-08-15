@@ -4,7 +4,7 @@ const expenseSchema = new Schema(
   {
     title: {
       type: String,
-      required: [true, "Title is required"],
+      required: [true, "Item name is required"],
       trim: true,
     },
     amount: {
@@ -60,11 +60,25 @@ const expenseSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    settled: {
+      type: Boolean,
+      default: false,
+    },
+    settlementId: {
+      type: Schema.Types.ObjectId,
+      ref: "Settlement",
+      default: null,
+    },
+    settledAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
 expenseSchema.index({ bsYear: 1, bsMonth: 1 });
 expenseSchema.index({ paidBy: 1 });
+expenseSchema.index({ settled: 1 });
 
 export const Expense = mongoose.model("Expense", expenseSchema);

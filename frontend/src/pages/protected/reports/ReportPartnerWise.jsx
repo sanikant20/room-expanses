@@ -44,7 +44,7 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
             extra={
                 selectedPartner ? (
                     <StatBadges items={[
-                        { label: `Total (${summary.count || 0} records)`, value: formatToNepaliCurrency(summary.total || 0), color: theme.palette.primary.main },
+                        { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },
                         { label: 'Primary', value: formatToNepaliCurrency(summary.primaryTotal || 0), color: theme.palette.success.main },
                         { label: 'Secondary', value: formatToNepaliCurrency(summary.secondaryTotal || 0), color: theme.palette.warning.main },
                     ]} />
@@ -56,8 +56,13 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
                 isLoading={partnerLoading}
                 filename="Partner Expense Report"
                 extra={
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
-                        <Stack spacing={0.25} alignItems="center">
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={1}
+                        alignItems={{ xs: 'stretch', md: 'flex-end' }}
+                        sx={{ flexWrap: 'wrap', width: '100%' }}
+                    >
+                        <Stack spacing={0.25} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
                             <InputLabel>Partner</InputLabel>
                             <Autocomplete
                                 size="small"
@@ -67,7 +72,7 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
                                 value={selectedPartner}
                                 onChange={(e, option) => setSelectedPartner(option)}
                                 renderInput={(params) => <TextField {...params} placeholder="Select partner" />}
-                                sx={{ minWidth: 220 }}
+                                sx={{ minWidth: { xs: 0, md: 220 }, width: { xs: '100%', md: 'auto' } }}
                             />
                         </Stack>
                         <ReportMonthPicker value={selectedMonth} onChange={onMonthChange} />

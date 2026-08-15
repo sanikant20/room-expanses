@@ -43,6 +43,14 @@ const settlementSchema = new Schema(
       ref: "Group",
       default: null,
     },
+    fromDate: {
+      type: String,
+      default: null,
+    },
+    toDate: {
+      type: String,
+      default: null,
+    },
     status: {
       type: String,
       enum: ["pending", "settled"],

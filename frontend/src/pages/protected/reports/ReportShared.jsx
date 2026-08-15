@@ -14,6 +14,7 @@ export const StatBadge = ({ label, value, color }) => (
         backgroundColor: alpha(color, 0.1),
         border: `1px solid ${alpha(color, 0.3)}`,
         minWidth: 0,
+        flex: '1 1 0%',
     }}>
         <InputLabel sx={{ fontSize: '0.7rem', mb: 0 }}>{label}</InputLabel>
         <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color }}>
@@ -23,7 +24,7 @@ export const StatBadge = ({ label, value, color }) => (
 );
 
 export const StatBadges = ({ items = [] }) => (
-    <Stack spacing={1} direction="row" alignItems="center" sx={{ flexWrap: 'wrap' }}>
+    <Stack direction="row" alignItems="center" sx={{ flexWrap: 'wrap', gap: 1, flex: '1 1 0%', minWidth: 0 }}>
         {items.map((item, index) => (
             <StatBadge key={index} {...item} />
         ))}
@@ -36,7 +37,11 @@ export const ReportMonthPicker = ({ value, onChange }) => (
         onChange={onChange}
         size="small"
         fullWidth={false}
-        sx={{ minWidth: 210 }}
+        sx={{
+            width: { xs: '100%', md: 'auto' },
+            minWidth: { xs: 0, md: 210 },
+            '& .MuiTextField-root': { width: '100%' },
+        }}
     />
 );
 
@@ -47,7 +52,7 @@ export const ExpenseTable = ({ data, isLoading, filename, extra }) => {
         { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
         { key: 'bsDate', label: 'BS Date' },
         {
-            key: 'title', label: 'Title',
+            key: 'title', label: 'Items',
             render: (row) => <Typography variant="body2" fontWeight={600}>{row.title}</Typography>,
         },
         {

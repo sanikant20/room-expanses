@@ -7,11 +7,16 @@ import mongoose from "mongoose";
 import {
   computeSettlement,
   computeSummary,
-  computeTransactions,
   expenseShares,
   fromPaise,
   round2,
 } from "../services/calculation.service.js";
+import {
+  revertAllCascade,
+  revertScope,
+  settleAllCascade,
+  settleScope,
+} from "../services/settlement.service.js";
 
 const populateOptions = () => [
   { path: "paidBy", select: "name image" },
@@ -44,6 +49,26 @@ const resolveGroup = (value) =>
 
 const fetchSettlementRecord = (bsYear, bsMonth, category = null, group = null) =>
   Settlement.findOne({ bsYear, bsMonth, category, group }).populate(settlementPopulates());
+
+const BS_DATE_RE = /^\d{4}\/\d{2}\/\d{2}$/;
+
+const validateDateRange = (fromDate, toDate, year, month) => {
+  if (!fromDate && !toDate) return { fromDate: null, toDate: null };
+  if (!fromDate || !toDate) {
+    throw new ApiError(400, "Both fromDate and toDate are required for a date-wise settlement");
+  }
+  if (!BS_DATE_RE.test(fromDate) || !BS_DATE_RE.test(toDate)) {
+    throw new ApiError(400, "Invalid BS date format. Use YYYY/MM/DD");
+  }
+  const monthPrefix = `${year}/${String(month).padStart(2, "0")}/`;
+  if (!fromDate.startsWith(monthPrefix) || !toDate.startsWith(monthPrefix)) {
+    throw new ApiError(400, "Settlement date range must be within the selected month");
+  }
+  if (fromDate > toDate) {
+    throw new ApiError(400, "From date cannot be after to date");
+  }
+  return { fromDate, toDate };
+};
 
 export const getSettlement = asyncHandler(async (req, res) => {
   const filter = buildFilter(req);
@@ -117,37 +142,48 @@ export const settleMonth = asyncHandler(async (req, res) => {
 
   const year = Number(bsYear);
   const month = Number(bsMonth);
+  const { fromDate, toDate } = validateDateRange(req.body.fromDate, req.body.toDate, year, month);
 
-  const existing = await Settlement.findOne({ bsYear: year, bsMonth: month, category, group });
-  if (existing && existing.status === "settled") {
-    throw new ApiError(409, "Settlement for this month is already settled");
-  }
-
-  const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
-  const expenses = await Expense.find({
-    bsYear: year,
-    bsMonth: month,
-    ...(category ? { category } : {}),
-    ...(group ? { group } : {}),
-  });
-
-  const settlement = computeSettlement(expenses, activePartners);
-  const transactions = computeTransactions(settlement.rows);
-
-  const record = await Settlement.findOneAndUpdate(
-    { bsYear: year, bsMonth: month, category, group },
-    {
+  if (category === null) {
+    const existingAll = await Settlement.findOne({
       bsYear: year,
       bsMonth: month,
-      category,
-      group,
-      status: "settled",
-      settledBy: req.user?._id,
-      settledAt: new Date(),
-      transactions,
-    },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
-  ).populate(settlementPopulates());
+      category: null,
+      group: null,
+    });
+    if (existingAll && existingAll.status === "settled") {
+      throw new ApiError(409, "Settlement for this month is already settled");
+    }
+
+    const results = await settleAllCascade({ year, month, fromDate, toDate, settledBy: req.user?._id });
+
+    const scopes = results.map(({ scope, group: scopeGroup, alreadySettled, record }) => ({
+      scope,
+      group: scopeGroup || null,
+      alreadySettled,
+      settlement: record,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: "Settlement marked as settled successfully (all scopes)",
+      scopes,
+      settlement: results[0]?.record || null,
+    });
+  }
+
+  const { record, alreadySettled } = await settleScope({
+    year,
+    month,
+    category,
+    group,
+    fromDate,
+    toDate,
+    settledBy: req.user?._id,
+  });
+  if (alreadySettled) {
+    throw new ApiError(409, "Settlement for this month is already settled");
+  }
 
   return res.status(200).json({
     success: true,
@@ -171,8 +207,21 @@ export const revertSettlement = asyncHandler(async (req, res) => {
   const year = Number(bsYear);
   const month = Number(bsMonth);
 
-  const record = await Settlement.findOneAndDelete({ bsYear: year, bsMonth: month, category, group });
-  if (!record) {
+  if (category === null) {
+    const results = await revertAllCascade({ year, month });
+    const revertedAny = results.some(({ reverted }) => reverted);
+    if (!revertedAny) {
+      throw new ApiError(404, "No settled record found for this month");
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Settlement reverted successfully (all scopes)",
+      settlement: null,
+    });
+  }
+
+  const { reverted } = await revertScope({ year, month, category, group });
+  if (!reverted) {
     throw new ApiError(404, "No settled record found for this month");
   }
 

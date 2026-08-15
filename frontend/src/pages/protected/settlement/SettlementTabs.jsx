@@ -3,9 +3,9 @@ import { BalanceRounded, CalculateRounded, CompareArrowsRounded, StarOutlineRoun
 import CustomTab from '../../../components/custom/CustomTab';
 import { formatYearMonthString, getCurrentBsYearMonth } from '../../../utils/nepaliDate';
 import { isPartnerAccount } from '../../../helper/getAuthData';
-import SettlementSummary from './SettlementSummary';
-import SettlementCalculation from './SettlementCalculation';
-import SettlementTransactions from './SettlementTransactions';
+import SettlementSummary from './summary/SettlementSummary';
+import SettlementCalculation from './calculation/SettlementCalculation';
+import SettlementTransactions from './transactions/SettlementTransactions';
 
 const SettlementTabs = () => {
     const isPartner = isPartnerAccount();
@@ -17,7 +17,7 @@ const SettlementTabs = () => {
 
     const tabs = [
         {
-            label: 'Settlement Summary',
+            label: 'All Summary',
             icon: <BalanceRounded />,
             content: (
                 <SettlementSummary
@@ -89,7 +89,7 @@ const SettlementTabs = () => {
         },
     ];
 
-    return <CustomTab tabs={tabs} />;
+    return <CustomTab tabs={tabs} storageKey="settlementActiveTab" />;
 };
 
 export default SettlementTabs;
