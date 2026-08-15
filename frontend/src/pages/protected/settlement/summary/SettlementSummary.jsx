@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Button,
-    FormControl,
-    FormControlLabel,
-    Radio,
-    RadioGroup,
     Stack,
     Typography,
 } from '@mui/material';
@@ -15,23 +11,17 @@ import { toast } from 'react-toastify';
 import CustomCard from '../../../../components/custom/CustomCard';
 import CustomDialog from '../../../../components/custom/CustomDialog';
 import AutoSettleBanner from '../../../../components/custom/AutoSettleBanner';
-import { NepaliDatePickerComponent } from '../../../../components/date/NepaliDatePicker';
 import { useGetSettlement, useSettleSettlement, useUnsettleSettlement } from '../../../../apis/settlementAPI/SettlementAPI';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../../constant/constant';
 import { SettlementMonthPicker, SettlementSummaryCards, SettlementTable, GroupSelector, SettlementStatus } from '../SettlementShared';
 import { useDialogState } from '../../../../hooks/useUIState';
 
-const toBsString = (value) => (value && typeof value === 'object' ? value.bsDate : value) || '';
-
 const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, allowSettle, selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
     const dialog = useDialogState(); // dialogueType: 'settle' | 'revert'
     const queryClient = useQueryClient();
     const settleMutation = useSettleSettlement();
     const revertMutation = useUnsettleSettlement();
-    const [settleMode, setSettleMode] = useState('month'); // 'month' | 'range'
-    const [rangeFrom, setRangeFrom] = useState('');
-    const [rangeTo, setRangeTo] = useState('');
 
     const monthObj = parseYearMonthString(selectedMonth);
 
@@ -45,6 +35,11 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
 
     const settlement = data?.settlement;
     const isSettled = settlement?.status === 'settled';
+    const isAutoSettled = isSettled && (
+        (settlement?.settleActions?.length
+            ? settlement.settleActions.every((action) => action.source === 'auto')
+            : !settlement?.settledBy)
+    );
     const settleLocked = category === 'secondary' && !groupFilter;
 
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
@@ -58,26 +53,11 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
         : monthLabel || 'this month';
 
     const openSettleDialog = () => {
-        setSettleMode('month');
-        setRangeFrom('');
-        setRangeTo('');
         dialog.show(null, 'settle');
     };
 
     const handleSettle = () => {
         const payload = { ...monthObj, category, ...(groupFilter ? { group: groupFilter } : {}) };
-        if (settleMode === 'range') {
-            if (!rangeFrom || !rangeTo) {
-                toast.error('Please select both from and to dates');
-                return;
-            }
-            if (String(rangeFrom) > String(rangeTo)) {
-                toast.error('From date cannot be after to date');
-                return;
-            }
-            payload.fromDate = rangeFrom;
-            payload.toDate = rangeTo;
-        }
         settleMutation.mutate(payload, {
             onSuccess: (res) => {
                 toast.success(res?.message || 'Settlement marked as settled');
@@ -117,7 +97,8 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
                 color="error"
                 startIcon={<UndoRounded />}
                 onClick={() => dialog.show(null, 'revert')}
-                disabled={revertMutation.isPending}
+                disabled={revertMutation.isPending || isAutoSettled}
+                title={isAutoSettled ? 'Auto-settled settlements cannot be reverted' : undefined}
             >
                 {revertMutation.isPending ? 'Reverting...' : 'Revert'}
             </Button>
@@ -144,33 +125,9 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
     const settleContent = (
         <Stack spacing={2}>
             <Typography variant="body2" color="text.secondary">
-                This records who-pays-whom transactions for the month and marks the covered expenses as settled.
+                This records who-pays-whom transactions for the whole month and marks the month's expenses as settled.
                 {!category && ' Settling from All Summary also settles Primary and Secondary (per group) automatically.'}
             </Typography>
-            <FormControl>
-                <RadioGroup
-                    row
-                    value={settleMode}
-                    onChange={(e) => setSettleMode(e.target.value)}
-                >
-                    <FormControlLabel value="month" control={<Radio size="small" />} label="Whole month" />
-                    <FormControlLabel value="range" control={<Radio size="small" />} label="Custom date range" />
-                </RadioGroup>
-            </FormControl>
-            {settleMode === 'range' && (
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                    <NepaliDatePickerComponent
-                        label="From Date"
-                        value={rangeFrom}
-                        onChange={(v) => setRangeFrom(toBsString(v))}
-                    />
-                    <NepaliDatePickerComponent
-                        label="To Date"
-                        value={rangeTo}
-                        onChange={(v) => setRangeTo(toBsString(v))}
-                    />
-                </Stack>
-            )}
         </Stack>
     );
 

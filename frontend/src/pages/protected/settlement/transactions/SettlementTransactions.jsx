@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Avatar, Box, InputLabel, MenuItem, Stack, TableRow, TextField, Typography } from '@mui/material';
 import { CompareArrowsRounded } from '@mui/icons-material';
 import CustomCard from '../../../../components/custom/CustomCard';
@@ -18,7 +18,12 @@ const PartnerCell = ({ partner }) => (
 );
 
 const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
-    const [category, setCategory] = useState('all');
+    const [category, setCategory] = useState(group && group !== 'all' ? 'secondary' : 'all');
+    const [source, setSource] = useState('all');
+
+    useEffect(() => {
+        if (group && group !== 'all') setCategory('secondary');
+    }, [group]);
 
     const monthObj = parseYearMonthString(selectedMonth);
 
@@ -33,13 +38,33 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
 
     const settlement = data?.settlement;
     const isSettled = settlement?.status === 'settled';
-    const transactions = isSettled ? (settlement?.transactions || []) : [];
+    const wholeMonthTransactions = isSettled ? (settlement?.transactions || []) : [];
+
+    const transactions = useMemo(() => {
+        if (source === 'all') return wholeMonthTransactions;
+        const actions = (settlement?.settleActions || []).filter((action) => action.source === source);
+        const map = new Map();
+        for (const action of actions) {
+            for (const tx of action.transactions || []) {
+                const key = `${tx.from?._id || tx.from}->${tx.to?._id || tx.to}`;
+                const current = map.get(key);
+                if (current) {
+                    current.amount = Math.round((current.amount + (Number(tx.amount) || 0)) * 100) / 100;
+                } else {
+                    map.set(key, { ...tx });
+                }
+            }
+        }
+        return [...map.values()];
+    }, [source, wholeMonthTransactions, settlement?.settleActions]);
 
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
 
     const categoryLabel = category === 'primary' ? 'Primary' : category === 'secondary' ? 'Secondary' : 'Total';
+    const sourceLabel = source === 'manual' ? 'Manual' : source === 'auto' ? 'Auto' : monthLabel || 'Whole Month';
+    const sourceSuffix = source === 'all' ? categoryLabel : `${categoryLabel} · ${sourceLabel}`;
 
     const columns = useMemo(() => [
         { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
@@ -57,7 +82,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
         <CustomCard
             icon={<CompareArrowsRounded />}
             title="Settlement Transactions"
-            subtitle={isSettled ? `Who pays whom for ${monthLabel || 'this month'} · ${categoryLabel}.` : `Not settled yet for ${monthLabel || 'this month'} · ${categoryLabel}.`}
+            subtitle={isSettled ? `Who pays whom for ${monthLabel || 'this month'} · ${sourceSuffix}.` : `Not settled yet for ${monthLabel || 'this month'} · ${categoryLabel}.`}
             extra={<SettlementStatus settlement={settlement} />}
         >
             {isSettled ? (
@@ -92,6 +117,20 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
                                 {category === 'secondary' && (
                                     <GroupSelector value={group} onChange={onGroupChange} label="Group" allLabel="All Groups" />
                                 )}
+                                <Stack spacing={0.25} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
+                                    <InputLabel>Source</InputLabel>
+                                    <TextField
+                                        select
+                                        size="small"
+                                        value={source}
+                                        onChange={(e) => setSource(e.target.value)}
+                                        sx={{ minWidth: { xs: 0, md: 150 }, width: { xs: '100%', md: 'auto' } }}
+                                    >
+                                        <MenuItem value="all">{monthLabel || 'Whole Month'}</MenuItem>
+                                        <MenuItem value="manual">Manual</MenuItem>
+                                        <MenuItem value="auto">Auto</MenuItem>
+                                    </TextField>
+                                </Stack>
                             </Stack>
                         }
                         footer={transactions.length > 0 ? (

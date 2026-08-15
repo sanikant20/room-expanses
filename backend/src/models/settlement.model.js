@@ -21,6 +21,41 @@ const transactionSchema = new Schema(
   { _id: false }
 );
 
+const settleActionSchema = new Schema(
+  {
+    source: {
+      type: String,
+      enum: ["manual", "auto"],
+      required: true,
+    },
+    settledBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    settledAt: {
+      type: Date,
+    },
+    fromDate: {
+      type: String,
+      default: null,
+    },
+    toDate: {
+      type: String,
+      default: null,
+    },
+    expenseCount: {
+      type: Number,
+      default: 0,
+    },
+    transactions: {
+      type: [transactionSchema],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 const settlementSchema = new Schema(
   {
     bsYear: {
@@ -65,6 +100,10 @@ const settlementSchema = new Schema(
     },
     transactions: {
       type: [transactionSchema],
+      default: [],
+    },
+    settleActions: {
+      type: [settleActionSchema],
       default: [],
     },
   },
