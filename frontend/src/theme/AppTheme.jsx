@@ -8,6 +8,7 @@ import { surfacesCustomizations } from './customizations/Surfaces';
 
 import { datePickersCustomizations } from './customizations/DatePicker';
 import { useThemeMode } from '../context/useThemeMode';
+import { getDesignTokens } from './ThemePrimitives';
 
 export default function AppTheme(props) {
     const { children, disableCustomTheme, themeComponents } = props;
