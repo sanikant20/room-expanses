@@ -149,7 +149,7 @@ export default function OptionsMenu() {
         name: `${authData?.FullName}`,
         email: authData?.Email || authData?.Phone || '',
         role: authData?.accountType === 'partner' ? 'Partner' : t('user.admin'),
-        avatar: '',
+        avatar: authData?.image || '',
         username: `${authData?.ComID}`
     };
 

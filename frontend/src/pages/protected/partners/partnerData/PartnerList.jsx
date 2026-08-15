@@ -11,7 +11,7 @@ import {
     VisibilityRounded,
 } from '@mui/icons-material';
 import DataTable from '../../../../components/table/DataTable';
-import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useDialogState, useModalState, usePreviewState } from '../../../../hooks/useUIState';
 import CustomModal from '../../../../components/custom/CustomModal';
 import CustomDialog from '../../../../components/custom/CustomDialog';
@@ -85,16 +85,13 @@ const Partners = () => {
         {
             key: 'image', label: 'Image',
             render: (row) => (
-                <Box
-                    component="img"
+                <Avatar
                     src={row.image || '/noAvatar.svg'}
                     alt={row.name}
                     onError={(e) => { e.target.src = '/noAvatar.svg'; }}
                     sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        objectFit: 'cover',
+                        width: 30,
+                        height: 30,
                         cursor: 'pointer',
                     }}
                     onClick={() => preview.show(row.image || '/noAvatar.svg', row.name)}

@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
+    Avatar,
+    AvatarGroup,
     Button,
     Chip,
     IconButton,
@@ -14,7 +16,6 @@ import {
     CheckCircleRounded,
     DeleteRounded,
     EditRounded,
-    GroupRounded,
     LockRounded,
     StarRounded,
 } from '@mui/icons-material';
@@ -143,14 +144,23 @@ const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
         },
         {
             key: 'applicablePartners', label: 'Apply To',
-            render: () => (
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                    <Chip
-                        size="small"
-                        color="primary"
-                        icon={<GroupRounded />}
-                        label={`All Active (${activePartners.length})`}
-                    />
+            render: (row) => (
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <AvatarGroup max={5} spacing="small">
+                        {(row.applicablePartners || []).map((partner) => (
+                            <Avatar
+                                key={partner?._id}
+                                src={partner?.image || '/noAvatar.svg'}
+                                alt={partner?.name}
+                                sx={{ width: 28, height: 28 }}
+                            >
+                                {partner?.name?.charAt(0)}
+                            </Avatar>
+                        ))}
+                    </AvatarGroup>
+                    <Typography variant="caption" color="text.secondary">
+                        {(row.applicablePartners || []).length} partner{(row.applicablePartners || []).length !== 1 ? 's' : ''}
+                    </Typography>
                 </Stack>
             ),
         },

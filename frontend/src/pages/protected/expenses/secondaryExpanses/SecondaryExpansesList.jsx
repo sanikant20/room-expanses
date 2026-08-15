@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
+    Avatar,
+    AvatarGroup,
     Button,
     Chip,
     IconButton,
@@ -190,14 +192,29 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
         {
             key: 'applicablePartners', label: 'Apply To',
             render: (row) => {
+                const partners = (row.applicablePartners || []).map((p) => p?._id || p);
                 const names = partnerNames(row);
                 return (
-                    <Chip
-                        size="small"
-                        icon={<GroupWorkRounded />}
-                        label={names.length ? names.join(', ') : '—'}
-                        variant="outlined"
-                    />
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <AvatarGroup max={5} spacing="small">
+                            {partners.map((id) => {
+                                const partner = activePartners.find((x) => String(x._id) === String(id));
+                                return (
+                                    <Avatar
+                                        key={String(id)}
+                                        src={partner?.image || '/noAvatar.svg'}
+                                        alt={partner?.name}
+                                        sx={{ width: 28, height: 28 }}
+                                    >
+                                        {partner?.name?.charAt(0)}
+                                    </Avatar>
+                                );
+                            })}
+                        </AvatarGroup>
+                        <Typography variant="caption" color="text.secondary">
+                            {names.length ? `${names.length} partner${names.length !== 1 ? 's' : ''}` : '—'}
+                        </Typography>
+                    </Stack>
                 );
             },
         },
