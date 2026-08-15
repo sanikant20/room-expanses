@@ -8,7 +8,7 @@ import { errorHandler } from "./utils/errorHandler.js";
 const app = express();
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: "15mb" }));
+app.use(express.json());
 app.use(cookieParser());
 
 baseRoutes(app);
