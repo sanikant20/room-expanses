@@ -5,7 +5,7 @@ import * as yup from 'yup'
 import { Grid, TextField, Button, Box, InputLabel, Stack, IconButton, InputAdornment } from '@mui/material'
 import { ArrowBackTwoTone, KeyRounded, KeyTwoTone, Visibility, VisibilityOff, VisibilityOffTwoTone, VisibilityTwoTone } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useChangePassword } from '../../../apis/authAPI/AuthAPI'
+import { useChangePassword } from '../../../apis/authApi/AuthAPI'
 import { toast } from 'react-toastify'
 import { useTranslation } from 'react-i18next'
 
