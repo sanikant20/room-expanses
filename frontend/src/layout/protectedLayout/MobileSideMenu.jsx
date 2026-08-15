@@ -30,6 +30,11 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
         toggleDrawer(false)();
     };
 
+    const handleLogoClick = () => {
+        navigate('/dashboard');
+        toggleDrawer(false)();
+    };
+
     return (
         <Drawer
             anchor="left"
@@ -84,12 +89,14 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
                             component="img"
                             src="/logo.png"
                             alt="logo"
+                            onClick={handleLogoClick}
                             sx={{
                                 width: 48,
                                 height: 48,
                                 objectFit: 'contain',
                                 borderRadius: '10%',
                                 backgroundColor: theme.palette.common.white,
+                                cursor: 'pointer',
                             }}
                         />
                         <Stack sx={{ minWidth: 0 }}>

@@ -7,6 +7,7 @@ import AppBar from '@mui/material/AppBar';
 import Stack from '@mui/material/Stack';
 import MuiToolbar from '@mui/material/Toolbar';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import OptionsMenu from './Optionsmenu';
 import dayjs from 'dayjs';
 import { useDateContext } from '../../context/useDateContext';
@@ -86,6 +87,7 @@ export default function MobileHeader() {
     const [showFAB, setShowFAB] = useState(false);
     const { useNepaliDate, toggleDateMode } = useDateContext();
     const { mode, toggleThemeMode } = useThemeMode();
+    const navigate = useNavigate();
 
     const toggleDrawer = (newOpen) => () => {
         setOpen(newOpen);
@@ -161,12 +163,14 @@ export default function MobileHeader() {
                                 component="img"
                                 src="/logo.png"
                                 alt="logo"
+                                onClick={() => navigate('/dashboard')}
                                 sx={{
                                     width: 48,
                                     height: 48,
                                     objectFit: 'contain',
                                     borderRadius: '10%',
                                     backgroundColor: theme.palette.common.white,
+                                    cursor: 'pointer',
                                 }}
                             />
                         </Box>
