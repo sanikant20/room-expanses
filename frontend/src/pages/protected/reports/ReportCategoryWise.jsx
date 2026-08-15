@@ -38,6 +38,7 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
     return (
         <CustomCard
             icon={<CategoryRounded />}
+            headerInline={false}
             title="Category Report"
             subtitle={`Expenses by category for ${monthLabel || 'all months'}.`}
             extra={

@@ -24,6 +24,7 @@ const ReportMonthWise = ({ selectedMonth, onMonthChange }) => {
             icon={<AssessmentRounded />}
             title="Monthly Report"
             subtitle={`Monthly expense summary for ${monthLabel || 'all months'}.`}
+            headerInline={false}
             extra={
                 <StatBadges items={[
                     { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },

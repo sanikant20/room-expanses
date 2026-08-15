@@ -225,23 +225,29 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
             <CustomCard
                 icon={<StarOutlineRounded />}
                 title="Secondary Expenses"
-                subtitle="Select a group, then choose partners each expense applies to"
+                headerInline
                 extra={
-                    <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<AddRounded />}
-                        disabled={!selectedGroupDoc}
-                        onClick={() => {
-                            if (!selectedGroupDoc) {
-                                toast.error('Select a group before adding an expense');
-                                return;
-                            }
-                            modal.openAdd();
-                        }}
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'flex-end', sm: 'flex-start' } }}
                     >
-                        Add Expense
-                    </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AddRounded />}
+                            disabled={!selectedGroupDoc}
+                            onClick={() => {
+                                if (!selectedGroupDoc) {
+                                    toast.error('Select a group before adding an expense');
+                                    return;
+                                }
+                                modal.openAdd();
+                            }}
+                        >
+                            Secondary Exp
+                        </Button>
+                    </Stack>
                 }
             >
                 <DataTable

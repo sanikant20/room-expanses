@@ -39,6 +39,7 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
     return (
         <CustomCard
             icon={<PersonRounded />}
+            headerInline={false}
             title="Partner Report"
             subtitle={`Expenses paid by a partner for ${monthLabel || 'all months'}.`}
             extra={

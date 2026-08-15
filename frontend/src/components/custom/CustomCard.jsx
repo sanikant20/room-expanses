@@ -79,6 +79,7 @@ const CustomCard = ({
     extra,
     defaultExpanded = true,
     collapsible = false,
+    headerInline = false,
     onToggle,
     ...props
 }) => {
@@ -177,14 +178,14 @@ const CustomCard = ({
                 onClick={handleToggle}
                 sx={{
                     ...(collapsible && { cursor: 'pointer' }),
-                    flexWrap: 'wrap',
+                    flexWrap: headerInline ? 'nowrap' : 'wrap',
                     gap: 1,
                     '& .MuiCardHeader-content': {
-                        flex: '1 1 220px',
+                        flex: headerInline ? '1 1 0%' : '1 1 220px',
                         minWidth: 0,
                     },
                     '& .MuiCardHeader-action': {
-                        flex: '1 1 auto',
+                        flex: headerInline ? '0 0 auto' : '1 1 auto',
                         minWidth: 0,
                         m: 0,
                         display: 'flex',
@@ -219,6 +220,7 @@ CustomCard.propTypes = {
     extra: PropTypes.node,
     defaultExpanded: PropTypes.bool,
     collapsible: PropTypes.bool,
+    headerInline: PropTypes.bool,
     onToggle: PropTypes.func,
 };
 
@@ -228,6 +230,7 @@ CustomCard.defaultProps = {
     extra: null,
     defaultExpanded: true,
     collapsible: false,
+    headerInline: false,
 };
 
 export default CustomCard;

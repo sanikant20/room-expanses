@@ -177,16 +177,22 @@ const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
             <CustomCard
                 icon={<StarRounded />}
                 title="Primary Expenses"
-                subtitle={isPartner ? 'Applies only to you' : 'Applies to all active partners'}
+                headerInline
                 extra={
-                    <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<AddRounded />}
-                        onClick={modal.openAdd}
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'flex-end', sm: 'flex-start' } }}
                     >
-                        Add Expense
-                    </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AddRounded />}
+                            onClick={modal.openAdd}
+                        >
+                            Primary Exp
+                        </Button>
+                    </Stack>
                 }
             >
                 <DataTable

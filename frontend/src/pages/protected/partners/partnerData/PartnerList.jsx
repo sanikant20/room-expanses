@@ -148,6 +148,7 @@ const Partners = () => {
         <CustomCard
             icon={<GroupsRounded />}
             title="Room Partners"
+            headerInline
             extra={
                 !isPartner && (
                     <Button
@@ -156,7 +157,7 @@ const Partners = () => {
                         startIcon={<AddRounded />}
                         onClick={modal.openAdd}
                     >
-                        Add Partner
+                        Room Partners
                     </Button>
                 )
             }

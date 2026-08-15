@@ -320,7 +320,7 @@ const Dashboard = () => {
                             {isLoading ? (
                                 <Skeleton height={40} />
                             ) : highestSpender?.partner ? (
-                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Box>
                                         <Typography variant="body1" fontWeight={600}>{highestSpender.partner?.name}</Typography>
                                         <Typography variant="caption" color="text.secondary">Primary {formatToNepaliCurrency(highestSpender.primary)} • Secondary {formatToNepaliCurrency(highestSpender.secondary)}</Typography>
@@ -343,7 +343,7 @@ const Dashboard = () => {
                             {isLoading ? (
                                 <Skeleton height={40} />
                             ) : lowestSpender?.partner ? (
-                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Box>
                                         <Typography variant="body1" fontWeight={600}>{lowestSpender.partner?.name}</Typography>
                                         <Typography variant="caption" color="text.secondary">Primary {formatToNepaliCurrency(lowestSpender.primary)} • Secondary {formatToNepaliCurrency(lowestSpender.secondary)}</Typography>
