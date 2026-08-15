@@ -1,1 +1,0 @@
-export const getComID = () => import.meta.env.VITE_ComID

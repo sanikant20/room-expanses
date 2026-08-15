@@ -5,7 +5,6 @@ const endpoint = {
     auth: "auth",
     login: "login",
     partnerLogin: "partner-login",
-    register: "register",
     me: "me",
     changePassword: "change-password",
 }
@@ -22,14 +21,6 @@ export const usePartnerLogin = () => useMutation({
     mutationKey: ["partnerLogin"],
     mutationFn: async ({ values }) => {
         const response = await AxiosConfig.post(`${endpoint.auth}/${endpoint.partnerLogin}`, values);
-        return response?.data;
-    }
-});
-
-export const useRegister = () => useMutation({
-    mutationKey: ["register"],
-    mutationFn: async ({ values }) => {
-        const response = await AxiosConfig.post(`${endpoint.auth}/${endpoint.register}`, values);
         return response?.data;
     }
 });

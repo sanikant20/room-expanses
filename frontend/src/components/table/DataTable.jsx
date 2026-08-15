@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Table, TableBody, TableContainer, TableHead, TableRow, TableFooter,
     TextField, Pagination, Typography,
@@ -253,13 +253,17 @@ const DataTable = ({
         onSelectionChange(newSelected);
     };
 
-    // Reset selection when data changes significantly
+    const previousDataRef = useRef(data);
+
+    // Reset selection when the data array identity changes
     useEffect(() => {
-        if (selected.length > 0) {
+        const isNewData = previousDataRef.current !== data;
+        previousDataRef.current = data;
+        if (isNewData && selected.length > 0) {
             setSelected([]);
             onSelectionChange([]);
         }
-    }, [data]);
+    }, [data, selected.length, onSelectionChange]);
 
     const handleSort = (key) => {
         setSortConfig(prev => ({

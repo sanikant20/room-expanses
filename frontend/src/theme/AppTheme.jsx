@@ -7,7 +7,7 @@ import { navigationCustomizations } from './customizations/navigation';
 import { surfacesCustomizations } from './customizations/surfaces';
 import { getDesignTokens } from './themePrimitives';
 import { datePickersCustomizations } from './customizations/datePicker';
-import { useThemeMode } from '../context/ThemeModeContext';
+import { useThemeMode } from '../context/useThemeMode';
 
 export default function AppTheme(props) {
     const { children, disableCustomTheme, themeComponents } = props;
@@ -28,6 +28,7 @@ export default function AppTheme(props) {
     }, [mode]);
 
     const theme = React.useMemo(() => {
+        void themeVersion;
         return disableCustomTheme
             ? {}
             : createTheme({

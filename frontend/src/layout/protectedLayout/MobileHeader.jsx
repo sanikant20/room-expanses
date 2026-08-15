@@ -9,8 +9,8 @@ import MuiToolbar from '@mui/material/Toolbar';
 import { useTranslation } from 'react-i18next';
 import OptionsMenu from './Optionsmenu';
 import dayjs from 'dayjs';
-import { useDateContext } from '../../context/DateContext';
-import { useThemeMode } from '../../context/ThemeModeContext';
+import { useDateContext } from '../../context/useDateContext';
+import { useThemeMode } from '../../context/useThemeMode';
 import { dateFormatToToggledDate } from '../../utils/dateFormatToToggleDate';
 import MobileSideMenu from './MobileSideMenu';
 

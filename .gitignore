@@ -4,3 +4,12 @@ atlas-credentials.env
 .env.*
 *.env
 *.log
+
+# Test files stay local-only (record kept in TESTING.md)
+backend/tests/
+*.test.js
+*.spec.js
+
+# Test artifacts
+coverage/
+.vitest/

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Container, Button, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { ArrowBack, Home } from '@mui/icons-material';
 
 const PageNotFound = () => {

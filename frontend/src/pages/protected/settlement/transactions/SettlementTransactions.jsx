@@ -38,9 +38,9 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
 
     const settlement = data?.settlement;
     const isSettled = settlement?.status === 'settled';
-    const wholeMonthTransactions = isSettled ? (settlement?.transactions || []) : [];
 
     const transactions = useMemo(() => {
+        const wholeMonthTransactions = isSettled ? (settlement?.transactions || []) : [];
         if (source === 'all') return wholeMonthTransactions;
         const actions = (settlement?.settleActions || []).filter((action) => action.source === source);
         const map = new Map();
@@ -56,7 +56,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
             }
         }
         return [...map.values()];
-    }, [source, wholeMonthTransactions, settlement?.settleActions]);
+    }, [source, isSettled, settlement?.transactions, settlement?.settleActions]);
 
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`

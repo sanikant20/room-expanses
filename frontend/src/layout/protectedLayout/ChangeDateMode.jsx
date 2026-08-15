@@ -14,7 +14,7 @@ import {
     CalendarMonthRounded,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { useDateContext } from '../../context/DateContext';
+import { useDateContext } from '../../context/useDateContext';
 
 const ChangeDateMode = () => {
     const theme = useTheme();

@@ -1,7 +1,5 @@
-// DateContext.js
-import React, { createContext, useContext, useState } from 'react';
-
-const DateContext = createContext();
+import React, { useState } from 'react';
+import { DateContext } from './dateContext';
 
 export const DateProvider = ({ children }) => {
     const [useNepaliDate, setUseNepaliDate] = useState(() => {
@@ -24,5 +22,3 @@ export const DateProvider = ({ children }) => {
         </DateContext.Provider>
     );
 };
-
-export const useDateContext = () => useContext(DateContext);

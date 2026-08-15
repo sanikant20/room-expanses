@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "nodemon -r dotenv/config src/server.js",
-    "seed": "node -r dotenv/config src/seed.js"
+    "seed": "node -r dotenv/config src/seed.js",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

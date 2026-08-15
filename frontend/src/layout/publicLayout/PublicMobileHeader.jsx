@@ -23,7 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useThemeMode } from '../../context/ThemeModeContext';
+import { useThemeMode } from '../../context/useThemeMode';
 import PublicMenuContent from './PublicMenuContent';
 import LoginModalButton from './LoginModalButton';
 import ChangeLanguage from '../protectedLayout/ChangeLanguage';

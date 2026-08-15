@@ -28,7 +28,7 @@ import {
 import { getAuthData, isPartnerAccount } from '../../../helper/getAuthData';
 import CustomCard from '../../../components/custom/CustomCard';
 import { dateFormatToToggledDate } from '../../../utils/dateFormatToToggleDate';
-import { useDateContext } from '../../../context/DateContext';
+import { useDateContext } from '../../../context/useDateContext';
 import { useTranslation } from 'react-i18next';
 
 const Profile = () => {

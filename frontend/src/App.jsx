@@ -2,10 +2,12 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Slide, ToastContainer } from 'react-toastify';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { AuthExpirationProvider, useAuthExpiration } from './context/AuthExpirationContext';
-import { DateProvider } from './context/DateContext';
-import { ThemeModeProvider } from './context/ThemeModeContext';
+import { AuthProvider } from './context/AuthProvider';
+import { useAuth } from './context/useAuth';
+import { AuthExpirationProvider } from './context/AuthExpirationProvider';
+import { useAuthExpiration } from './context/useAuthExpiration';
+import { DateProvider } from './context/DateProvider';
+import { ThemeModeProvider } from './context/ThemeModeProvider';
 import { CssBaseline } from '@mui/material';
 
 // Component imports

@@ -20,7 +20,7 @@ import {
 import { brandColors } from "./ThemeColors";
 import CustomCard from "../components/custom/CustomCard";
 import { CheckCircleRounded, DarkModeRounded, LightModeRounded, RestartAltRounded } from "@mui/icons-material";
-import { useThemeMode } from "../context/ThemeModeContext";
+import { useThemeMode } from "../context/useThemeMode";
 
 // Create a utility function for text formatting
 const formatNameCase = (text) => {
@@ -45,7 +45,7 @@ const formatNameCase = (text) => {
 
 
 // Helper function to get current theme from localStorage
-export const getCurrentTheme = () => {
+const getCurrentTheme = () => {
     if (typeof window !== "undefined") {
         const theme = localStorage.getItem("selectedTheme");
         if (!theme) {
@@ -58,16 +58,10 @@ export const getCurrentTheme = () => {
 };
 
 // Helper function to set theme in localStorage
-export const setTheme = (themeName) => {
+const setTheme = (themeName) => {
     if (typeof window !== "undefined") {
         localStorage.setItem("selectedTheme", themeName);
     }
-};
-
-// Get current theme colors
-export const getCurrentThemeColors = () => {
-    const themeName = getCurrentTheme();
-    return brandColors[themeName] || brandColors.default;
 };
 
 const ThemeColorSelection = () => {

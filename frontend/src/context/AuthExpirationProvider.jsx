@@ -1,17 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import CustomDialog from '../components/custom/CustomDialog';
-import { useAuth } from './AuthContext';
-
-const AuthExpirationContext = createContext();
-
-export const useAuthExpiration = () => {
-    const context = useContext(AuthExpirationContext);
-    if (!context) {
-        throw new Error('useAuthExpiration must be used within AuthExpirationProvider');
-    }
-    return context;
-};
+import { AuthExpirationContext } from './authExpirationContext';
+import { useAuth } from './useAuth';
 
 const INACTIVITY_TIMEOUT = 50 * 60 * 1000;
 

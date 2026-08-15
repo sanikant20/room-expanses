@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useLogin, usePartnerLogin } from '../../apis/authApi/AuthAPI';
 import { toast } from 'react-toastify';
 import { encryptData } from '../../utils/encryption';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 // Animation keyframes
@@ -44,8 +44,8 @@ const slideUp = keyframes`
 `;
 
 const initialValues = {
-    email: 'admin@room.local',
-    password: 'Admin@123',
+    email: '',
+    password: '',
 };
 
 const Login = () => {

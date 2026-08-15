@@ -8,7 +8,7 @@ import {
     useTheme
 } from '@mui/material';
 import { CalendarMonthRounded } from '@mui/icons-material';
-import { useDateContext } from '../../../context/DateContext';
+import { useDateContext } from '../../../context/useDateContext';
 import CustomCard from '../../../components/custom/CustomCard';
 import { getTodayEnglishDate, getTodayNepaliDate } from '../../../utils/dateConverter';
 import { useTranslation } from 'react-i18next';

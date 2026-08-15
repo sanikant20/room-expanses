@@ -26,36 +26,6 @@ const publicPartner = (partner) => ({
   accountType: "partner",
 });
 
-export const register = asyncHandler(async (req, res) => {
-  const { name, email, phone, password } = req.body;
-
-  if (!name || !email || !password) {
-    throw new ApiError(400, "Name, email, and password are required");
-  }
-
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
-    throw new ApiError(409, "User already exists with this email");
-  }
-
-  const user = await User.create({
-    name,
-    email: email.toLowerCase(),
-    phone,
-    password,
-    role: req.body.role || "admin",
-  });
-
-  const { accessToken } = await generateTokens(user);
-
-  return res.status(201).json({
-    success: true,
-    message: "Registration successful",
-    token: accessToken,
-    user: publicUser(user),
-  });
-});
-
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
