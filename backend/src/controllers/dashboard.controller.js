@@ -6,9 +6,10 @@ import { ApiError } from "../utils/ApiError.js";
 import {
   aggregateMonthlyTrend,
   computePartnerSummaries,
+  computePayerTotals,
   computeSummary,
-  findHighestSpender,
-  findLowestSpender,
+  findHighestPayer,
+  findLowestPayer,
   subtractBsMonths,
 } from "../services/calculation.service.js";
 
@@ -25,8 +26,24 @@ export const getSummary = asyncHandler(async (req, res) => {
   const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
   const expenses = await Expense.find({ bsYear: year, bsMonth: month });
 
+  // Collect every partner referenced by the month's expenses (paidBy or shares)
+  // so totals reconcile even if a partner has since been deactivated.
+  const referencedIds = new Set();
+  for (const expense of expenses) {
+    if (expense.paidBy) referencedIds.add(String(expense.paidBy));
+    for (const id of expense.applicablePartners || []) referencedIds.add(String(id));
+  }
+  const referencedPartners = await Partner.find({ _id: { $in: [...referencedIds] } });
+
+  const partnerById = new Map();
+  for (const partner of [...activePartners, ...referencedPartners]) {
+    partnerById.set(String(partner._id), partner);
+  }
+  const monthPartners = [...partnerById.values()];
+
   const summary = computeSummary(expenses);
-  const partnerSummaries = computePartnerSummaries(expenses, activePartners);
+  const partnerSummaries = computePartnerSummaries(expenses, monthPartners);
+  const payerTotals = computePayerTotals(expenses, monthPartners);
 
   // Fetch expenses for the last 6 months (including the selected month) for the trend chart.
   const monthsToFetch = 6;
@@ -39,7 +56,7 @@ export const getSummary = asyncHandler(async (req, res) => {
     $or: period.map(({ bsYear: y, bsMonth: m }) => ({ bsYear: y, bsMonth: m })),
   });
 
-  const monthlyTrend = aggregateMonthlyTrend(trendExpenses);
+  const monthlyTrend = aggregateMonthlyTrend(trendExpenses, period);
 
   const settlementRecord = await Settlement.findOne({
     bsYear: year,
@@ -64,12 +81,13 @@ export const getSummary = asyncHandler(async (req, res) => {
     ...summary,
     partnerCount: activePartners.length,
     partnerSummaries,
+    payerTotals,
     categoryBreakdown: [
       { name: "Primary", value: summary.primaryTotal },
       { name: "Secondary", value: summary.secondaryTotal },
     ],
-    highestSpender: findHighestSpender(partnerSummaries),
-    lowestSpender: findLowestSpender(partnerSummaries),
+    highestPayer: findHighestPayer(payerTotals),
+    lowestPayer: findLowestPayer(payerTotals),
     monthlyTrend,
     settlementStatus,
   });

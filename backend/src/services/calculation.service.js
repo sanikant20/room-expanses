@@ -133,11 +133,53 @@ export const computeSettlement = (expenses, activePartners) => {
   };
 };
 
-export const findHighestSpender = (partnerSummaries) =>
-  partnerSummaries.length > 0 ? partnerSummaries[0] : null;
+// Returns rows with the total amount each partner actually paid out of pocket,
+// broken down by category, plus the share of the month's grand total each represents.
+export const computePayerTotals = (expenses, partners) => {
+  const rows = partners.map((partner) => ({
+    partner: { _id: partner._id, name: partner.name, image: partner.image },
+    primary: 0,
+    secondary: 0,
+    paid: 0,
+    percentage: 0,
+  }));
+  const rowById = new Map(rows.map((row) => [row.partner._id.toString(), row]));
 
-export const computeTransactions = (rows) => {
-  const debtors = rows
+  for (const expense of expenses) {
+    const row = rowById.get(partnerId(expense.paidBy));
+    if (!row) continue;
+    const amount = Number(expense.amount) || 0;
+    row.paid += amount;
+    if (expense.category === "primary") row.primary += amount;
+    else row.secondary += amount;
+  }
+
+  const grandTotal = computeSummary(expenses).grandTotal;
+
+  rows.forEach((row) => {
+    row.primary = round2(row.primary);
+    row.secondary = round2(row.secondary);
+    row.paid = round2(row.paid);
+    row.percentage = grandTotal > 0 ? round2((row.paid / grandTotal) * 100) : 0;
+  });
+
+  rows.sort((a, b) => b.paid - a.paid);
+  return rows;
+};
+
+export const findHighestPayer = (payerTotals) => {
+  const payers = (payerTotals || []).filter((row) => (row.paid || 0) > 0);
+  if (payers.length === 0) return null;
+  return payers.reduce((a, b) => (b.paid > a.paid ? b : a));
+};
+
+export const findLowestPayer = (payerTotals) => {
+  const payers = (payerTotals || []).filter((row) => (row.paid || 0) > 0);
+  if (payers.length === 0) return null;
+  return payers.reduce((a, b) => (b.paid < a.paid ? b : a));
+};
+
+export const computeTransactions = (rows) => {  const debtors = rows
     .filter((row) => row.balance < -0.005)
     .map((row) => ({
       partnerId: row.partner._id,
@@ -173,11 +215,16 @@ export const computeTransactions = (rows) => {
   return transactions;
 };
 
-export const findLowestSpender = (partnerSummaries) =>
-  partnerSummaries.length > 0 ? partnerSummaries[partnerSummaries.length - 1] : null;
-
-export const aggregateMonthlyTrend = (expenses) => {
+export const aggregateMonthlyTrend = (expenses, months = []) => {
   const map = new Map();
+  for (const month of months) {
+    map.set(`${month.bsYear}-${month.bsMonth}`, {
+      bsYear: month.bsYear,
+      bsMonth: month.bsMonth,
+      total: 0,
+      count: 0,
+    });
+  }
   for (const expense of expenses) {
     const key = `${expense.bsYear}-${expense.bsMonth}`;
     if (!map.has(key)) {

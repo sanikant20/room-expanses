@@ -112,11 +112,11 @@ const Dashboard = () => {
     }, [data?.monthlyTrend]);
 
     const partnerChartData = useMemo(() => {
-        return (data?.partnerSummaries || []).map((row) => ({
+        return (data?.payerTotals || []).map((row) => ({
             name: row.partner?.name || 'Unknown',
-            value: Number(row.total) || 0,
+            value: Number(row.paid) || 0,
         }));
-    }, [data?.partnerSummaries]);
+    }, [data?.payerTotals]);
 
     const categoryChartData = useMemo(() => {
         const primary = Number(data?.primaryTotal) || 0;
@@ -140,7 +140,7 @@ const Dashboard = () => {
             ),
         },
         {
-            key: 'primary', label: 'Primary',
+            key: 'primary', label: 'Primary Paid',
             render: (row) => formatToNepaliCurrency(row.primary),
             footerRenderer: ({ data }) => (
                 <Typography variant="body2" fontWeight={700} color="primary.main">
@@ -149,7 +149,7 @@ const Dashboard = () => {
             ),
         },
         {
-            key: 'secondary', label: 'Secondary',
+            key: 'secondary', label: 'Secondary Paid',
             render: (row) => formatToNepaliCurrency(row.secondary),
             footerRenderer: ({ data }) => (
                 <Typography variant="body2" fontWeight={700} color="primary.main">
@@ -158,16 +158,16 @@ const Dashboard = () => {
             ),
         },
         {
-            key: 'total', label: 'Total Contribution',
-            render: (row) => <Typography variant="body2" fontWeight={700}>{formatToNepaliCurrency(row.total)}</Typography>,
+            key: 'total', label: 'Total Paid',
+            render: (row) => <Typography variant="body2" fontWeight={700}>{formatToNepaliCurrency(row.paid)}</Typography>,
             footerRenderer: ({ data }) => (
                 <Typography variant="body2" fontWeight={700} color="primary.main">
-                    {formatToNepaliCurrency(data.reduce((sum, row) => sum + (Number(row.total) || 0), 0))}
+                    {formatToNepaliCurrency(data.reduce((sum, row) => sum + (Number(row.paid) || 0), 0))}
                 </Typography>
             ),
         },
         {
-            key: 'percentage', label: '% of Total',
+            key: 'percentage', label: '% of Total Paid',
             render: (row) => (
                 <Chip
                     label={`${row.percentage}%`}
@@ -210,8 +210,8 @@ const Dashboard = () => {
         },
     ];
 
-    const highestSpender = data?.highestSpender;
-    const lowestSpender = data?.lowestSpender;
+    const highestPayer = data?.highestPayer;
+    const lowestPayer = data?.lowestPayer;
 
     return (
         <Box sx={{ width: '100%' }}>
@@ -308,24 +308,24 @@ const Dashboard = () => {
                 ))}
             </Grid>
 
-            {/* Highest / Lowest spenders */}
+            {/* Highest / Lowest payers */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ borderRadius: 3, border: `1px solid ${theme.palette.divider}`, height: '100%' }}>
                         <CardContent>
                             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                                 <TrendingUpRounded color="success" />
-                                <Typography variant="h6" fontWeight={700}>Highest Spending Partner</Typography>
+                                <Typography variant="h6" fontWeight={700}>Highest Payer</Typography>
                             </Stack>
                             {isLoading ? (
                                 <Skeleton height={40} />
-                            ) : highestSpender?.partner ? (
+                            ) : highestPayer?.partner ? (
                                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Box>
-                                        <Typography variant="body1" fontWeight={600}>{highestSpender.partner?.name}</Typography>
-                                        <Typography variant="caption" color="text.secondary">Primary {formatToNepaliCurrency(highestSpender.primary)} • Secondary {formatToNepaliCurrency(highestSpender.secondary)}</Typography>
+                                        <Typography variant="body1" fontWeight={600}>{highestPayer.partner?.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary">Paid the most this month</Typography>
                                     </Box>
-                                    <Chip label={formatToNepaliCurrency(highestSpender.total)} color="success" />
+                                    <Chip label={formatToNepaliCurrency(highestPayer.paid)} color="success" />
                                 </Stack>
                             ) : (
                                 <Typography variant="body2" color="text.secondary">No expenses recorded for this month.</Typography>
@@ -338,17 +338,17 @@ const Dashboard = () => {
                         <CardContent>
                             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                                 <TrendingDownRounded color="warning" />
-                                <Typography variant="h6" fontWeight={700}>Lowest Spending Partner</Typography>
+                                <Typography variant="h6" fontWeight={700}>Lowest Payer</Typography>
                             </Stack>
                             {isLoading ? (
                                 <Skeleton height={40} />
-                            ) : lowestSpender?.partner ? (
+                            ) : lowestPayer?.partner ? (
                                 <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Box>
-                                        <Typography variant="body1" fontWeight={600}>{lowestSpender.partner?.name}</Typography>
-                                        <Typography variant="caption" color="text.secondary">Primary {formatToNepaliCurrency(lowestSpender.primary)} • Secondary {formatToNepaliCurrency(lowestSpender.secondary)}</Typography>
+                                        <Typography variant="body1" fontWeight={600}>{lowestPayer.partner?.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary">Paid the least this month</Typography>
                                     </Box>
-                                    <Chip label={formatToNepaliCurrency(lowestSpender.total)} color="warning" />
+                                    <Chip label={formatToNepaliCurrency(lowestPayer.paid)} color="warning" />
                                 </Stack>
                             ) : (
                                 <Typography variant="body2" color="text.secondary">No expenses recorded for this month.</Typography>
@@ -379,7 +379,7 @@ const Dashboard = () => {
                     </CustomCard>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomCard icon={<GroupsRounded />} title="Partner-wise Expense Distribution">
+                    <CustomCard icon={<GroupsRounded />} title="Partner-wise Amount Paid">
                         {partnerChartData.length === 0 ? (
                             <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Typography variant="body2" color="text.secondary">No data available</Typography>
@@ -425,7 +425,7 @@ const Dashboard = () => {
             <CustomCard
                 icon={<GroupsRounded />}
                 title="Partner Expense Summary"
-                subtitle={`Expense distribution by partner for ${monthLabel || 'all months'}.`}
+                subtitle={`Amounts paid by each partner for ${monthLabel || 'all months'}.`}
                 extra={
                     <Button
                         variant="contained"
@@ -439,7 +439,7 @@ const Dashboard = () => {
             >
                 <DataTable
                     columns={partnerColumns}
-                    data={data?.partnerSummaries || []}
+                    data={data?.payerTotals || []}
                     loading={isLoading}
                     download={{ enabled: true, filename: 'Partner Expense Summary', excludeColumns: ['sn'] }}
                 />
