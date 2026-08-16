@@ -23,12 +23,12 @@ AxiosConfig.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+export const isLoginRequest = (url) => /\/login$|\/partner-login$/.test(url || '');
+
 AxiosConfig.interceptors.response.use(
     (response) => response,
     (error) => {
-        const url = error.config?.url || '';
-        const isLoginRequest = /\/login$|\/partner-login$/.test(url);
-        if (error.response?.status === 401 && !isLoginRequest) {
+        if (error.response?.status === 401 && !isLoginRequest(error.config?.url)) {
             if (authExpirationHandler) {
                 authExpirationHandler();
             } else {

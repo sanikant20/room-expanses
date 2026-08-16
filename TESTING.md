@@ -13,12 +13,12 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2026-08-16** — backend 31 tests, frontend 22 tests,
+Last verified green: **2026-08-16** — backend 73 tests, frontend 37 tests,
 frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (31 tests, Node built-in runner)
+### Backend — `backend/tests/` (73 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -33,14 +33,44 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   that `POST /register` is **not** exposed.
 - `settlement-payment.test.js` — pay/confirm role guards (partner who isn't the
   payer/receiver gets 403; missing from/to gets 400) and settlement service surface.
+- `settlement-logic.test.js` (24 tests) — the settlement state machine, all with
+  model mocks (no DB):
+  - `isAutoSettled` — auto-settled vs manual (`settledBy` + `settleActions` cases).
+  - `settleScope` — already-settled shortcut, and E11000 race retry (re-fetches the
+    existing record; asserts the second `findOne` happens).
+  - `markTransactionPaid` — admin may mark any transaction paid; the payer partner may
+    mark their own; a partner who isn't the payer gets **403**; missing from/to → 400.
+  - `confirmTransactionReceipt` — receiver-only 403; 404 when not found; 409 when not
+    yet paid; marks the record confirmed; a non-receiver partner gets 403.
+  - `resetTransactionPayment` — only the payer may reset; admin may reset any.
+  - Guard coverage — `settleMonth`/`revertSettlement` reject invalid scope/category
+    (400) and refuse to revert an auto-settled record; re-settling an already-settled
+    all scope → 409.
+- `validation.test.js` (18 tests) — request-validation guards (all pure 400s, no DB):
+  - `parseBsDate` — slash/dash formats, single-digit parts, null for malformed and
+    out-of-range year/month.
+  - `login` / `partnerLogin` / `changePassword` — require email+password / old+new.
+  - partner controllers — name required, phone-or-password for login, invalid `:id`
+    rejected, `togglePartnerStatus` validates the status value.
+  - group controllers — name and at least one partner required, invalid `:id` rejected.
+  - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
+    at least one applicable partner.
 
-### Frontend — `frontend/src/utils/*.test.js` (22 tests, vitest)
+### Frontend — `frontend/src/utils/*.test.js` + `constant`/`configurations`/`helper` (37 tests, vitest)
 - `nepaliDate.test.js` — BS parsing/formatting, known calendar boundaries
   (2025-04-14 = BS 2082/01/01; 2025-04-13 = BS 2081/12/31), month arithmetic,
   `getBsMonthsRange`, `isValidBsDate`, current-date helpers.
 - `currencyFormat.test.js` — en-IN grouping (`12,34,567.89`), 2 decimals, `Rs` symbol,
   null/undefined/NaN fallback to `0.00`.
 - `dateConverter.test.js` — `convertToBSFormat` known conversions + invalid input.
+- `configurations/axiosConfig.test.js` — `isLoginRequest` matches only `POST /login` and
+  `POST /partner-login` (used by the interceptor so invalid credentials show the inline
+  alert instead of the "Session Ended" dialog).
+- `helper/getAuthData.test.js` — `getAuthData` default-filled shape for empty/corrupt
+  storage, plain-JSON and encrypted round-trips, FullName fallback to email local-part;
+  `isPartnerAccount` true/false. (Vitest `node` env: `sessionStorage` is stubbed.)
+- `constant/constant.test.js` — `PAYMENT_STATUS` pending→paid→confirmed lifecycle and
+  `SETTLEMENT_STATUS` receive/pay/settled labels.
 
 ## Bugs found & fixed (audit pass, 2026-08-15)
 
