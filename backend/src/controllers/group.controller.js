@@ -120,7 +120,7 @@ export const updateGroup = asyncHandler(async (req, res) => {
       status: status !== undefined ? status : existing.status,
       partners: partnerIds,
     },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   const populated = await withPopulates(Group.findById(group._id));

@@ -94,7 +94,7 @@ export const settleScope = async ({ year, month, category = null, group = null, 
   const record = await Settlement.findOneAndUpdate(
     { bsYear: year, bsMonth: month, category, group },
     update,
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
   ).populate(settlementPopulates());
 
   if (unsettledCount > 0) {

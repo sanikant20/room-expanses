@@ -95,7 +95,7 @@ export const updatePartner = asyncHandler(async (req, res) => {
   const partner = await Partner.findByIdAndUpdate(
     id,
     update,
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!partner) throw new ApiError(404, "Partner not found");
@@ -145,7 +145,7 @@ export const togglePartnerStatus = asyncHandler(async (req, res) => {
   const partner = await Partner.findByIdAndUpdate(
     id,
     { status },
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
 
   if (!partner) throw new ApiError(404, "Partner not found");
