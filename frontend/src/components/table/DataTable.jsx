@@ -2,10 +2,9 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
     Table, TableBody, TableContainer, TableHead, TableRow, TableFooter,
     TextField, Pagination, Typography,
-    Box, useTheme, IconButton, Tooltip, Checkbox, TableSortLabel, CircularProgress, Popover,
+    Box, useTheme, IconButton, Tooltip, Checkbox, TableSortLabel, Popover,
     Skeleton, Autocomplete, InputAdornment, Badge
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import {
     Search, Close, FilterListAlt, ViewColumn,
     PushPinRounded,
@@ -657,17 +656,6 @@ const DataTable = ({
 
             {/* Table Container */}
             <TableContainer sx={{ maxHeight: 560, position: 'relative', overflow: 'auto' }}>
-                {loading && (
-                    <Box sx={{
-                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.7),
-                        zIndex: 1
-                    }}>
-                        <CircularProgress />
-                    </Box>
-                )}
-
                 <Table stickyHeader size="small" sx={{ whiteSpace: 'nowrap' }}>
                     <TableHead sx={{ position: 'sticky', top: 0, zIndex: 10 }}>
                         <TableRow>

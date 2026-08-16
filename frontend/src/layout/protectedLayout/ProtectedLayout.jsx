@@ -1,9 +1,10 @@
 import React, { useState, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
-import { alpha, Box, Chip, Stack, Typography, CircularProgress } from '@mui/material';
+import { alpha, Box, Stack } from '@mui/material';
 import DesktopSideBar from './DesktopSideBar';
 import MobileHeader from './MobileHeader';
 import DesktopHeader from './DesktopHeader';
+import PageSkeleton from '../../components/skeleton';
 
 export default function ProtectedLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -67,22 +68,7 @@ export default function ProtectedLayout() {
                                 pt: { xs: 1, md: 2 },
                             }}
                         >
-                            <Suspense
-                                fallback={
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            minHeight: '60vh',
-                                            width: '100%',
-                                        }}
-                                    >
-                                        <CircularProgress size={40} thickness={4} />
-                                    </Box>
-                                }
-                            >
+                            <Suspense fallback={<PageSkeleton />}>
                                 <Outlet />
                             </Suspense>
                         </Stack>

@@ -10,7 +10,7 @@ import { ThemeModeProvider } from './context/ThemeModeProvider';
 import { CssBaseline } from '@mui/material';
 
 // Component imports
-import Loader from './components/loader';
+import PageSkeleton from './components/skeleton';
 import PageNotFound from './components/pageNotFound';
 import ErrorBoundary from './components/errorBoundary';
 
@@ -99,7 +99,7 @@ const App = () => {
           <AuthProvider>
             <AuthExpirationProvider>
               <Router>
-                <Suspense fallback={<Loader />}>
+                <Suspense fallback={<PageSkeleton />}>
                   <AxiosInterceptorSetup />
                   <HealthPoller />
                   <ErrorBoundary>
@@ -119,7 +119,7 @@ const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
   const { isOnline } = useGetNetworkStatus();
 
-  if (isAuthenticated === undefined) return <Loader />;
+  if (isAuthenticated === undefined) return <PageSkeleton />;
   if (!isOnline) return <OfflineContainer />;
 
   return (

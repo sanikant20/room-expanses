@@ -362,25 +362,31 @@ const Dashboard = () => {
             <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <CustomCard icon={<CategoryRounded />} title="Primary vs Secondary Expenses">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={categoryChartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip formatter={(value) => formatToNepaliCurrency(value)} />
-                                <Legend />
-                                <Bar dataKey="value" name="Amount" radius={[6, 6, 0, 0]}>
-                                    {categoryChartData.map((entry, index) => (
-                                        <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {isLoading ? (
+                            <Skeleton variant="rounded" height={300} sx={{ borderRadius: 2 }} />
+                        ) : (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={categoryChartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis />
+                                    <Tooltip formatter={(value) => formatToNepaliCurrency(value)} />
+                                    <Legend />
+                                    <Bar dataKey="value" name="Amount" radius={[6, 6, 0, 0]}>
+                                        {categoryChartData.map((entry, index) => (
+                                            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </CustomCard>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <CustomCard icon={<GroupsRounded />} title="Partner-wise Amount Paid">
-                        {partnerChartData.length === 0 ? (
+                        {isLoading ? (
+                            <Skeleton variant="rounded" height={300} sx={{ borderRadius: 2 }} />
+                        ) : partnerChartData.length === 0 ? (
                             <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Typography variant="body2" color="text.secondary">No data available</Typography>
                             </Box>
@@ -401,7 +407,9 @@ const Dashboard = () => {
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                     <CustomCard icon={<ReceiptLongRounded />} title="Monthly Expense Trend">
-                        {monthlyTrend.length === 0 ? (
+                        {isLoading ? (
+                            <Skeleton variant="rounded" height={280} sx={{ borderRadius: 2 }} />
+                        ) : monthlyTrend.length === 0 ? (
                             <Box sx={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Typography variant="body2" color="text.secondary">No data available</Typography>
                             </Box>
