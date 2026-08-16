@@ -6,13 +6,11 @@ import { tabsClasses } from '@mui/material/Tabs';
 import AppBar from '@mui/material/AppBar';
 import Stack from '@mui/material/Stack';
 import MuiToolbar from '@mui/material/Toolbar';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import OptionsMenu from './Optionsmenu';
 import dayjs from 'dayjs';
-import { useDateContext } from '../../context/useDateContext';
 import { useThemeMode } from '../../context/useThemeMode';
-import { dateFormatToToggledDate } from '../../utils/dateFormatToToggleDate';
+import { convertToBSFormat } from '../../utils/dateConverter';
 import MobileSideMenu from './MobileSideMenu';
 
 const LogoImage = styled('img')(({ theme }) => ({
@@ -81,11 +79,9 @@ const FloatingActionButton = styled(IconButton)(({ theme }) => ({
 
 export default function MobileHeader() {
     const theme = useTheme();
-    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const [, setCurrentTime] = useState(dayjs());
     const [showFAB, setShowFAB] = useState(false);
-    const { useNepaliDate, toggleDateMode } = useDateContext();
     const { mode, toggleThemeMode } = useThemeMode();
     const navigate = useNavigate();
 
@@ -140,7 +136,7 @@ export default function MobileHeader() {
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <IconButton
-                                aria-label={t('header.openSidebar')}
+                                aria-label="Open sidebar"
                                 onClick={toggleDrawer(true)}
                                 sx={{
                                     width: 40,
@@ -177,22 +173,16 @@ export default function MobileHeader() {
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {/* Date Display Chip */}
-                            <Tooltip
-                                title={useNepaliDate ? 'Switch to English date' : 'Switch to Nepali date'}
-                                arrow
-                                placement="bottom"
-                            >
+                            <Tooltip title="Current date (Nepali BS)" arrow placement="bottom">
                                 <DateChip
                                     icon={<CalendarTodayRounded />}
-                                    label={dateFormatToToggledDate(new Date(), useNepaliDate)}
+                                    label={convertToBSFormat(new Date()) || ''}
                                     size="small"
                                     variant="outlined"
-                                    onClick={toggleDateMode}
-                                    sx={{ cursor: 'pointer' }}
                                 />
                             </Tooltip>
 
-                            <Tooltip title={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')} arrow>
+                            <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>
                                 <IconButton
                                     onClick={toggleThemeMode}
                                     size="small"

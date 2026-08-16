@@ -12,9 +12,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
-import { useTranslation } from 'react-i18next';
-import MenuContent from './MenuContent';
-import { useNavigate } from 'react-router-dom';
+import MenuContent from './MenuContent';import { useNavigate } from 'react-router-dom';
 import { Tooltip, Switch, Box, Collapse, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import { ExpandLess, ExpandMore, PersonRounded } from '@mui/icons-material';
 import { getAuthData } from '../../helper/getAuthData';
@@ -22,7 +20,6 @@ import { getAuthData } from '../../helper/getAuthData';
 export default function MobileSideMenu({ open, toggleDrawer }) {
     const theme = useTheme();
     const navigate = useNavigate();
-    const { t } = useTranslation();
     const authData = getAuthData();
 
     const handleLogout = () => {
@@ -109,7 +106,7 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
                                     fontSize: '1rem',
                                 }}
                             >
-                                {t('project.name')}
+                                The Roomies
                             </Typography>
                             <Typography
                                 variant="caption"
@@ -119,7 +116,7 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
                                     fontWeight: 500,
                                 }}
                             >
-                                {t('project.description')}
+                                Room Expenses Management
                             </Typography>
                             <Stack direction="row" sx={{ gap: 0.5, alignItems: 'center', mt: 0.5 }}>
                                 <PersonRounded sx={{ fontSize: 12, opacity: 0.8 }} />
@@ -209,7 +206,7 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
                             },
                         }}
                     >
-                        {t('menu.logout')}
+                        Logout
                     </Button>
                 </Stack>
             </Stack>

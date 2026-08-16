@@ -7,7 +7,6 @@ import { ArrowBackTwoTone, KeyRounded, KeyTwoTone, Visibility, VisibilityOff, Vi
 import { useNavigate } from 'react-router-dom'
 import { useChangePassword } from '../../../apis/authApi/AuthAPI'
 import { toast } from 'react-toastify'
-import { useTranslation } from 'react-i18next'
 
 const initialValues = {
     oldPassword: '',
@@ -32,7 +31,6 @@ const validationSchema = yup.object({
 
 const ChangePassword = () => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
 
     const [showPassword, setShowPassword] = useState({
         oldPassword: false,
@@ -74,7 +72,7 @@ const ChangePassword = () => {
     }
 
     return (
-        <CustomCard title={t('settings.changePassword', 'Change Password')}
+        <CustomCard title="Change Password"
             sx={{ maxWidth: 500, mx: 'auto' }}
             icon={<KeyTwoTone />}
         >
@@ -88,7 +86,7 @@ const ChangePassword = () => {
                         <Grid container spacing={1}>
                             <Grid size={{ xs: 12 }}>
                                 <Stack spacing={0.5}>
-                                    <InputLabel htmlFor="oldPassword" required>{t('changePassword.oldPassword', 'Old Password')}</InputLabel>
+                                    <InputLabel htmlFor="oldPassword" required>Old Password</InputLabel>
                                     <TextField
                                         fullWidth
                                         name="oldPassword"
@@ -122,7 +120,7 @@ const ChangePassword = () => {
 
                             <Grid size={{ xs: 12 }}>
                                 <Stack spacing={0.5}>
-                                    <InputLabel htmlFor="newPassword" required>{t('changePassword.newPassword', 'New Password')}</InputLabel>
+                                    <InputLabel htmlFor="newPassword" required>New Password</InputLabel>
                                     <TextField
                                         fullWidth
                                         name="newPassword"
@@ -156,7 +154,7 @@ const ChangePassword = () => {
 
                             <Grid size={{ xs: 12 }}>
                                 <Stack spacing={0.5}>
-                                    <InputLabel htmlFor="confirmPassword" required>{t('changePassword.confirmNewPassword', 'Confirm New Password')}</InputLabel>
+                                    <InputLabel htmlFor="confirmPassword" required>Confirm New Password</InputLabel>
                                     <TextField
                                         fullWidth
                                         name="confirmPassword"
@@ -197,7 +195,7 @@ const ChangePassword = () => {
                                         onClick={() => navigate(-1)}
                                         startIcon={<ArrowBackTwoTone />}
                                     >
-                                        {t('button.cancel', 'Cancel')}
+                                        Cancel
                                     </Button>
                                     <Button
                                         type="submit"
@@ -205,7 +203,7 @@ const ChangePassword = () => {
                                         disabled={!dirty|| isSubmitting}
                                         startIcon={<KeyTwoTone />}
                                     >
-                                        {isSubmitting ? t('changePassword.changing', 'Changing...') : t('settings.changePassword', 'Change Password')}
+                                        {isSubmitting ? 'Changing...' : 'Change Password'}
                                     </Button>
                                 </Box>
                             </Grid>

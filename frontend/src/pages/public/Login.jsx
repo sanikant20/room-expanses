@@ -3,7 +3,6 @@ import { Box, Grid, Card, TextField, Button, Typography, InputAdornment, IconBut
 import { FormatQuote, LoginRounded, PeopleAltTwoTone, ReceiptLongTwoTone, AccountBalanceWalletTwoTone, BarChartTwoTone, PersonTwoTone, VisibilityOffTwoTone, VisibilityTwoTone, LockTwoTone, AdminPanelSettingsRounded } from '@mui/icons-material';
 import { Formik, Form } from 'formik';
 import * as yup from 'yup';
-import { useTranslation } from 'react-i18next';
 import { useLogin, usePartnerLogin } from '../../apis/authApi/AuthAPI';
 import { toast } from 'react-toastify';
 import { encryptData } from '../../utils/encryption';
@@ -50,7 +49,6 @@ const initialValues = {
 
 const Login = () => {
     const theme = useTheme();
-    const { t } = useTranslation();
     const navigate = useNavigate();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [showPassword, setShowPassword] = useState(false);
@@ -61,8 +59,8 @@ const Login = () => {
     const { isAuthenticated, setIsAuthenticated } = useAuth();
 
     const validationSchema = yup.object({
-        email: yup.string().email(t('login.validation.emailInvalid', 'Invalid email address')).required(t('login.validation.emailRequired', 'Email is required')),
-        password: yup.string().required(t('login.validation.passwordRequired', 'Password is required')),
+        email: yup.string().email('Invalid email address').required('Email is required'),
+        password: yup.string().required('Password is required'),
     });
 
     const { mutate: login, isPending } = useLogin();
@@ -85,13 +83,13 @@ const Login = () => {
                     setIsAuthenticated(true);
                     setSubmitting(false);
                 } else {
-                    toast.error(response?.message || t('login.failed', 'Login failed'));
+                    toast.error(response?.message || 'Login failed');
                     setErrorMessage(response?.message);
                 }
             },
             onError: (error) => {
                 setSubmitting(false);
-                const errorMsg = error?.response?.data?.message || t('login.genericError', 'An error occurred during login');
+                const errorMsg = error?.response?.data?.message || 'An error occurred during login';
                 toast.error(errorMsg);
                 setErrorMessage(errorMsg);
             }
@@ -101,23 +99,23 @@ const Login = () => {
     const features = [
         {
             icon: ReceiptLongTwoTone,
-            text: t('login.feature1Title', 'Expense tracking'),
-            description: t('login.feature1Desc', 'Record primary and secondary room expenses in seconds.'),
+            text: 'Expense tracking',
+            description: 'Record primary and secondary room expenses in seconds.',
         },
         {
             icon: PeopleAltTwoTone,
-            text: t('login.feature2Title', 'Fair split calculations'),
-            description: t('login.feature2Desc', 'Automatic per-partner shares that respect excluded members.'),
+            text: 'Fair split calculations',
+            description: 'Automatic per-partner shares that respect excluded members.',
         },
         {
             icon: AccountBalanceWalletTwoTone,
-            text: t('login.feature3Title', 'Monthly settlement'),
-            description: t('login.feature3Desc', 'See who owes and who receives with clear balances.'),
+            text: 'Monthly settlement',
+            description: 'See who owes and who receives with clear balances.',
         },
         {
             icon: BarChartTwoTone,
-            text: t('login.feature4Title', 'Insightful reports'),
-            description: t('login.feature4Desc', 'Visual dashboards and Nepali-month reports for every partner.'),
+            text: 'Insightful reports',
+            description: 'Visual dashboards and Nepali-month reports for every partner.',
         },
     ];
 
@@ -172,7 +170,7 @@ const Login = () => {
                             <Box
                                 component="img"
                                 src="/logo.png"
-                                alt="404RoomNotFound Logo"
+                                alt="The Roomies Logo"
                                 sx={{
                                     width: 80,
                                     height: 80,
@@ -185,11 +183,11 @@ const Login = () => {
                                 }}
                             />
                             <Typography variant="h3" fontWeight="bold" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, textAlign: { xs: 'center', sm: 'left' } }}>
-                                {t('project.name')}
+                                The Roomies
                             </Typography>
                         </Box>
                         <Typography variant="h5" sx={{ opacity: 0.9, fontSize: { xs: '1rem', md: '1.25rem' } }}>
-                            {t('project.description', 'Room Expenses Management')}
+                            Room Expenses Management
                         </Typography>
                     </Box>
 
@@ -231,7 +229,7 @@ const Login = () => {
                                 mx: 'auto'
                             }}
                         >
-                            {t('login.quote', 'Add expenses, assign contributors, exclude partners when required, and settle balances — all in Nepali months.')}
+                            Add expenses, assign contributors, exclude partners when required, and settle balances — all in Nepali months.
                         </Typography>
                         <FormatQuote
                             sx={{
@@ -341,7 +339,7 @@ const Login = () => {
                                     animation: `${slideInRight} 0.8s ease-out`,
                                 }}
                             >
-                                {t('login.title', 'Welcome to 404RoomNotFound')}
+                                Welcome to The Roomies
                             </Typography>
                             <Typography
                                 variant="body1"
@@ -351,7 +349,7 @@ const Login = () => {
                                     animation: `${slideInRight} 1s ease-out`,
                                 }}
                             >
-                                {t('login.subtitle', 'Sign in to manage your shared room expenses')}
+                                Sign in to manage your shared room expenses
                             </Typography>
                         </Box>
 
@@ -404,7 +402,7 @@ const Login = () => {
                                             <Grid size={{ xs: 12 }}>
                                                 <Stack spacing={1}>
                                                     <InputLabel htmlFor="email" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                                                        {t('login.email', 'Email')}
+                                                        Email
                                                     </InputLabel>
                                                     <TextField
                                                         fullWidth
@@ -425,7 +423,7 @@ const Login = () => {
                                                                 )
                                                             }
                                                         }}
-                                                        placeholder={t('login.emailPlaceholder', 'Enter your email')}
+                                                        placeholder="Enter your email"
                                                         sx={{
                                                             animation: `${slideInRight} 1.2s ease-out`,
                                                             '& .MuiOutlinedInput-root': {
@@ -444,7 +442,7 @@ const Login = () => {
 
                                             <Grid size={{ xs: 12 }}>
                                                 <Stack spacing={1}>
-                                                    <InputLabel htmlFor="password" sx={{ fontWeight: 600, color: 'text.primary' }}>{t('login.password', 'Password')}</InputLabel>
+                                                    <InputLabel htmlFor="password" sx={{ fontWeight: 600, color: 'text.primary' }}>Password</InputLabel>
                                                     <TextField
                                                         fullWidth
                                                         id="password"
@@ -473,7 +471,7 @@ const Login = () => {
                                                                 )
                                                             }
                                                         }}
-                                                        placeholder={t('login.passwordPlaceholder', 'Enter your password')}
+                                                        placeholder="Enter your password"
                                                         sx={{
                                                             animation: `${slideInRight} 1.4s ease-out`,
                                                             '& .MuiOutlinedInput-root': {
@@ -533,14 +531,14 @@ const Login = () => {
                                                     }}
                                                     startIcon={<LoginRounded />}
                                                 >
-                                                    {(isSubmitting || isPending || isPartnerPending) ? t('login.signingIn', 'Signing in...') : t('login.signIn', 'Sign in')}
+                                                    {(isSubmitting || isPending || isPartnerPending) ? 'Signing in...' : 'Sign in'}
                                                 </Button>
                                             </Grid>
                                         </Grid>
 
                                         <Divider sx={{ my: 3 }}>
                                             <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
-                                                {t('login.secureAccess', 'Secure Access')}
+                                                Secure Access
                                             </Typography>
                                         </Divider>
 
@@ -554,7 +552,7 @@ const Login = () => {
                                         <Box sx={{ mt: 4, textAlign: 'center' }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 © {new Date().getFullYear()} <span style={{ color: theme.palette.primary.main, fontWeight: 600 }}>
-                                                    404RoomNotFound</span>. {t('login.allRightsReserved', 'All rights reserved.')}
+                                                    The Roomies</span>. All rights reserved.
                                             </Typography>
                                         </Box>
                                     </Form>

@@ -234,7 +234,7 @@ const Dashboard = () => {
                         <Grid size={{ xs: 12, sm: 'auto' }}>
                             <Stack spacing={1}>
                                 <Typography variant="overline" sx={{ letterSpacing: 1.5, opacity: 0.9 }}>
-                                    404RoomNotFound
+                                    The Roomies
                                 </Typography>
                                 <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
                                     Room Expenses Dashboard

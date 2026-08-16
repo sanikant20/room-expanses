@@ -17,7 +17,6 @@ import {
     styled
 } from '@mui/material';
 import { CheckCircleRounded, CloseRounded, ErrorRounded, InfoRounded, WarningAmberRounded } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 // Slide animation
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -110,7 +109,6 @@ const CustomDialog = ({
     disableEscapeKeyDown = false,
 }) => {
     const theme = useTheme();
-    const { t } = useTranslation();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const getIcon = () => {
@@ -184,7 +182,7 @@ const CustomDialog = ({
                 </Typography>
                 {showCloseIcon && (
                     <IconButton
-                        aria-label={t('common.close', 'Close')}
+                        aria-label="Close"
                         onClick={onCancel}
                         disabled={loading}
                         size="small"
@@ -228,7 +226,7 @@ const CustomDialog = ({
                             order: isMobile ? 2 : 1,
                         }}
                     >
-                        {cancelText || t('button.cancel', 'Cancel')}
+                        {cancelText || 'Cancel'}
                     </ActionButton>
                 )}
                 <ActionButton
@@ -248,7 +246,7 @@ const CustomDialog = ({
                         color: theme.palette.primary.contrastText,
                     }}
                 >
-                    {loading ? t('button.processing', 'Processing...') : (confirmText || t('button.confirm', 'Confirm'))}
+                    {loading ? 'Processing...' : (confirmText || 'Confirm')}
                 </ActionButton>
             </StyledDialogActions>
         </StyledDialog>

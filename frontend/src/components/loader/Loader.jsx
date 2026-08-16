@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress, Typography, keyframes, useTheme, alpha } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 
 // Animations
 const fadeIn = keyframes`
@@ -44,13 +43,13 @@ const rotateReverse = keyframes`
   }
 `;
 
-// Loading Messages (will be translated inside component)
-const getLoadingMessages = (t) => [
-    t('loader.message1', 'Opening the 404RoomNotFound workspace...'),
-    t('loader.message2', 'Preparing your expense insights...'),
-    t('loader.message3', 'Syncing settlements and reports...'),
-    t('loader.message4', 'Almost ready for your room team...'),
-    t('loader.message5', '404RoomNotFound - Room Expenses Management...')
+// Loading Messages
+const loadingMessages = [
+    'Opening the Roomies workspace...',
+    'Preparing your expense insights...',
+    'Syncing settlements and reports...',
+    'Almost ready for your room team...',
+    'The Roomies - Room Expenses Management...'
 ];
 
 const Loader = ({
@@ -65,8 +64,6 @@ const Loader = ({
     progress = null,
 }) => {
     const theme = useTheme();
-    const { t } = useTranslation();
-    const loadingMessages = getLoadingMessages(t);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(() => {
         return Math.floor(Math.random() * loadingMessages.length);
     });
@@ -86,7 +83,7 @@ const Loader = ({
         }, rotationInterval);
 
         return () => clearInterval(interval);
-    }, [rotateMessages, rotationInterval, currentMessageIndex, loadingMessages]);
+    }, [rotateMessages, rotationInterval, currentMessageIndex]);
 
     // Simulate progress if showProgressPercentage is true
     useEffect(() => {
@@ -197,7 +194,7 @@ const Loader = ({
                 <Box
                     component="img"
                     src={logo}
-                    alt="404RoomNotFound"
+                    alt="The Roomies"
                     sx={{
                         width: logoSize - 10,
                         height: logoSize - 10,
@@ -304,7 +301,7 @@ const Loader = ({
                     mx: 'auto',
                 }}
             >
-                "404RoomNotFound - Powering fair room expense sharing"
+                "The Roomies - Powering fair room expense sharing"
             </Typography>
         </Box>
     );

@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.png'],
       manifest: {
-        name: '404RoomNotFound',
-        short_name: '404RoomNotFound',
-        description: '404RoomNotFound | Room Expenses Management',
+        name: 'The Roomies',
+        short_name: 'The Roomies',
+        description: 'The Roomies | Room Expenses Management',
         icons: [
           {
             src: 'logo.png',

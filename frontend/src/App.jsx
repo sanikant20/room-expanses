@@ -6,7 +6,6 @@ import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './context/useAuth';
 import { AuthExpirationProvider } from './context/AuthExpirationProvider';
 import { useAuthExpiration } from './context/useAuthExpiration';
-import { DateProvider } from './context/DateProvider';
 import { ThemeModeProvider } from './context/ThemeModeProvider';
 import { CssBaseline } from '@mui/material';
 
@@ -97,21 +96,19 @@ const App = () => {
             draggable
             pauseOnHover
           />
-          <DateProvider>
-            <AuthProvider>
-              <AuthExpirationProvider>
-                <Router>
-                  <Suspense fallback={<Loader />}>
-                    <AxiosInterceptorSetup />
-                    <HealthPoller />
-                    <ErrorBoundary>
-                      <AppRoutes />
-                    </ErrorBoundary>
-                  </Suspense>
-                </Router>
-              </AuthExpirationProvider>
-            </AuthProvider>
-          </DateProvider>
+          <AuthProvider>
+            <AuthExpirationProvider>
+              <Router>
+                <Suspense fallback={<Loader />}>
+                  <AxiosInterceptorSetup />
+                  <HealthPoller />
+                  <ErrorBoundary>
+                    <AppRoutes />
+                  </ErrorBoundary>
+                </Suspense>
+              </Router>
+            </AuthExpirationProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </AppTheme>
     </ThemeModeProvider>

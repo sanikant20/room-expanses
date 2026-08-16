@@ -5,7 +5,6 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
-import { useTranslation } from 'react-i18next';
 import OptionsMenu from './Optionsmenu';
 import MenuContent from './MenuContent';
 import { useNavigate } from 'react-router-dom';
@@ -102,7 +101,6 @@ const UserSection = styled(Stack, { shouldForwardProp: (prop) => prop !== 'open'
 export default function DesktopSideBar({ open }) {
     const theme = useTheme();
     const navigate = useNavigate();
-    const { t } = useTranslation();
     const authData = getAuthData();
 
     return (
@@ -132,7 +130,7 @@ export default function DesktopSideBar({ open }) {
                                     color: 'white',
                                 }}
                             >
-                                {t('project.name')}
+                                The Roomies
                             </Typography>
                             <Typography
                                 variant="caption"
@@ -144,7 +142,7 @@ export default function DesktopSideBar({ open }) {
                                     color: 'white',
                                 }}
                             >
-                                {t('project.description')}
+                                Room Expenses Management
                             </Typography>
                         </Stack>
                     )}

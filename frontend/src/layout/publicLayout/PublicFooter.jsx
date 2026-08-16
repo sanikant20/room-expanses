@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Link, Divider, IconButton, Stack, useTheme } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
@@ -9,7 +8,6 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 
 const PublicFooter = () => {
     const theme = useTheme();
-    const { t } = useTranslation();
     const isDark = theme.palette.mode === 'dark';
 
     return (
@@ -27,10 +25,10 @@ const PublicFooter = () => {
                     {/* Company Info */}
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Typography variant="h6" gutterBottom fontWeight="bold">
-                            {t('footer.companyName')}
+                            The Roomies
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
-                            {t('footer.companyAddress')}
+                            Track shared expenses, settle balances, and stay organized in Nepali months.
                         </Typography>
                         <Stack direction="row" spacing={1}>
                             <IconButton
@@ -87,7 +85,7 @@ const PublicFooter = () => {
                     {/* Quick Links */}
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Typography variant="h6" gutterBottom fontWeight="bold">
-                            {t('footer.quickLinks')}
+                            Quick Links
                         </Typography>
                         <Stack spacing={1}>
                             <Link
@@ -96,7 +94,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.home')}
+                                Home
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -104,7 +102,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.aboutUs')}
+                                About Us
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -112,7 +110,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.services')}
+                                Services
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -120,7 +118,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.contact')}
+                                Contact
                             </Link>
                         </Stack>
                     </Grid>
@@ -128,7 +126,7 @@ const PublicFooter = () => {
                     {/* Resources */}
                     <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                         <Typography variant="h6" gutterBottom fontWeight="bold">
-                            {t('footer.resources')}
+                            Resources
                         </Typography>
                         <Stack spacing={1}>
                             <Link
@@ -137,7 +135,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.blog')}
+                                Blog
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -145,7 +143,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.faq')}
+                                FAQ
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -153,7 +151,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.support')}
+                                Support
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -161,7 +159,7 @@ const PublicFooter = () => {
                                 color="inherit"
                                 sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
                             >
-                                {t('footer.privacyPolicy')}
+                                Privacy Policy
                             </Link>
                         </Stack>
                     </Grid>
@@ -169,16 +167,16 @@ const PublicFooter = () => {
                     {/* Contact Info */}
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography variant="h6" gutterBottom fontWeight="bold">
-                            {t('footer.contactUs')}
+                            Contact Us
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                            📍 {t('footer.companyAddress')}
+                            📍 Kathmandu, Nepal
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                            📞 {t('footer.companyPhone')}
+                            📞 +977 1 4000000
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                            ✉️ {t('footer.companyEmail')}
+                            ✉️ support@theroomies.app
                         </Typography>
                     </Grid>
                 </Grid>
@@ -191,8 +189,8 @@ const PublicFooter = () => {
                         © {new Date().getFullYear()} <span
                             onClick={() => window.open('https://easysoftware.com.np/', '_blank')}
                             style={{ color: isDark ? theme.palette.primary.main : 'inherit', fontWeight: 600, cursor: 'pointer' }}>
-                            {t('footer.companyName')}
-                        </span> {t('footer.allRightsReserved')}
+                            The Roomies
+                        </span> All rights reserved.
                     </Typography>
                 </Box>
             </Container>

@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { CloseRounded } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 const CustomModal = ({
     open,
@@ -24,7 +23,6 @@ const CustomModal = ({
     headerColor = ''
 }) => {
     const theme = useTheme();
-    const { t } = useTranslation();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [isScrolled, setIsScrolled] = useState(false);
     const contentRef = useRef(null);
@@ -130,7 +128,7 @@ const CustomModal = ({
                     >
                         {title}
                     </Typography>
-                    <Tooltip title={t('common.close', 'Close')} arrow>
+                    <Tooltip title="Close" arrow>
                         <IconButton
                             onClick={onClose}
                             size="small"

@@ -1,6 +1,6 @@
-# Arora Trading Nepal — Direct Selling Admin Portal
+# The Roomies — Room Expenses Management
 
-A modern admin portal for Arora Trading Nepal built with React, Vite, and Material UI. The app includes a polished dashboard experience, role-based UI sections, multilingual support, and reusable admin components for direct-selling operations.
+A modern room-expenses management app built with React, Vite, and Material UI. The app includes a polished dashboard experience, role-based UI sections, and reusable components for tracking shared expenses and settling balances in Nepali months.
 
 ## Tech stack
 
@@ -10,7 +10,7 @@ A modern admin portal for Arora Trading Nepal built with React, Vite, and Materi
 - React Router 7.18.1
 - React Query 5.101.2
 - React Toastify 11.1.0
-- i18next 26.3.4 with Nepali and English translations
+- Nepali date pickers via nepali-date-converter
 - PWA support via vite-plugin-pwa
 
 ## Available scripts
@@ -39,8 +39,7 @@ A modern admin portal for Arora Trading Nepal built with React, Vite, and Materi
 - `src/pages` — public and protected screens
 - `src/layout` — shared layout, header, sidebar, and navigation
 - `src/components` — reusable UI components such as cards, dialogs, tables, and loaders
-- `src/i18n` — English and Nepali translation files
-- `src/apis` — API integration layer for the admin modules
+- `src/apis` — API integration layer for the app modules
 - `src/theme` — theme configuration and color selection UI
 
 ## Notes

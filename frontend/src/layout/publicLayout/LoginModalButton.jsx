@@ -7,12 +7,10 @@ import {
 } from '@mui/material';
 import { LoginRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
 const LoginModalButton = ({ isMobile = false }) => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const { t } = useTranslation();
 
     const handleLogin = () => navigate(`/login`);
 
@@ -22,7 +20,7 @@ const LoginModalButton = ({ isMobile = false }) => {
                 <IconButton
                     onClick={handleLogin}
                     size="small"
-                    aria-label={t('button.login')}
+                    aria-label="Login"
                     sx={{
                         width: 44,
                         height: 44,
@@ -47,7 +45,7 @@ const LoginModalButton = ({ isMobile = false }) => {
                     size="small"
                     startIcon={<LoginRounded />}
                 >
-                    {t('button.login')}
+                    Login
                 </Button>
             )}
         </>

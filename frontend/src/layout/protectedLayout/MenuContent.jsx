@@ -2,7 +2,6 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from
 import { useTheme, alpha } from '@mui/material/styles';
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Collapse, TextField, InputAdornment, IconButton, Tooltip, Box, Fade, Popper, Paper, Grow } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { MenuItemLists, secondaryListItems } from './MenuItemLists';
 import { ClearRounded, ExpandLess, ExpandMore, SearchRounded, FiberManualRecord } from '@mui/icons-material';
 
@@ -14,7 +13,6 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
-    const { t } = useTranslation();
 
     const computeOpenStates = useCallback(() => {
         const states = {};
@@ -51,7 +49,7 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
     const activeItemRef = useRef(null);
     const menuItemDomRefs = useRef({});
 
-    const getMenuText = (item) => t(item?.translationKey || item?.menu || '', item?.menu || '');
+    const getMenuText = (item) => item?.menu || '';
 
     const isActive = useCallback((item) => {
         const path = location.pathname;
@@ -318,7 +316,7 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
                         <TextField
                             fullWidth
                             size="small"
-                            placeholder={t('menu.searchPlaceholder', 'Search menu...')}
+                            placeholder="Search menu..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             slotProps={{
@@ -360,7 +358,7 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
                     {renderMenuItems(filteredMainItems)}
                     {!sidebarCollapsed && filteredMainItems.length === 0 && searchTerm && (
                         <ListItem>
-                            <ListItemText primary={t('menu.noResultsFound', 'No menu items found')} primaryTypographyProps={{ variant: 'body2', color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }} />
+                            <ListItemText primary="No menu items found" primaryTypographyProps={{ variant: 'body2', color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }} />
                         </ListItem>
                     )}
                 </List>

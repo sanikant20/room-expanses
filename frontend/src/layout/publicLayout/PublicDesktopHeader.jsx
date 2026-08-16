@@ -15,8 +15,6 @@ import { WbSunnyRounded, NightsStayRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../../context/useThemeMode';
 import LoginModalButton from './LoginModalButton';
-import ChangeLanguage from '../protectedLayout/ChangeLanguage';
-import { useTranslation } from 'react-i18next';
 
 const LogoImage = styled('img')(({ theme }) => ({
     width: 40,
@@ -31,7 +29,6 @@ const LogoImage = styled('img')(({ theme }) => ({
 const PublicDesktopHeader = () => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const { t } = useTranslation();
     const { mode, toggleThemeMode } = useThemeMode();
     const [scrolled, setScrolled] = useState(false);
 
@@ -87,12 +84,12 @@ const PublicDesktopHeader = () => {
                         onClick={handleLogoClick}
                         role="link"
                         tabIndex={0}
-                        aria-label={t('project.name')}
+                        aria-label="The Roomies"
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogoClick(); } }}
                     >
                         <LogoImage
                             src="/logo.png"
-                            alt={`${t('project.name')} logo`}
+                            alt="The Roomies logo"
                             onError={(e) => {
                                 e.target.style.display = 'none';
                             }}
@@ -107,17 +104,17 @@ const PublicDesktopHeader = () => {
                                 lineHeight: 1.2,
                             }}
                         >
-                            {t('project.name')}
+                            The Roomies
                         </Typography>
                     </Box>
 
                     {/* Right side - Theme Toggle & Login */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Tooltip title={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')} arrow>
+                        <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>
                             <IconButton
                                 onClick={toggleThemeMode}
                                 size="small"
-                                aria-label={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')}
+                                aria-label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
                                 sx={{
                                     width: 40,
                                     height: 40,
@@ -145,7 +142,6 @@ const PublicDesktopHeader = () => {
                             </IconButton>
                         </Tooltip>
 
-                        <ChangeLanguage variant="iconButton" />
                         <LoginModalButton />
                     </Box>
                 </Toolbar>

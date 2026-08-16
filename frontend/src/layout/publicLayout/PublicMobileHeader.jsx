@@ -16,17 +16,13 @@ import {
     styled
 } from '@mui/material';
 import {
-    MenuRounded,
     CloseRounded,
     WbSunnyRounded,
     NightsStayRounded
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useThemeMode } from '../../context/useThemeMode';
-import PublicMenuContent from './PublicMenuContent';
 import LoginModalButton from './LoginModalButton';
-import ChangeLanguage from '../protectedLayout/ChangeLanguage';
 
 const LogoImage = styled('img')(({ theme }) => ({
     width: 40,
@@ -41,7 +37,6 @@ const LogoImage = styled('img')(({ theme }) => ({
 const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const { t } = useTranslation();
     const { mode, toggleThemeMode } = useThemeMode();
 
     // Close drawer on Escape key
@@ -103,12 +98,12 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
                         onClick={handleLogoClick}
                         role="link"
                         tabIndex={0}
-                        aria-label={t('project.name')}
+                        aria-label="The Roomies"
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogoClick(); } }}
                     >
                         <LogoImage
                             src="/logo.png"
-                            alt={`${t('project.name')} logo`}
+                            alt="The Roomies logo"
                             onError={(e) => {
                                 e.target.style.display = 'none';
                             }}
@@ -123,18 +118,18 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
                                 lineHeight: 1.2,
                             }}
                         >
-                            {t('project.name')}
+                            The Roomies
                         </Typography>
                     </Box>
 
                     {/* Right side */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         {/* Theme Toggle */}
-                        <Tooltip title={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')} arrow>
+                        <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>
                             <IconButton
                                 onClick={toggleThemeMode}
                                 size="small"
-                                aria-label={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')}
+                                aria-label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
                                 sx={{
                                     width: 44,
                                     height: 44,
@@ -154,49 +149,7 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
                             </IconButton>
                         </Tooltip>
 
-                        <ChangeLanguage variant="iconButton" />
-
-                        {/* Login Button (Mobile) */}
                         <LoginModalButton isMobile />
-
-                        {/* Hamburger Menu Button */}
-                        {/* <IconButton
-                            onClick={handleMenuToggle}
-                            size="small"
-                            aria-label={mobileMenuOpen ? t('header.closeSidebar', 'Close menu') : t('header.openSidebar', 'Open menu')}
-                            aria-expanded={mobileMenuOpen}
-                            sx={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 2,
-                                color: theme.palette.text.primary,
-                                border: `1px solid ${alpha(theme.palette.divider, 0.15)}`,
-                                backgroundColor: 'transparent',
-                                transition: 'all 0.2s ease',
-                                ml: 0.5,
-                                '&:hover': {
-                                    backgroundColor: alpha(theme.palette.action.hover, 0.5),
-                                    borderColor: alpha(theme.palette.divider, 0.3),
-                                },
-                                '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'transform 0.3s ease',
-                                    transform: mobileMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                                    '@media (prefers-reduced-motion: reduce)': {
-                                        transition: 'none',
-                                        transform: 'none',
-                                    },
-                                }}
-                            >
-                                {mobileMenuOpen ? <CloseRounded sx={{ fontSize: 24 }} /> : <MenuRounded sx={{ fontSize: 24 }} />}
-                            </Box>
-                        </IconButton>*/}
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -254,12 +207,12 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
                             onClick={handleLogoClick}
                             role="link"
                             tabIndex={0}
-                            aria-label={t('project.name')}
+                            aria-label="The Roomies"
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogoClick(); } }}
                         >
                             <LogoImage
                                 src="/logo.png"
-                                alt={`${t('project.name')} logo`}
+                                alt="The Roomies logo"
                                 onError={(e) => { e.target.style.display = 'none'; }}
                                 sx={{ width: 36, height: 36 }}
                             />
@@ -272,13 +225,13 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
                                     lineHeight: 1.2,
                                 }}
                             >
-                                {t('project.name')}
+                                The Roomies
                             </Typography>
                         </Box>
                         <IconButton
                             onClick={onMenuClose}
                             size="small"
-                            aria-label={t('header.closeSidebar', 'Close menu')}
+                            aria-label="Close menu"
                             sx={{
                                 width: 44,
                                 height: 44,
@@ -322,7 +275,7 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
                                     : <NightsStayRounded sx={{ mr: 1.5, color: theme.palette.primary.main, fontSize: 22 }} />
                                 }
                                 <ListItemText
-                                    primary={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')}
+                                    primary={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
                                     primaryTypographyProps={{ fontWeight: 500, fontSize: '0.9375rem' }}
                                 />
                             </ListItemButton>

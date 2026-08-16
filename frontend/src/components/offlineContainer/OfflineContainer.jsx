@@ -7,10 +7,8 @@ import {
     CircularProgress
 } from '@mui/material';
 import { WifiOff } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 export const OfflineContainer = () => {
-    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
 
     const handleRetry = () => {
@@ -60,11 +58,11 @@ export const OfflineContainer = () => {
                     </Box>
 
                     <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {t('offline.title')}
+                        You're offline
                     </Typography>
 
                     <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400 }}>
-                        {t('offline.message')}
+                        No internet connection detected.
                     </Typography>
 
                     <Button
@@ -74,11 +72,11 @@ export const OfflineContainer = () => {
                         disabled={loading}
                         sx={{ textTransform: 'none', fontWeight: 500, mt: 1 }}
                     >
-                        {loading ? t('button.loading') : t('button.retry')}
+                        {loading ? 'Loading...' : 'Try Again'}
                     </Button>
 
                     <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.6 }}>
-                        {t('offline.retry')}
+                        If the problem persists, check your router or mobile data settings.
                     </Typography>
                 </Box>
             </Container>

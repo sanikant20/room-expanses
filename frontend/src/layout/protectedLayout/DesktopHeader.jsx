@@ -12,12 +12,10 @@ import {
     NightsStayRounded,
 } from '@mui/icons-material';
 import { Tooltip, Box, IconButton, Chip, keyframes } from '@mui/material';
-import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import OptionsMenu from './Optionsmenu';
-import { useDateContext } from '../../context/useDateContext';
 import { useThemeMode } from '../../context/useThemeMode';
-import { dateFormatToToggledDate } from '../../utils/dateFormatToToggleDate';
+import { convertToBSFormat } from '../../utils/dateConverter';
 import BreadcrumbsPath from './BreadcrumbsPath';
 import { getAuthData } from '../../helper/getAuthData';
 
@@ -62,8 +60,6 @@ const InfoChip = ({ label, color = 'primary' }) => {
 
 export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
     const theme = useTheme();
-    const { t } = useTranslation();
-    const { useNepaliDate, toggleDateMode } = useDateContext();
     const { mode, toggleThemeMode } = useThemeMode();
     const [currentTime, setCurrentTime] = useState(dayjs());
 
@@ -72,12 +68,11 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
         return () => clearInterval(interval);
     }, []);
 
-    const formatTimeWithAMPM = () => useNepaliDate ? currentTime.format('HH:mm:ss') : currentTime.format('hh:mm:ss A');
     const getGreeting = () => {
         const hour = currentTime.hour();
-        if (hour < 12) return t('header.goodMorning');
-        if (hour < 17) return t('header.goodAfternoon');
-        return t('header.goodEvening');
+        if (hour < 12) return 'Good Morning';
+        if (hour < 17) return 'Good Afternoon';
+        return 'Good Evening';
     };
     const authData = getAuthData();
 
@@ -180,37 +175,13 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                 </Stack>
 
                 <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center' }}>
-                    <Tooltip title={useNepaliDate ? 'Switch to English date' : 'Switch to Nepali date'} arrow>
-                        <Chip
-                            label={dateFormatToToggledDate(new Date(), useNepaliDate)}
-                            // icon={<CalendarTodayRounded sx={{ fontSize: 16 }} />}
-                            onClick={toggleDateMode}
-                            size="small"
-                            sx={{
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                height: 34,
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                background: alpha(theme.palette.primary.main, 0.08),
-                                color: theme.palette.primary.main,
-                                border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                                backdropFilter: 'blur(4px)',
-                                '&:hover': {
-                                    background: alpha(theme.palette.primary.main, 0.15),
-                                    transform: 'translateY(-2px)',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`,
-                                },
-                            }}
-                        />
-                    </Tooltip>
-                    <InfoChip label={formatTimeWithAMPM()} icon={<AccessTimeRounded sx={{ fontSize: 16 }} />} />
+                    <InfoChip label={convertToBSFormat(new Date()) || ''} icon={<CalendarTodayRounded sx={{ fontSize: 16 }} />} />
+                    <InfoChip label={currentTime.format('HH:mm:ss')} icon={<AccessTimeRounded sx={{ fontSize: 16 }} />} />
                     <InfoChip
                         label={`${getGreeting()}, ${authData?.FullName?.split(' ')[0] || 'User'}!`}
                         icon={getGreetingIcon()}
                     />
-                    <Tooltip title={mode === 'dark' ? t('header.lightMode') : t('header.darkMode')} arrow>
+                    <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>
                         <IconButton
                             onClick={toggleThemeMode}
                             size="small"

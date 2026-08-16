@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import { ExpandLessRounded, ExpandMoreRounded } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 const StyledCard = styled(Card, {
     shouldForwardProp: (prop) => prop !== 'cardColor',
@@ -84,7 +83,6 @@ const CustomCard = ({
     ...props
 }) => {
     const theme = useTheme();
-    const { t } = useTranslation();
     const [expanded, setExpanded] = useState(defaultExpanded);
 
     useEffect(() => {
@@ -105,11 +103,11 @@ const CustomCard = ({
         if (!collapsible) return null;
 
         return (
-            <Tooltip title={expanded ? t('common.collapse', 'Collapse') : t('common.expand', 'Expand')} placement="left" arrow>
+            <Tooltip title={expanded ? 'Collapse' : 'Expand'} placement="left" arrow>
                 <ExpandIcon
                     onClick={handleToggle}
                     aria-expanded={expanded}
-                    aria-label={expanded ? t('common.collapse', 'Collapse') : t('common.expand', 'Expand')}
+                    aria-label={expanded ? 'Collapse' : 'Expand'}
                     size="small"
                     headerColor={headerColor}
                 >

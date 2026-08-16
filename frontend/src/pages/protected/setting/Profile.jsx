@@ -27,17 +27,13 @@ import {
 } from '@mui/icons-material';
 import { getAuthData, isPartnerAccount } from '../../../helper/getAuthData';
 import CustomCard from '../../../components/custom/CustomCard';
-import { dateFormatToToggledDate } from '../../../utils/dateFormatToToggleDate';
-import { useDateContext } from '../../../context/useDateContext';
-import { useTranslation } from 'react-i18next';
+import { convertToBSFormat } from '../../../utils/dateConverter';
 
 const Profile = () => {
     const theme = useTheme();
     const authData = getAuthData();
     const isPartner = isPartnerAccount();
-    const { useNepaliDate } = useDateContext();
-    const { t } = useTranslation();
-    const roleLabel = isPartner ? t('user.partner', 'Partner') : t('user.admin', 'Admin');
+    const roleLabel = isPartner ? 'Partner' : 'Admin';
     const RoleChipIcon = isPartner ? PersonPinTwoTone : AdminPanelSettingsRounded;
     const roleRowIcon = isPartner ? PersonPinTwoTone : AdminPanelSettingsTwoTone;
 
@@ -104,7 +100,7 @@ const Profile = () => {
                     </Avatar>
                     <Box sx={{ flex: 1, textAlign: { xs: 'center', md: 'left' } }}>
                         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                            {authData?.FullName || t('user.user', 'User')}
+                            {authData?.FullName || 'User'}
                         </Typography>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent={{ xs: 'center', md: 'flex-start' }} alignItems="center">
                             <Chip
@@ -123,10 +119,10 @@ const Profile = () => {
                     </Box>
                     <Box>
                         <Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
-                            {t('profile.userId', 'User ID')}: {authData?.UserID || '-'}
+                            User ID: {authData?.UserID || '-'}
                         </Typography>
                         <Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
-                            {t('profile.username', 'Username')}: {authData?.Email || '-'}
+                            Username: {authData?.Email || '-'}
                         </Typography>
                     </Box>
                 </Stack>
@@ -134,22 +130,20 @@ const Profile = () => {
 
             <Grid container spacing={3}>
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomCard icon={<InfoTwoTone fontSize="small" />} title={t('profile.basicInformation', 'Basic Information')}>
-                        <InfoRow label={t('profile.fullName', 'Full Name')} value={authData?.FullName} icon={BadgeTwoTone} />
-                        <InfoRow label={t('profile.username', 'Username')} value={authData?.Email} icon={PersonPinTwoTone} />
-                        <InfoRow label={t('profile.email', 'Email')} value={authData?.Email} icon={EmailTwoTone} />
-                        <InfoRow label={t('profile.phone', 'Phone')} value={authData?.Phone} icon={PhoneTwoTone} />
-                        <InfoRow label={t('profile.companyId', 'Company ID')} value={authData?.ComID} icon={BusinessTwoTone} />
+                    <CustomCard icon={<InfoTwoTone fontSize="small" />} title="Basic Information">
+                        <InfoRow label="Full Name" value={authData?.FullName} icon={BadgeTwoTone} />
+                        <InfoRow label="Username" value={authData?.Email} icon={PersonPinTwoTone} />
+                        <InfoRow label="Email" value={authData?.Email} icon={EmailTwoTone} />
+                        <InfoRow label="Phone" value={authData?.Phone} icon={PhoneTwoTone} />
+                        <InfoRow label="Company ID" value={authData?.ComID} icon={BusinessTwoTone} />
                     </CustomCard>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <CustomCard icon={<FingerprintTwoTone fontSize="small" />} title={t('profile.accountDetails', 'Account Details')}>
-                        {/* <InfoRow label="User ID" value={authData?.UserID} icon={FingerprintTwoTone} /> */}
-                        {/* <InfoRow label="Auth Code" value={authData?.AuthCode} icon={BadgeTwoTone} /> */}
-                        <InfoRow label={t('profile.role', 'Role')} value={roleLabel} icon={roleRowIcon} />
-                        <InfoRow label={t('profile.todaysDate', "Today's Date")} value={dateFormatToToggledDate(new Date(), useNepaliDate)} icon={CalendarTodayTwoTone} />
-                        <InfoRow label={t('profile.currentTime', 'Current Time')} value={new Date().toLocaleTimeString()} icon={AccessTimeTwoTone} />
+                    <CustomCard icon={<FingerprintTwoTone fontSize="small" />} title="Account Details">
+                        <InfoRow label="Role" value={roleLabel} icon={roleRowIcon} />
+                        <InfoRow label="Today's Date" value={convertToBSFormat(new Date()) || '-'} icon={CalendarTodayTwoTone} />
+                        <InfoRow label="Current Time" value={new Date().toLocaleTimeString()} icon={AccessTimeTwoTone} />
                     </CustomCard>
                 </Grid>
             </Grid>

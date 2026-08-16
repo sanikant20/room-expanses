@@ -8,7 +8,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
     SettingsRounded,
     AdminPanelSettingsRounded,
@@ -18,8 +17,6 @@ import {
     PersonRounded
 } from '@mui/icons-material';
 import { Avatar, Badge, Tooltip, useMediaQuery } from '@mui/material';
-import ChangeLanguage from './ChangeLanguage';
-import ChangeDateMode from './ChangeDateMode';
 import { getAuthData } from '../../helper/getAuthData';
 
 // Styled Components with responsive adjustments
@@ -126,7 +123,6 @@ export default function OptionsMenu() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
-    const { t } = useTranslation();
     const authData = getAuthData();
 
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -148,7 +144,7 @@ export default function OptionsMenu() {
     const userData = {
         name: `${authData?.FullName}`,
         email: authData?.Email || authData?.Phone || '',
-        role: authData?.accountType === 'partner' ? 'Partner' : t('user.admin'),
+        role: authData?.accountType === 'partner' ? 'Partner' : 'Admin',
         avatar: authData?.image || '',
         username: `${authData?.ComID}`
     };
@@ -157,25 +153,25 @@ export default function OptionsMenu() {
     const menuItems = [
         {
             id: 'profile',
-            label: t('menu.myProfile'),
+            label: 'My Profile',
             icon: <PersonRounded fontSize={isMobile ? "small" : "small"} />,
             action: () => handleNavigation('/profile')
         },
         {
             id: 'change-password',
-            label: t('menu.changePassword'),
+            label: 'Change Password',
             icon: <KeyRounded fontSize={isMobile ? "small" : "small"} />,
             action: () => handleNavigation('/change-password')
         },
         {
             id: 'theme',
-            label: t('menu.theme'),
+            label: 'Theme',
             icon: <PaletteRounded fontSize={isMobile ? "small" : "small"} />,
             action: () => handleNavigation('/theme')
         },
         {
             id: 'setting',
-            label: t('menu.settings'),
+            label: 'Settings',
             icon: <SettingsRounded fontSize={isMobile ? "small" : "small"} />,
             action: () => handleNavigation('/settings')
         }
@@ -183,7 +179,7 @@ export default function OptionsMenu() {
 
     return (
         <React.Fragment>
-            <Tooltip title={t('header.userProfile')} arrow>
+            <Tooltip title="User Profile" arrow>
                 <Badge
                     overlap="circular"
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
@@ -286,11 +282,6 @@ export default function OptionsMenu() {
                     </MenuItem>
                 ))}
 
-                <ChangeLanguage isMobile={isMobile} />
-
-                <ChangeDateMode />
-
-                {/* Logout Section */}
                 <Divider sx={{ my: isMobile ? 0.5 : 1 }} />
 
                 <MenuItem onClick={handleLogout} className="logout" sx={{
@@ -313,7 +304,7 @@ export default function OptionsMenu() {
                             }
                         }} />
                     </ListItemIcon>
-                    <ListItemText primary={t('menu.logout')} />
+                    <ListItemText primary="Logout" />
                 </MenuItem>
             </Menu>
         </React.Fragment>
