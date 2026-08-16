@@ -13,12 +13,12 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2026-08-15** — backend 23 tests, frontend 22 tests,
-frontend lint 0/0, frontend build OK, backend boots with 32 routes.
+Last verified green: **2026-08-16** — backend 31 tests, frontend 22 tests,
+frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (23 tests, Node built-in runner)
+### Backend — `backend/tests/` (31 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -27,8 +27,12 @@ frontend lint 0/0, frontend build OK, backend boots with 32 routes.
   - `computePartnerSummaries` per-partner totals reconcile with the grand total.
   - `aggregateMonthlyTrend` buckets by BS year/month, sorts chronologically.
   - `subtractBsMonths` rolls over year boundaries (2082/01 − 1 = 2081/12).
-- `routes.test.js` — boots the Express app on an ephemeral port, asserts all 20+ core
-  routes exist and that `POST /register` is **not** exposed.
+  - `computePayerTotals` / `findHighestPayer` / `findLowestPayer` — payer-based dashboard math.
+- `routes.test.js` — boots the Express app on an ephemeral port, asserts all core
+  routes exist (incl. settlement `POST /pay`, `POST /confirm`, `POST /reset`) and
+  that `POST /register` is **not** exposed.
+- `settlement-payment.test.js` — pay/confirm role guards (partner who isn't the
+  payer/receiver gets 403; missing from/to gets 400) and settlement service surface.
 
 ### Frontend — `frontend/src/utils/*.test.js` (22 tests, vitest)
 - `nepaliDate.test.js` — BS parsing/formatting, known calendar boundaries
@@ -66,6 +70,13 @@ frontend lint 0/0, frontend build OK, backend boots with 32 routes.
 - `backend/.env` must set: `MONGODB_URI` (Atlas), `DB_NAME=room-expanses`, `ACCESS_TOKEN_SECRET`,
   `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` (= deployed frontend origin), `NODE_ENV=production`,
   `PORT`. Current values are **dev defaults**.
+- **Settlement index repair (2026-08-16)**: the `settlements` collection carried a stale
+  legacy unique index `bsYear_1_bsMonth_1_category_1` (3-field) left over from before the
+  `group` field existed. It made secondary settlements of different groups collide with
+  `E11000` for the same month (schema index is correctly 4-field: `+ group`). Dropped via
+  `backend/src/scripts/repair-settlement-index.js` (`node src/scripts/repair-settlement-index.js`).
+  `settleScope` also now retries on `code 11000` by re-fetching the existing record so a
+  concurrent upsert (auto-settle cron racing a manual settle) can't 500 mid-cascade.
 - Frontend build env needs `VITE_ENCRYPTION_KEY` (required — see item 4 above). `VITE_BASE_URL`
   defaults to `/api` (dev proxy: Vite → `http://localhost:5000`).
 - Auth flow: JWT in `sessionStorage['auth']` → `Authorization: Bearer` via axios interceptor;

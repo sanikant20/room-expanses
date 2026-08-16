@@ -1,14 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Avatar, Box, InputLabel, MenuItem, Stack, TableRow, TextField, Typography } from '@mui/material';
-import { CompareArrowsRounded } from '@mui/icons-material';
+import { Avatar, Box, Button, Chip, InputLabel, MenuItem, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { CheckCircleRounded, CompareArrowsRounded, PaymentsRounded, ReplayRounded } from '@mui/icons-material';
 import CustomCard from '../../../../components/custom/CustomCard';
 import DataTable from '../../../../components/table/DataTable';
-import { StyledTableCell } from '../../../../components/table/StyledTableCell';
-import { useGetSettlement } from '../../../../apis/settlementAPI/SettlementAPI';
+import CustomDialog from '../../../../components/custom/CustomDialog';
+import {
+    useConfirmTransactionReceipt,
+    useGetSettlement,
+    useMarkTransactionPaid,
+    useResetTransactionPayment,
+} from '../../../../apis/settlementAPI/SettlementAPI';
 import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
-import { getNepaliMonthLabel } from '../../../../constant/constant';
+import { convertToBSFormat } from '../../../../utils/dateConverter';
+import { getNepaliMonthLabel, PAYMENT_STATUS } from '../../../../constant/constant';
 import { GroupSelector, SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
+import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
+import { useDialogState } from '../../../../hooks/useUIState';
+import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 
 const PartnerCell = ({ partner }) => (
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -17,9 +27,33 @@ const PartnerCell = ({ partner }) => (
     </Stack>
 );
 
+const PaymentStatusCell = ({ row }) => {
+    const found = PAYMENT_STATUS.find((s) => s.value === row.paymentStatus) || {};
+    const status = row.paymentStatus || 'pending';
+    return (
+        <Stack spacing={0.5}>
+            <Chip label={found.label || status} color={found.color || 'default'} size="small" sx={{ alignSelf: 'flex-start' }} />
+            {row.paidAt && (
+                <Typography variant="caption" color="text.secondary">
+                    Paid: {convertToBSFormat(row.paidAt)}, {new Date(row.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Typography>
+            )}
+            {row.confirmedAt && (
+                <Typography variant="caption" color="text.secondary">
+                    Confirmed: {convertToBSFormat(row.confirmedAt)}, {new Date(row.confirmedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Typography>
+            )}
+        </Stack>
+    );
+};
+
 const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
+    const queryClient = useQueryClient();
+    const isPartner = isPartnerAccount();
+    const myId = getAuthData()?._id;
     const [category, setCategory] = useState(group && group !== 'all' ? 'secondary' : 'all');
     const [source, setSource] = useState('all');
+    const dialog = useDialogState();
 
     useEffect(() => {
         if (group && group !== 'all') setCategory('secondary');
@@ -58,6 +92,8 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
         return [...map.values()];
     }, [source, isSettled, settlement?.transactions, settlement?.settleActions]);
 
+    const showPaymentStatus = source === 'all';
+
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
@@ -66,17 +102,163 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
     const sourceLabel = source === 'manual' ? 'Manual' : source === 'auto' ? 'Auto' : monthLabel || 'Whole Month';
     const sourceSuffix = source === 'all' ? categoryLabel : `${categoryLabel} · ${sourceLabel}`;
 
-    const columns = useMemo(() => [
-        { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
-        { key: 'from', label: 'Pays', render: (row) => <PartnerCell partner={row.from} /> },
-        { key: 'to', label: 'Receives', render: (row) => <PartnerCell partner={row.to} /> },
-        {
-            key: 'amount', label: 'Amount',
-            render: (row) => <Typography variant="body2" fontWeight={700}>{formatToNepaliCurrency(row.amount)}</Typography>,
-        },
-    ], []);
+    const closeDialog = dialog.close;
+    const showDialog = dialog.show;
 
-    const total = transactions.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+    const invalidate = () => {
+        queryClient.invalidateQueries({ queryKey: ['getSettlement'] });
+        closeDialog();
+    };
+
+    const payMutation = useMarkTransactionPaid();
+    const confirmMutation = useConfirmTransactionReceipt();
+    const resetMutation = useResetTransactionPayment();
+
+    const runMutation = (mutation, tx) => {
+        mutation.mutate(
+            {
+                ...monthObj,
+                category: categoryFilter,
+                ...(groupFilter ? { group: groupFilter } : {}),
+                from: tx.from?._id || tx.from,
+                to: tx.to?._id || tx.to,
+            },
+            {
+                onSuccess: (res) => {
+                    toast.success(res?.message || 'Transaction updated');
+                    invalidate();
+                },
+                onError: (error) => {
+                    toast.error(error?.response?.data?.message || 'Failed to update transaction');
+                    closeDialog();
+                },
+            }
+        );
+    };
+
+    const columns = useMemo(() => {
+        const cols = [
+            { key: 'sn', label: 'SN', render: (row, index) => index + 1 },
+            { key: 'from', label: 'Pays', render: (row) => <PartnerCell partner={row.from} /> },
+            { key: 'to', label: 'Receives', render: (row) => <PartnerCell partner={row.to} /> },
+            {
+                key: 'amount', label: 'Amount',
+                render: (row) => <Typography variant="body2" fontWeight={700}>{formatToNepaliCurrency(row.amount)}</Typography>,
+                footerRenderer: ({ data }) => (
+                    <Typography variant="body2" fontWeight={700} color="primary.main">
+                        {formatToNepaliCurrency(data.reduce((sum, row) => sum + (Number(row.amount) || 0), 0))}
+                    </Typography>
+                ),
+            },
+        ];
+        if (showPaymentStatus) {
+            cols.push({
+                key: 'paymentStatus', label: 'Payment Status',
+                filterValue: (row) => row.paymentStatus || 'pending',
+                render: (row) => <PaymentStatusCell row={row} />,
+            });
+            if (!isPartner) {
+                cols.push({
+                    key: 'actions', label: 'Actions', filterable: false,
+                    render: (row) => {
+                        const status = row.paymentStatus || 'pending';
+                        return (
+                            <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
+                                {status === 'pending' && (
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<PaymentsRounded />}
+                                        onClick={() => showDialog(row, 'pay')}
+                                    >
+                                        Mark Paid
+                                    </Button>
+                                )}
+                                {status === 'paid' && (
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="primary"
+                                        startIcon={<CheckCircleRounded />}
+                                        onClick={() => showDialog(row, 'confirm')}
+                                    >
+                                        Confirm
+                                    </Button>
+                                )}
+                                {status !== 'pending' && (
+                                    <Tooltip title="Reset payment status to pending">
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="warning"
+                                            startIcon={<ReplayRounded />}
+                                            onClick={() => showDialog(row, 'reset')}
+                                        >
+                                            Reset
+                                        </Button>
+                                    </Tooltip>
+                                )}
+                            </Stack>
+                        );
+                    },
+                });
+            } else {
+                cols.push({
+                    key: 'actions', label: 'Actions', filterable: false,
+                    render: (row) => {
+                        const status = row.paymentStatus || 'pending';
+                        const fromId = String(row.from?._id || row.from);
+                        const toId = String(row.to?._id || row.to);
+                        const canPay = status === 'pending' && fromId === myId;
+                        const canConfirm = status === 'paid' && toId === myId;
+                        if (!canPay && !canConfirm) return null;
+                        return (
+                            <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
+                                {canPay && (
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<PaymentsRounded />}
+                                        onClick={() => showDialog(row, 'pay')}
+                                    >
+                                        Mark Paid
+                                    </Button>
+                                )}
+                                {canConfirm && (
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="primary"
+                                        startIcon={<CheckCircleRounded />}
+                                        onClick={() => showDialog(row, 'confirm')}
+                                    >
+                                        Confirm
+                                    </Button>
+                                )}
+                            </Stack>
+                        );
+                    },
+                });
+            }
+        }
+        return cols;
+    }, [showPaymentStatus, isPartner, myId, showDialog]);
+
+    const dialogConfig = {
+        pay: { title: 'Mark Payment as Paid', confirmText: 'Mark as Paid', type: 'success' },
+        confirm: { title: 'Confirm Received', confirmText: 'Confirm Received', type: 'info' },
+        reset: { title: 'Reset Payment Status', confirmText: 'Reset', type: 'warning' },
+    }[dialog.dialogueType] || {};
+
+    const dialogContent = dialog.open ? (
+        dialog.dialogueType === 'pay'
+            ? `Mark ${dialog.data.from?.name || 'this partner'}'s payment of ${formatToNepaliCurrency(dialog.data.amount)} to ${dialog.data.to?.name || 'the receiving partner'} as paid?`
+            : dialog.dialogueType === 'confirm'
+                ? `Confirm that ${dialog.data.to?.name || 'the receiving partner'} received ${formatToNepaliCurrency(dialog.data.amount)} from ${dialog.data.from?.name || 'the paying partner'}?`
+                : `Reset the payment status of ${formatToNepaliCurrency(dialog.data.amount)} from ${dialog.data.from?.name || 'paying partner'} to ${dialog.data.to?.name || 'receiving partner'} back to pending?`
+    ) : '';
 
     return (
         <CustomCard
@@ -91,7 +273,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
                         columns={columns}
                         data={transactions}
                         loading={isLoading}
-                        download={{ enabled: true, filename: 'Settlement Transactions', excludeColumns: ['sn'] }}
+                        download={{ enabled: true, filename: 'Settlement Transactions', excludeColumns: ['sn', 'actions'] }}
                         extra={
                             <Stack
                                 direction={{ xs: 'column', md: 'row' }}
@@ -133,16 +315,6 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
                                 </Stack>
                             </Stack>
                         }
-                        footer={transactions.length > 0 ? (
-                            <TableRow key="total">
-                                <StyledTableCell colSpan={columns.length - 1} align="right">
-                                    <strong>Total:</strong>
-                                </StyledTableCell>
-                                <StyledTableCell>
-                                    <strong>{formatToNepaliCurrency(total)}</strong>
-                                </StyledTableCell>
-                            </TableRow>
-                        ) : null}
                     />
                 </>
             ) : (
@@ -152,6 +324,21 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
                     </Typography>
                 </Box>
             )}
+
+            <CustomDialog
+                open={dialog.open}
+                title={dialogConfig.title}
+                content={dialogContent}
+                confirmText={dialogConfig.confirmText}
+                loading={payMutation.isPending || confirmMutation.isPending || resetMutation.isPending}
+                type={dialogConfig.type}
+                onConfirm={() => {
+                    if (dialog.dialogueType === 'pay') runMutation(payMutation, dialog.data);
+                    else if (dialog.dialogueType === 'confirm') runMutation(confirmMutation, dialog.data);
+                    else if (dialog.dialogueType === 'reset') runMutation(resetMutation, dialog.data);
+                }}
+                onCancel={closeDialog}
+            />
         </CustomCard >
     );
 };

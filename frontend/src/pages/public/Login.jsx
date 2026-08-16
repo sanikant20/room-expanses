@@ -55,7 +55,7 @@ const Login = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [loginMode, setLoginMode] = useState('user');
+    const [loginMode, setLoginMode] = useState('partner');
     const isPartnerMode = loginMode === 'partner';
 
     const { isAuthenticated, setIsAuthenticated } = useAuth();
@@ -83,7 +83,6 @@ const Login = () => {
                     sessionStorage.setItem('auth', token);
                     sessionStorage.setItem('user', encryptData(JSON.stringify(user)));
                     setIsAuthenticated(true);
-                    navigate('/dashboard', { replace: true });
                     setSubmitting(false);
                 } else {
                     toast.error(response?.message || t('login.failed', 'Login failed'));
@@ -390,14 +389,15 @@ const Login = () => {
                                                 },
                                             }}
                                         >
-                                            <ToggleButton value="user">
-                                                <AdminPanelSettingsRounded fontSize="small" sx={{ mr: 1 }} />
-                                                Admin / Staff
-                                            </ToggleButton>
                                             <ToggleButton value="partner">
                                                 <PersonTwoTone fontSize="small" sx={{ mr: 1 }} />
                                                 Partner
                                             </ToggleButton>
+                                            <ToggleButton value="user">
+                                                <AdminPanelSettingsRounded fontSize="small" sx={{ mr: 1 }} />
+                                                Admin / Staff
+                                            </ToggleButton>
+
                                         </ToggleButtonGroup>
 
                                         <Grid container spacing={3}>

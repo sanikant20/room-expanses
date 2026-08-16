@@ -91,11 +91,20 @@ export const settleScope = async ({ year, month, category = null, group = null, 
     };
   }
 
-  const record = await Settlement.findOneAndUpdate(
-    { bsYear: year, bsMonth: month, category, group },
-    update,
-    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
-  ).populate(settlementPopulates());
+  const scopeFilter = { bsYear: year, bsMonth: month, category, group };
+
+  let record;
+  try {
+    record = await Settlement.findOneAndUpdate(
+      scopeFilter,
+      update,
+      { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
+    ).populate(settlementPopulates());
+  } catch (error) {
+    if (error?.code !== 11000) throw error;
+    record = await Settlement.findOne(scopeFilter).populate(settlementPopulates());
+    if (!record) throw error;
+  }
 
   if (unsettledCount > 0) {
     await Expense.updateMany(unsettledFilter, {

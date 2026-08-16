@@ -26,7 +26,9 @@ AxiosConfig.interceptors.request.use(
 AxiosConfig.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const url = error.config?.url || '';
+        const isLoginRequest = /\/login$|\/partner-login$/.test(url);
+        if (error.response?.status === 401 && !isLoginRequest) {
             if (authExpirationHandler) {
                 authExpirationHandler();
             } else {

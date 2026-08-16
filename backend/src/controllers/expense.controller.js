@@ -138,12 +138,9 @@ export const createExpense = asyncHandler(async (req, res) => {
 
   const expense = await Expense.create({ ...payload, createdBy: req.user._id });
 
-  const populated = await withPopulates(Expense.findById(expense._id));
-
   return res.status(201).json({
     success: true,
     message: "Expense created successfully",
-    expense: populated,
   });
 });
 
@@ -214,13 +211,11 @@ export const updateExpense = asyncHandler(async (req, res) => {
     await enforcePartnerExpenseRules(payload, req.user._id);
   }
 
-  const updated = await Expense.findByIdAndUpdate(id, payload, { returnDocument: "after", runValidators: true });
-  const populated = await withPopulates(Expense.findById(updated._id));
+  await Expense.findByIdAndUpdate(id, payload, { runValidators: true });
 
   return res.status(200).json({
     success: true,
     message: "Expense updated successfully",
-    expense: populated,
   });
 });
 

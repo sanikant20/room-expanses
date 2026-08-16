@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { BalanceRounded, CalculateRounded, CompareArrowsRounded, StarOutlineRounded, StarRounded } from '@mui/icons-material';
+import { BalanceRounded, CalculateRounded, CompareArrowsRounded, ReceiptLongRounded, StarOutlineRounded, StarRounded } from '@mui/icons-material';
 import CustomTab from '../../../components/custom/CustomTab';
 import { formatYearMonthString, getCurrentBsYearMonth } from '../../../utils/nepaliDate';
 import { isPartnerAccount } from '../../../helper/getAuthData';
 import SettlementSummary from './summary/SettlementSummary';
 import SettlementCalculation from './calculation/SettlementCalculation';
 import SettlementTransactions from './transactions/SettlementTransactions';
+import SettlementMyPayments from './payments/SettlementMyPayments';
 
 const SettlementTabs = () => {
     const isPartner = isPartnerAccount();
@@ -26,6 +27,16 @@ const SettlementTabs = () => {
                     subtitlePrefix="Total settlement summary"
                     filename="Settlement Summary"
                     allowSettle={!isPartner}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                />
+            ),
+        },
+        {
+            label: 'My Payments',
+            icon: <ReceiptLongRounded />,
+            content: (
+                <SettlementMyPayments
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
                 />
@@ -89,7 +100,7 @@ const SettlementTabs = () => {
         },
     ];
 
-    return <CustomTab tabs={tabs} storageKey="settlementActiveTab" />;
+    return <CustomTab tabs={tabs} storageKey={isPartner ? 'settlementActiveTabPartner' : 'settlementActiveTab'} />;
 };
 
 export default SettlementTabs;

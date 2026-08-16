@@ -43,3 +43,30 @@ export const useUnsettleSettlement = () => useMutation({
         return response?.data;
     },
 });
+
+export const useMarkTransactionPaid = () => useMutation({
+    mutationKey: ["markTransactionPaid"],
+    mutationFn: async ({ bsYear, bsMonth, category, group, from, to }) => {
+        const body = { bsYear, bsMonth, category, group, from, to };
+        const response = await AxiosConfig.post(`${endpoint}/pay`, body);
+        return response?.data;
+    },
+});
+
+export const useConfirmTransactionReceipt = () => useMutation({
+    mutationKey: ["confirmTransactionReceipt"],
+    mutationFn: async ({ bsYear, bsMonth, category, group, from, to }) => {
+        const body = { bsYear, bsMonth, category, group, from, to };
+        const response = await AxiosConfig.post(`${endpoint}/confirm`, body);
+        return response?.data;
+    },
+});
+
+export const useResetTransactionPayment = () => useMutation({
+    mutationKey: ["resetTransactionPayment"],
+    mutationFn: async ({ bsYear, bsMonth, category, group, from, to }) => {
+        const body = { bsYear, bsMonth, category, group, from, to };
+        const response = await AxiosConfig.post(`${endpoint}/reset`, body);
+        return response?.data;
+    },
+});

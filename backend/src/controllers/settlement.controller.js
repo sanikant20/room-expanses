@@ -50,6 +50,122 @@ const resolveCategory = (value) =>
 const resolveGroup = (value) =>
   value && mongoose.Types.ObjectId.isValid(value) ? value : null;
 
+const resolveTransactionScope = (req) => {
+  const { bsYear, bsMonth, from, to } = req.body;
+  const category = resolveCategory(req.body.category);
+  const group = resolveGroup(req.body.group);
+
+  if (!bsYear || !bsMonth) {
+    throw new ApiError(400, "bsYear and bsMonth are required");
+  }
+  if (!from || !to) {
+    throw new ApiError(400, "Transaction from and to partners are required");
+  }
+
+  return {
+    year: Number(bsYear),
+    month: Number(bsMonth),
+    category,
+    group,
+    from: String(from),
+    to: String(to),
+  };
+};
+
+const updateTransactionPayment = async (scope, payment) => {
+  const record = await Settlement.findOneAndUpdate(
+    {
+      bsYear: scope.year,
+      bsMonth: scope.month,
+      category: scope.category,
+      group: scope.group,
+      status: "settled",
+      "transactions.from": scope.from,
+      "transactions.to": scope.to,
+    },
+    { $set: payment }
+  );
+
+  if (!record) {
+    throw new ApiError(404, "Settled transaction not found for this month");
+  }
+};
+
+export const markTransactionPaid = asyncHandler(async (req, res) => {
+  const scope = resolveTransactionScope(req);
+
+  if (req.userType === "partner" && req.user._id.toString() !== scope.from) {
+    throw new ApiError(403, "Only the paying partner can mark this transaction as paid");
+  }
+
+  await updateTransactionPayment(scope, {
+    "transactions.$.paymentStatus": "paid",
+    "transactions.$.paidAt": new Date(),
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Transaction marked as paid",
+  });
+});
+
+export const confirmTransactionReceipt = asyncHandler(async (req, res) => {
+  const scope = resolveTransactionScope(req);
+
+  if (req.userType === "partner" && req.user._id.toString() !== scope.to) {
+    throw new ApiError(403, "Only the receiving partner can confirm this transaction");
+  }
+
+  const record = await Settlement.findOne({
+    bsYear: scope.year,
+    bsMonth: scope.month,
+    category: scope.category,
+    group: scope.group,
+    status: "settled",
+    "transactions.from": scope.from,
+    "transactions.to": scope.to,
+  });
+
+  if (!record) {
+    throw new ApiError(404, "Settled transaction not found for this month");
+  }
+
+  const transaction = (record.transactions || []).find(
+    (tx) => String(tx.from?._id || tx.from) === scope.from && String(tx.to?._id || tx.to) === scope.to
+  );
+  if (!transaction) {
+    throw new ApiError(404, "Settled transaction not found for this month");
+  }
+  if (transaction.paymentStatus !== "paid") {
+    throw new ApiError(409, "The payer has not marked this transaction as paid yet");
+  }
+
+  await updateTransactionPayment(scope, {
+    "transactions.$.paymentStatus": "confirmed",
+    "transactions.$.confirmedAt": new Date(),
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Transaction confirmed as received",
+  });
+});
+
+export const resetTransactionPayment = asyncHandler(async (req, res) => {
+  const scope = resolveTransactionScope(req);
+
+  await updateTransactionPayment(scope, {
+    "transactions.$.paymentStatus": "pending",
+    "transactions.$.paidAt": null,
+    "transactions.$.confirmedAt": null,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Transaction payment status reset",
+  });
+});
+
 const fetchSettlementRecord = (bsYear, bsMonth, category = null, group = null) =>
   Settlement.findOne({ bsYear, bsMonth, category, group }).populate(settlementPopulates());
 
@@ -137,24 +253,15 @@ export const settleMonth = asyncHandler(async (req, res) => {
       throw new ApiError(409, "Settlement for this month is already settled");
     }
 
-    const results = await settleAllCascade({ year, month, settledBy: req.user?._id });
-
-    const scopes = results.map(({ scope, group: scopeGroup, alreadySettled, record }) => ({
-      scope,
-      group: scopeGroup || null,
-      alreadySettled,
-      settlement: record,
-    }));
+    await settleAllCascade({ year, month, settledBy: req.user?._id });
 
     return res.status(200).json({
       success: true,
       message: "Settlement marked as settled successfully (all scopes)",
-      scopes,
-      settlement: results[0]?.record || null,
     });
   }
 
-  const { record, alreadySettled } = await settleScope({
+  const { alreadySettled } = await settleScope({
     year,
     month,
     category,
@@ -168,7 +275,6 @@ export const settleMonth = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Settlement marked as settled successfully",
-    settlement: record,
   });
 });
 

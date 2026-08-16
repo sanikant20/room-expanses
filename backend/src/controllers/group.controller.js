@@ -36,7 +36,7 @@ export const createGroup = asyncHandler(async (req, res) => {
 
   const partnerIds = await validatePartners(partners);
 
-  const group = await Group.create({
+  await Group.create({
     name: String(name).trim(),
     description: description || "",
     status: "active",
@@ -44,12 +44,9 @@ export const createGroup = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
   });
 
-  const populated = await withPopulates(Group.findById(group._id));
-
   return res.status(201).json({
     success: true,
     message: "Group created successfully",
-    group: populated,
   });
 });
 
@@ -112,7 +109,7 @@ export const updateGroup = asyncHandler(async (req, res) => {
 
   const partnerIds = await validatePartners(partners);
 
-  const group = await Group.findByIdAndUpdate(
+  await Group.findByIdAndUpdate(
     id,
     {
       name: name !== undefined ? String(name).trim() : existing.name,
@@ -120,15 +117,12 @@ export const updateGroup = asyncHandler(async (req, res) => {
       status: status !== undefined ? status : existing.status,
       partners: partnerIds,
     },
-    { returnDocument: "after", runValidators: true }
+    { runValidators: true }
   );
-
-  const populated = await withPopulates(Group.findById(group._id));
 
   return res.status(200).json({
     success: true,
     message: "Group updated successfully",
-    group: populated,
   });
 });
 

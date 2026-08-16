@@ -22,7 +22,7 @@ export const createPartner = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone number or password is required to set a partner login");
   }
 
-  const partner = await Partner.create({
+  await Partner.create({
     name,
     phone,
     email,
@@ -37,7 +37,6 @@ export const createPartner = asyncHandler(async (req, res) => {
   return res.status(201).json({
     success: true,
     message: "Partner created successfully",
-    partner,
   });
 });
 
@@ -95,7 +94,7 @@ export const updatePartner = asyncHandler(async (req, res) => {
   const partner = await Partner.findByIdAndUpdate(
     id,
     update,
-    { returnDocument: "after", runValidators: true }
+    { runValidators: true }
   );
 
   if (!partner) throw new ApiError(404, "Partner not found");
@@ -103,7 +102,6 @@ export const updatePartner = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Partner updated successfully",
-    partner,
   });
 });
 
@@ -145,7 +143,7 @@ export const togglePartnerStatus = asyncHandler(async (req, res) => {
   const partner = await Partner.findByIdAndUpdate(
     id,
     { status },
-    { returnDocument: "after", runValidators: true }
+    { runValidators: true }
   );
 
   if (!partner) throw new ApiError(404, "Partner not found");
@@ -153,7 +151,6 @@ export const togglePartnerStatus = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: `Partner ${status === "active" ? "activated" : "inactivated"} successfully`,
-    partner,
   });
 });
 

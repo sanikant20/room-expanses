@@ -54,6 +54,12 @@ export const SETTLEMENT_STATUS = [
     { value: 'settled', label: 'Settled', color: 'default' },
 ]
 
+export const PAYMENT_STATUS = [
+    { value: 'pending', label: 'Pending', color: 'warning' },
+    { value: 'paid', label: 'Paid', color: 'info' },
+    { value: 'confirmed', label: 'Confirmed', color: 'success' },
+]
+
 export const BS_YEAR_RANGE = {
     min: 2070,
     max: 2090,

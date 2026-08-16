@@ -17,6 +17,19 @@ const transactionSchema = new Schema(
       required: true,
       min: [0, "Amount cannot be negative"],
     },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "confirmed"],
+      default: "pending",
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    confirmedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { _id: false }
 );
