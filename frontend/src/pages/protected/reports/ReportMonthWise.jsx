@@ -26,7 +26,7 @@ const ReportMonthWise = ({ selectedMonth, onMonthChange }) => {
             subtitle={`Monthly expense summary for ${monthLabel || 'all months'}.`}
             headerInline={false}
             extra={
-                <StatBadges items={[
+                <StatBadges isLoading={isLoading} items={[
                     { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },
                     { label: 'Primary', value: formatToNepaliCurrency(summary.primaryTotal || 0), color: theme.palette.success.main },
                     { label: 'Secondary', value: formatToNepaliCurrency(summary.secondaryTotal || 0), color: theme.palette.warning.main },

@@ -42,7 +42,7 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
             title="Category Report"
             subtitle={`Expenses by category for ${monthLabel || 'all months'}.`}
             extra={
-                <StatBadges items={[
+                <StatBadges isLoading={isLoading} items={[
                     { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },
                     { label: 'Primary', value: formatToNepaliCurrency(summary.primaryTotal || 0), color: theme.palette.success.main },
                     { label: 'Secondary', value: formatToNepaliCurrency(summary.secondaryTotal || 0), color: theme.palette.warning.main },

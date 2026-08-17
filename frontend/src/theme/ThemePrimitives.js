@@ -34,13 +34,23 @@ export const gray = {
     900: 'hsl(220, 35%, 3%)',
 };
 
+const saasShadows = (isDark) => [
+    'none',
+    isDark ? '0px 1px 2px rgba(0, 0, 0, 0.4)' : '0px 1px 2px rgba(16, 24, 40, 0.05)',
+    isDark ? '0px 2px 4px rgba(0, 0, 0, 0.4)' : '0px 1px 3px rgba(16, 24, 40, 0.08), 0px 1px 2px rgba(16, 24, 40, 0.04)',
+    isDark ? '0px 4px 8px rgba(0, 0, 0, 0.4)' : '0px 4px 6px rgba(16, 24, 40, 0.05), 0px 2px 4px rgba(16, 24, 40, 0.04)',
+    isDark ? '0px 8px 16px rgba(0, 0, 0, 0.45)' : '0px 10px 15px rgba(16, 24, 40, 0.06), 0px 4px 6px rgba(16, 24, 40, 0.04)',
+    isDark ? '0px 12px 24px rgba(0, 0, 0, 0.5)' : '0px 20px 25px rgba(16, 24, 40, 0.08), 0px 10px 10px rgba(16, 24, 40, 0.04)',
+    ...defaultTheme.shadows.slice(6),
+];
+
 export const getDesignTokens = (mode = 'light') => {
     const currentBrand = getCurrentBrand();
     const isDark = mode === 'dark';
-
-    customShadows[1] = isDark
-        ? 'hsla(220, 50%, 3%, 0.3) 0px 4px 16px 0px, hsla(220, 40%, 5%, 0.2) 0px 8px 16px -5px'
-        : 'hsla(220, 30%, 5%, 0.07) 0px 4px 16px 0px, hsla(220, 25%, 10%, 0.07) 0px 8px 16px -5px';
+    const saasShadowArray = saasShadows(isDark);
+    saasShadowArray.forEach((shadow, index) => {
+        customShadows[index] = shadow;
+    });
 
     return {
         palette: {
@@ -90,8 +100,8 @@ export const getDesignTokens = (mode = 'light') => {
             grey: { ...gray },
             divider: isDark ? alpha(gray[400], 0.2) : alpha(gray[300], 0.4),
             background: {
-                default: isDark ? 'hsl(220, 30%, 10%)' : 'hsl(0, 0%, 99%)',
-                paper: isDark ? 'hsl(220, 25%, 14%)' : 'hsl(220, 35%, 97%)',
+                default: isDark ? 'hsl(220, 28%, 10%)' : 'hsl(220, 30%, 97%)',
+                paper: isDark ? 'hsl(220, 25%, 13%)' : 'hsl(220, 35%, 100%)',
             },
             text: {
                 primary: isDark ? gray[100] : gray[800],

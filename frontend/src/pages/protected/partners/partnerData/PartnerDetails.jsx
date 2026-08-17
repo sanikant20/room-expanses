@@ -17,11 +17,6 @@ import {
     PhoneRounded,
 } from '@mui/icons-material';
 
-const getShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
-
 const InfoCard = ({ icon, label, value, color, noWrap = true }) => {
     const theme = useTheme();
     return (
@@ -35,7 +30,7 @@ const InfoCard = ({ icon, label, value, color, noWrap = true }) => {
                 borderRadius: `${theme.shape.borderRadius}px`,
                 border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
                 backgroundColor: alpha(theme.palette.background.paper, 0.7),
-                boxShadow: getShadow(theme.palette.mode),
+                boxShadow: theme.shadows[1],
             }}
         >
             <Box
@@ -139,7 +134,7 @@ const PartnerDetails = ({ partner = {} }) => {
                         fontSize: '2rem',
                         bgcolor: theme.palette.primary.main,
                         border: `4px solid ${theme.palette.background.paper}`,
-                        boxShadow: getShadow(theme.palette.mode),
+                        boxShadow: theme.shadows[2],
                     }}
                 >
                     {partner.name?.charAt(0)?.toUpperCase()}

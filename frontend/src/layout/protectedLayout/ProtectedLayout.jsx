@@ -4,7 +4,7 @@ import { alpha, Box, Stack } from '@mui/material';
 import DesktopSideBar from './DesktopSideBar';
 import MobileHeader from './MobileHeader';
 import DesktopHeader from './DesktopHeader';
-import PageSkeleton from '../../components/skeleton';
+import { RouteAwareSkeleton } from '../../components/skeleton';
 
 export default function ProtectedLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -68,7 +68,7 @@ export default function ProtectedLayout() {
                                 pt: { xs: 1, md: 2 },
                             }}
                         >
-                            <Suspense fallback={<PageSkeleton />}>
+                            <Suspense fallback={<RouteAwareSkeleton />}>
                                 <Outlet />
                             </Suspense>
                         </Stack>

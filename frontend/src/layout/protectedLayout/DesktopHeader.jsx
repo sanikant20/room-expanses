@@ -7,27 +7,16 @@ import {
     CloseTwoTone,
     EmojiPeopleRounded,
     MenuTwoTone,
-    PersonRounded,
     WbSunnyRounded,
     NightsStayRounded,
 } from '@mui/icons-material';
-import { Tooltip, Box, IconButton, Chip, keyframes } from '@mui/material';
+import { Tooltip, Box, IconButton, Chip } from '@mui/material';
 import dayjs from 'dayjs';
 import OptionsMenu from './Optionsmenu';
 import { useThemeMode } from '../../context/useThemeMode';
 import { convertToBSFormat } from '../../utils/dateConverter';
 import BreadcrumbsPath from './BreadcrumbsPath';
 import { getAuthData } from '../../helper/getAuthData';
-
-// Animation for shimmer effect
-const shimmer = keyframes`
-    0% {
-        transform: translateX(-100%);
-    }
-    100% {
-        transform: translateX(100%);
-    }
-`;
 
 const InfoChip = ({ label, color = 'primary' }) => {
     const theme = useTheme();
@@ -36,21 +25,16 @@ const InfoChip = ({ label, color = 'primary' }) => {
             <Chip
                 label={label}
                 size="small"
-                // icon={icon}
                 sx={{
                     fontSize: '0.75rem',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     height: 34,
-                    borderRadius: 2,
+                    borderRadius: '999px',
                     background: alpha(theme.palette[color].main, 0.08),
                     color: theme.palette[color].main,
                     border: `1px solid ${alpha(theme.palette[color].main, 0.15)}`,
-                    backdropFilter: 'blur(4px)',
                     '&:hover': {
                         background: alpha(theme.palette[color].main, 0.15),
-                        transform: 'translateY(-2px)',
-                        transition: 'all 0.2s ease',
-                        boxShadow: `0 4px 12px ${alpha(theme.palette[color].main, 0.2)}`,
                     },
                 }}
             />
@@ -76,7 +60,6 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
     };
     const authData = getAuthData();
 
-    // Get greeting icon based on time of day
     const getGreetingIcon = () => {
         const hour = currentTime.hour();
         if (hour < 12) return <WbSunnyRounded sx={{ fontSize: 16 }} />;
@@ -93,31 +76,9 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                 top: 0,
                 p: 0.5,
                 zIndex: 1100,
-                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.04)} 0%, ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
+                background: alpha(theme.palette.background.paper, 0.9),
                 backdropFilter: 'blur(12px)',
-                borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                overflow: 'hidden',
-                '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: `radial-gradient(circle at 0% 0%, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 50%)`,
-                    pointerEvents: 'none',
-                },
-                '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: '-100%',
-                    width: '100%',
-                    height: '100%',
-                    background: `linear-gradient(90deg, transparent, ${alpha(theme.palette.primary.main, 0.05)}, transparent)`,
-                    animation: `${shimmer} 3s infinite`,
-                    pointerEvents: 'none',
-                },
+                borderBottom: `1px solid ${theme.palette.divider}`,
             }}
         >
             <Stack
@@ -126,46 +87,25 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     px: 3,
-                    py: 1.5,
+                    py: 1.25,
                     maxWidth: '1700px',
                     mx: 'auto',
-                    position: 'relative',
-                    zIndex: 1,
                 }}
                 spacing={2}
             >
-                <Stack direction="row" sx={{ alignItems: 'center', gap: 2 }}>
+                <Stack direction="row" sx={{ alignItems: 'center', gap: 1.5 }}>
                     <IconButton
                         onClick={onToggleSidebar}
+                        aria-label="Toggle sidebar"
                         sx={{
                             width: 40,
                             height: 40,
                             borderRadius: 2,
-                            background: alpha(theme.palette.primary.main, 0.08),
-                            color: theme.palette.primary.main,
-                            border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                            transition: 'all 0.2s ease',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                width: 0,
-                                height: 0,
-                                borderRadius: '50%',
-                                backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                                transform: 'translate(-50%, -50%)',
-                                transition: 'width 0.6s, height 0.6s',
-                            },
+                            color: theme.palette.text.secondary,
+                            border: `1px solid ${theme.palette.divider}`,
                             '&:hover': {
-                                background: alpha(theme.palette.primary.main, 0.15),
-                                transform: 'scale(1.05)',
-                                '&::before': {
-                                    width: 100,
-                                    height: 100,
-                                },
+                                backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                color: theme.palette.primary.main,
                             },
                         }}
                     >
@@ -185,17 +125,16 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                         <IconButton
                             onClick={toggleThemeMode}
                             size="small"
+                            aria-label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
                             sx={{
                                 width: 34,
                                 height: 34,
                                 borderRadius: 2,
-                                background: alpha(theme.palette.primary.main, 0.08),
-                                color: theme.palette.primary.main,
-                                border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                                transition: 'all 0.2s ease',
+                                color: theme.palette.text.secondary,
+                                border: `1px solid ${theme.palette.divider}`,
                                 '&:hover': {
-                                    background: alpha(theme.palette.primary.main, 0.15),
-                                    transform: 'scale(1.05)',
+                                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                    color: theme.palette.primary.main,
                                 },
                             }}
                         >
@@ -205,18 +144,6 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                     <OptionsMenu />
                 </Stack>
             </Stack>
-
-            {/* Subtle bottom accent line */}
-            <Box
-                sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    background: `linear-gradient(90deg, transparent, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.5)}, transparent)`,
-                }}
-            />
         </Box>
     );
 }

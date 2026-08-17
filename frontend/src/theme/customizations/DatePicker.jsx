@@ -1,16 +1,5 @@
 import { alpha } from '@mui/material/styles';
 import { menuItemClasses } from '@mui/material/MenuItem';
-import { gray } from '../ThemePrimitives';
-
-const getNeumorphShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
-
-const getNeumorphInset = (mode) =>
-    mode === 'dark'
-        ? 'inset 4px 4px 8px rgba(0, 0, 0, 0.35), inset -4px -4px 8px rgba(60, 60, 80, 0.12)'
-        : 'inset 4px 4px 8px rgba(163, 177, 198, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.5)';
 
 export const datePickersCustomizations = {
     MuiPickersPopper: {
@@ -18,30 +7,23 @@ export const datePickersCustomizations = {
             paper: ({ theme }) => ({
                 marginTop: 4,
                 borderRadius: theme.shape.borderRadius,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                border: `1px solid ${theme.palette.divider}`,
                 backgroundImage: 'none',
-                background: alpha(theme.palette.background.paper, 0.98),
-                backdropFilter: 'blur(8px)',
-                boxShadow: getNeumorphShadow(theme.palette.mode),
+                background: theme.palette.background.paper,
+                boxShadow: theme.shadows[3],
                 padding: '4px',
                 [`& .${menuItemClasses.root}`]: {
                     borderRadius: theme.shape.borderRadius,
                     margin: '2px 4px',
                     padding: '6px 12px',
-                    transition: 'all 0.2s ease',
+                    transition: 'background-color 0.15s ease',
                     '&:hover': {
                         backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                        transform: 'translateX(2px)',
                     },
                     '&.Mui-selected': {
                         backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                        boxShadow: getNeumorphInset(theme.palette.mode),
                     },
                 },
-                ...theme.applyStyles('dark', {
-                    background: alpha(gray[900], 0.98),
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
-                }),
             }),
         },
     },
@@ -117,7 +99,7 @@ export const datePickersCustomizations = {
                     backgroundColor: theme.palette.primary.main,
                     color: 'white',
                     fontWeight: theme.typography.fontWeightMedium,
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                     '&:hover': {
                         backgroundColor: theme.palette.primary.dark,
                     },
@@ -138,7 +120,7 @@ export const datePickersCustomizations = {
                     '&.Mui-selected': {
                         color: 'white',
                         backgroundColor: theme.palette.primary.main,
-                        boxShadow: getNeumorphShadow(theme.palette.mode),
+                        boxShadow: theme.shadows[1],
                         '&:hover': {
                             backgroundColor: theme.palette.primary.dark,
                         },
@@ -164,7 +146,7 @@ export const datePickersCustomizations = {
                     backgroundColor: theme.palette.primary.main,
                     color: 'white',
                     fontWeight: theme.typography.fontWeightMedium,
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                     '&:hover': {
                         backgroundColor: theme.palette.primary.dark,
                     },
@@ -185,7 +167,7 @@ export const datePickersCustomizations = {
                     '&.Mui-selected': {
                         color: 'white',
                         backgroundColor: theme.palette.primary.main,
-                        boxShadow: getNeumorphShadow(theme.palette.mode),
+                        boxShadow: theme.shadows[1],
                         '&:hover': {
                             backgroundColor: theme.palette.primary.dark,
                         },
@@ -212,7 +194,7 @@ export const datePickersCustomizations = {
                     backgroundColor: theme.palette.primary.main,
                     color: 'white',
                     fontWeight: theme.typography.fontWeightMedium,
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                     '&:hover': {
                         backgroundColor: theme.palette.primary.dark,
                     },
@@ -237,7 +219,7 @@ export const datePickersCustomizations = {
                     '&.Mui-selected': {
                         color: 'white',
                         backgroundColor: theme.palette.primary.main,
-                        boxShadow: getNeumorphShadow(theme.palette.mode),
+                        boxShadow: theme.shadows[1],
                         '&:hover': {
                             backgroundColor: theme.palette.primary.dark,
                         },

@@ -31,41 +31,32 @@ const StyledCard = styled(Card, {
 const Header = styled(CardHeader, {
     shouldForwardProp: (prop) => prop !== 'headerColor',
 })(({ theme, headerColor = '#fff' }) => ({
-    backgroundColor: headerColor ?
-        alpha(headerColor, 0.1) :
-        alpha(theme.palette.primary.main, 0.1),
-    color: headerColor || theme.palette.primary.main,
-    padding: theme.spacing(1),
+    backgroundColor: 'transparent',
+    color: headerColor || theme.palette.text.primary,
+    padding: theme.spacing(1.25),
     borderTopLeftRadius: theme.shape.borderRadius,
     borderTopRightRadius: theme.shape.borderRadius,
-    borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+    borderBottom: `1px solid ${theme.palette.divider}`,
     '.MuiCardHeader-title': {
         fontSize: '1rem',
         fontWeight: 'bold',
-        color: headerColor || theme.palette.primary.main,
+        color: headerColor || theme.palette.text.primary,
     },
     '.MuiCardHeader-subtitle': {
-        color: alpha(headerColor || theme.palette.primary.main, 0.8),
+        color: theme.palette.text.secondary,
         fontSize: '0.875rem',
     },
     cursor: 'pointer',
-    '&:hover': {
-        backgroundColor: headerColor ?
-            alpha(headerColor, 0.15) :
-            alpha(theme.palette.primary.main, 0.15),
-    },
-    transition: 'all 0.2s ease',
+    transition: 'background-color 0.2s ease',
 }));
 
 const ExpandIcon = styled(IconButton)(({ theme, headerColor }) => ({
-    color: headerColor || theme.palette.primary.main,
+    color: headerColor || theme.palette.text.secondary,
     padding: theme.spacing(0.5),
-    backgroundColor: alpha(headerColor || theme.palette.primary.main, 0.1),
+    backgroundColor: alpha(headerColor || theme.palette.primary.main, 0.08),
     '&:hover': {
-        backgroundColor: alpha(headerColor || theme.palette.primary.main, 0.2),
-        transform: 'scale(1.05)',
+        backgroundColor: alpha(headerColor || theme.palette.primary.main, 0.16),
     },
-    transition: 'all 0.2s ease',
 }));
 
 const CustomCard = ({
@@ -132,7 +123,7 @@ const CustomCard = ({
                     variant="h6"
                     component="span"
                     sx={{
-                        color: headerColor || theme.palette.primary.main,
+                        color: headerColor || theme.palette.text.primary,
                         fontWeight: 600,
                         fontSize: '1rem',
                     }}
@@ -144,7 +135,7 @@ const CustomCard = ({
                         variant="body2"
                         component="div"
                         sx={{
-                            color: alpha(headerColor || theme.palette.primary.main, 0.8),
+                            color: theme.palette.text.secondary,
                             fontSize: '0.875rem',
                             mt: 0.25,
                         }}

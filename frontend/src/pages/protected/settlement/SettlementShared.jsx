@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, Card, CardContent, Chip, InputLabel, MenuItem, Stack, TextField, Typography, alpha, useTheme } from '@mui/material';
+import { Box, Card, CardContent, Chip, InputLabel, MenuItem, Stack, TextField, Typography, Skeleton, alpha, useTheme } from '@mui/material';
 import { AccountBalanceWalletRounded, BalanceRounded, CheckCircleRounded, CompareArrowsRounded } from '@mui/icons-material';
 import DataTable from '../../../components/table/DataTable';
 import { NepaliYearMonthPicker } from '../../../components/date/NepaliYearMonthPicker';
@@ -66,7 +66,7 @@ export const GroupSelector = ({ value, onChange, label = 'Group', allLabel = 'Al
     );
 };
 
-export const SettlementSummaryCard = ({ title, value, subtitle, color }) => {
+export const SettlementSummaryCard = ({ title, value, subtitle, color, isLoading = false }) => {
     const theme = useTheme();
     return (
         <Card
@@ -86,8 +86,16 @@ export const SettlementSummaryCard = ({ title, value, subtitle, color }) => {
                     </Box>
                     <Box sx={{ minWidth: 0, flex: '1 1 160px' }}>
                         <Typography variant="body2" color="text.secondary" fontWeight={600}>{title}</Typography>
-                        <Typography variant="h6" fontWeight={700} color={`${color}.main`} sx={{ overflowWrap: 'anywhere' }}>{value}</Typography>
-                        {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
+                        {isLoading ? (
+                            <Skeleton width={130} height={28} />
+                        ) : (
+                            <Typography variant="h6" fontWeight={700} color={`${color}.main`} sx={{ overflowWrap: 'anywhere' }}>{value}</Typography>
+                        )}
+                        {isLoading ? (
+                            <Skeleton width={90} height={14} sx={{ mt: 0.5 }} />
+                        ) : (
+                            subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>
+                        )}
                     </Box>
                 </Stack>
             </CardContent>
@@ -95,7 +103,7 @@ export const SettlementSummaryCard = ({ title, value, subtitle, color }) => {
     );
 };
 
-export const SettlementSummaryCards = ({ data }) => {
+export const SettlementSummaryCards = ({ data, isLoading = false }) => {
     const partnerCount = (data?.rows || []).length;
     const avgContribution = partnerCount > 0 ? ((data?.expectedTotal || 0) / partnerCount) : 0;
     return (
@@ -107,9 +115,9 @@ export const SettlementSummaryCards = ({ data }) => {
                 gap: { xs: 2.5, sm: 2 },
             }}
         >
-            <SettlementSummaryCard title="Total Spent" value={formatToNepaliCurrency(data?.grandTotal || 0)} color="primary" subtitle={`${data?.expenseCount || 0} record(s)`} />
-            <SettlementSummaryCard title="Average Contribution" value={formatToNepaliCurrency(avgContribution)} color="warning" subtitle={`Avg share per partner (${partnerCount} partner(s))`} />
-            <SettlementSummaryCard title="Net Balance" value={formatToNepaliCurrency(data?.netBalance || 0)} color="success" subtitle="Should always be 0 (self-balancing)" />
+            <SettlementSummaryCard title="Total Spent" value={formatToNepaliCurrency(data?.grandTotal || 0)} color="primary" subtitle={`${data?.expenseCount || 0} record(s)`} isLoading={isLoading} />
+            <SettlementSummaryCard title="Average Contribution" value={formatToNepaliCurrency(avgContribution)} color="warning" subtitle={`Avg share per partner (${partnerCount} partner(s))`} isLoading={isLoading} />
+            <SettlementSummaryCard title="Net Balance" value={formatToNepaliCurrency(data?.netBalance || 0)} color="success" subtitle="Should always be 0 (self-balancing)" isLoading={isLoading} />
         </Stack>
     );
 };

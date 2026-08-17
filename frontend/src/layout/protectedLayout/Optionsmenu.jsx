@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { alpha, styled, useTheme } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import Divider from '@mui/material/Divider';
 import Menu from '@mui/material/Menu';
 import MuiMenuItem from '@mui/material/MenuItem';
@@ -26,10 +26,9 @@ const MenuItem = styled(MuiMenuItem)(({ theme }) => ({
     padding: '6px 8px',
     gap: 10,
     minHeight: 'auto',
-    transition: 'all 0.2s ease-in-out',
+    transition: 'background-color 0.15s ease',
     '&:hover': {
         backgroundColor: theme.palette.action.hover,
-        transform: 'translateX(2px)',
     },
     '&.logout': {
         color: theme.palette.error.main,
@@ -220,23 +219,11 @@ export default function OptionsMenu() {
                         width: isMobile ? 200 : 240,
                         maxHeight: 'calc(100vh - 100px)',
                         borderRadius: 2,
-                        boxShadow: theme.shadows[8],
-                        border: `1px solid ${theme.palette.primary.main}`,
+                        boxShadow: theme.shadows[4],
+                        border: `1px solid ${theme.palette.divider}`,
                         overflow: 'visible',
                         display: 'flex',
                         flexDirection: 'column',
-                        '&:before': {
-                            content: '""',
-                            display: 'block',
-                            position: 'absolute',
-                            top: -8,
-                            right: isMobile ? 16 : 20,
-                            width: 16,
-                            height: 16,
-                            backgroundColor: alpha(theme.palette.primary.light, 1),
-                            transform: 'rotate(45deg)',
-                            border: `1px solid ${theme.palette.primary.main}`,
-                        },
                     },
                     '& .MuiList-root': {
                         padding: isMobile ? '4px' : '6px',

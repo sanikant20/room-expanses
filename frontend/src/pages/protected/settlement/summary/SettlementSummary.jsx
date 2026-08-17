@@ -139,7 +139,7 @@ const SettlementSummary = ({ title, icon, subtitlePrefix, filename, category, al
             extra={allowSettle ? <SettlementStatus settlement={settlement} scope={settledScopeLabel} /> : null}
         >
             {!category && autoSettleBanner}
-            <SettlementSummaryCards data={data} />
+            <SettlementSummaryCards data={data} isLoading={isLoading} />
             <Box sx={{ mt: 2 }}>
                 <SettlementTable
                     data={data?.rows || []}

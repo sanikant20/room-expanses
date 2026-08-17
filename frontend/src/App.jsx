@@ -10,7 +10,7 @@ import { ThemeModeProvider } from './context/ThemeModeProvider';
 import { CssBaseline } from '@mui/material';
 
 // Component imports
-import PageSkeleton from './components/skeleton';
+import PageSkeleton, { RouteAwareSkeleton } from './components/skeleton';
 import PageNotFound from './components/pageNotFound';
 import ErrorBoundary from './components/errorBoundary';
 
@@ -99,7 +99,7 @@ const App = () => {
           <AuthProvider>
             <AuthExpirationProvider>
               <Router>
-                <Suspense fallback={<PageSkeleton />}>
+                <Suspense fallback={<RouteAwareSkeleton />}>
                   <AxiosInterceptorSetup />
                   <HealthPoller />
                   <ErrorBoundary>

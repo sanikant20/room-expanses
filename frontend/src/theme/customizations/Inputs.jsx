@@ -7,21 +7,6 @@ import { toggleButtonClasses } from '@mui/material/ToggleButton';
 import { CheckBoxOutlineBlankRounded, CheckRounded, RemoveRounded } from '@mui/icons-material';
 import { brand, gray } from '../ThemePrimitives';
 
-const getNeumorphShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
-
-const getNeumorphShadowLg = (mode) =>
-    mode === 'dark'
-        ? '8px 8px 16px rgba(0, 0, 0, 0.45), -8px -8px 16px rgba(60, 60, 80, 0.12)'
-        : '8px 8px 16px rgba(163, 177, 198, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.7)';
-
-const getNeumorphInset = (mode) =>
-    mode === 'dark'
-        ? 'inset 4px 4px 8px rgba(0, 0, 0, 0.35), inset -4px -4px 8px rgba(60, 60, 80, 0.12)'
-        : 'inset 4px 4px 8px rgba(163, 177, 198, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.5)';
-
 export const inputsCustomizations = {
     MuiButtonBase: {
         defaultProps: {
@@ -32,7 +17,7 @@ export const inputsCustomizations = {
         styleOverrides: {
             root: ({ theme }) => ({
                 boxSizing: 'border-box',
-                transition: 'all 150ms ease-in-out',
+                transition: 'background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease',
                 '&:focus-visible': {
                     outline: `3px solid ${alpha(theme.palette.primary.main, 0.4)}`,
                     outlineOffset: '2px',
@@ -84,17 +69,16 @@ export const inputsCustomizations = {
                             variant: 'contained',
                         },
                         style: {
-                            background: `linear-gradient(135deg, ${brand[300]}, ${brand[500]})`,
-                            boxShadow: getNeumorphShadow(theme.palette.mode),
+                            background: brand[500],
                             border: 'none',
                             color: 'white',
                             '&:hover': {
-                                transform: 'translateY(-1px)',
-                                boxShadow: getNeumorphShadowLg(theme.palette.mode),
+                                background: brand[600],
+                                boxShadow: theme.shadows[2],
                             },
                             '&:active': {
-                                transform: 'translateY(0)',
-                                boxShadow: getNeumorphInset(theme.palette.mode),
+                                background: brand[700],
+                                boxShadow: 'none',
                             },
                         },
                     },
@@ -104,17 +88,16 @@ export const inputsCustomizations = {
                             variant: 'contained',
                         },
                         style: {
-                            background: `linear-gradient(135deg, ${gray[700]}, ${gray[800]})`,
-                            boxShadow: getNeumorphShadow(theme.palette.mode),
+                            background: gray[700],
                             border: 'none',
                             color: 'white',
                             '&:hover': {
-                                transform: 'translateY(-1px)',
-                                boxShadow: getNeumorphShadowLg(theme.palette.mode),
+                                background: gray[800],
+                                boxShadow: theme.shadows[2],
                             },
                             '&:active': {
-                                transform: 'translateY(0)',
-                                boxShadow: getNeumorphInset(theme.palette.mode),
+                                background: gray[900],
+                                boxShadow: 'none',
                             },
                         },
                     },
@@ -123,18 +106,15 @@ export const inputsCustomizations = {
                             variant: 'outlined',
                         },
                         style: {
-                            backgroundColor: alpha(gray[50], 0.1),
+                            backgroundColor: 'transparent',
                             border: '1px solid',
                             borderColor: gray[200],
-                            boxShadow: getNeumorphShadow(theme.palette.mode),
                             '&:hover': {
                                 backgroundColor: alpha(gray[100], 0.2),
                                 borderColor: gray[300],
-                                transform: 'translateY(-1px)',
                             },
                             '&:active': {
-                                transform: 'translateY(0)',
-                                boxShadow: getNeumorphInset(theme.palette.mode),
+                                backgroundColor: alpha(gray[200], 0.2),
                             },
                         },
                     },
@@ -148,15 +128,12 @@ export const inputsCustomizations = {
                             border: '1px solid',
                             borderColor: brand[200],
                             backgroundColor: alpha(brand[50], 0.1),
-                            boxShadow: getNeumorphShadow(theme.palette.mode),
                             '&:hover': {
                                 backgroundColor: alpha(brand[100], 0.2),
                                 borderColor: brand[300],
-                                transform: 'translateY(-1px)',
                             },
                             '&:active': {
-                                transform: 'translateY(0)',
-                                boxShadow: getNeumorphInset(theme.palette.mode),
+                                backgroundColor: alpha(brand[200], 0.2),
                             },
                         },
                     },
@@ -196,24 +173,15 @@ export const inputsCustomizations = {
     MuiIconButton: {
         styleOverrides: {
             root: ({ theme }) => ({
-                boxShadow: getNeumorphShadow(theme.palette.mode),
+                boxShadow: 'none',
                 borderRadius: theme.shape.borderRadius,
                 textTransform: 'none',
                 fontWeight: theme.typography.fontWeightMedium,
                 letterSpacing: 0,
                 color: theme.palette.text.primary,
-                border: '1px solid',
-                borderColor: alpha(gray[200], 0.5),
-                backgroundColor: alpha(theme.palette.primary.light, 0.03),
+                backgroundColor: 'transparent',
                 '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.light, 0.08),
-                    borderColor: gray[300],
-                    transform: 'translateY(-1px)',
-                    boxShadow: '8px 8px 16px rgba(163, 177, 198, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.7)',
-                },
-                '&:active': {
-                    transform: 'translateY(0)',
-                    boxShadow: getNeumorphInset(theme.palette.mode),
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
                 },
                 variants: [
                     {
@@ -235,9 +203,9 @@ export const inputsCustomizations = {
         styleOverrides: {
             root: ({ theme }) => ({
                 borderRadius: theme.shape.borderRadius,
-                boxShadow: getNeumorphShadow(theme.palette.mode),
                 padding: '2px',
-                backgroundColor: alpha(theme.palette.primary.light, 0.03),
+                backgroundColor: alpha(theme.palette.background.default, 0.5),
+                border: `1px solid ${theme.palette.divider}`,
                 [`& .${toggleButtonGroupClasses.selected}`]: {
                     color: brand[500],
                 },
@@ -260,7 +228,6 @@ export const inputsCustomizations = {
                 },
                 [`&.${toggleButtonClasses.selected}`]: {
                     backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                    boxShadow: getNeumorphInset(theme.palette.mode),
                     color: brand[500],
                 },
             }),
@@ -276,14 +243,14 @@ export const inputsCustomizations = {
             indeterminateIcon: <RemoveRounded sx={{ height: 14, width: 14 }} />,
         },
         styleOverrides: {
-            root: ({ theme }) => ({
+            root: () => ({
                 margin: 8,
                 height: 18,
                 width: 18,
                 borderRadius: 6,
                 border: '1px solid',
                 borderColor: alpha(gray[300], 0.6),
-                boxShadow: getNeumorphInset(theme.palette.mode),
+                boxShadow: 'none',
                 backgroundColor: alpha(gray[100], 0.2),
                 transition: 'all 150ms ease-in-out',
                 '&:hover': {
@@ -298,7 +265,7 @@ export const inputsCustomizations = {
                     color: 'white',
                     backgroundColor: brand[500],
                     borderColor: brand[500],
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: 'none',
                     '&:hover': {
                         backgroundColor: brand[600],
                     },
@@ -330,19 +297,17 @@ export const inputsCustomizations = {
                 color: theme.palette.text.primary,
                 borderRadius: theme.shape.borderRadius,
                 border: '1px solid',
-                borderColor: alpha(gray[200], 0.5),
-                backgroundColor: alpha(theme.palette.primary.light, 0.02),
-                boxShadow: getNeumorphInset(theme.palette.mode),
-                transition: 'all 150ms ease-in-out',
+                borderColor: alpha(gray[200], 0.6),
+                backgroundColor: theme.palette.background.paper,
+                boxShadow: 'none',
+                transition: 'border-color 150ms ease, box-shadow 150ms ease',
                 '&:hover': {
                     borderColor: brand[300],
-                    backgroundColor: alpha(theme.palette.primary.light, 0.04),
                 },
                 [`&.${outlinedInputClasses.focused}`]: {
-                    outline: `3px solid ${alpha(brand[500], 0.3)}`,
+                    outline: `3px solid ${alpha(brand[500], 0.2)}`,
                     borderColor: brand[400],
-                    backgroundColor: alpha(theme.palette.primary.light, 0.04),
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: `0 0 0 3px ${alpha(brand[500], 0.1)}`,
                 },
                 [`& .MuiAutocomplete-endAdornment`]: {
                     right: 0,
@@ -395,12 +360,11 @@ export const inputsCustomizations = {
                 },
             }),
             paper: ({ theme }) => ({
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                border: `1px solid ${theme.palette.divider}`,
                 borderRadius: theme.shape.borderRadius,
                 marginTop: '4px',
-                boxShadow: getNeumorphShadow(theme.palette.mode),
-                backgroundColor: alpha(theme.palette.background.paper, 0.98),
-                backdropFilter: 'blur(8px)',
+                boxShadow: theme.shadows[3],
+                backgroundColor: theme.palette.background.paper,
             }),
         },
     },

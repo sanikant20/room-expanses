@@ -26,6 +26,7 @@ import {
     ScheduleRounded,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { getAuthData } from '../../../helper/getAuthData';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import CustomCard from '../../../components/custom/CustomCard';
 import AutoSettleBanner from '../../../components/custom/AutoSettleBanner';
@@ -91,6 +92,15 @@ const StatCard = ({ title, value, subtitle, icon, color }) => {
 const Dashboard = () => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const authData = getAuthData();
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 17) return 'Good afternoon';
+        return 'Good evening';
+    };
+
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const current = getCurrentBsYearMonth();
         return formatYearMonthString(current);
@@ -232,15 +242,15 @@ const Dashboard = () => {
                         sx={{ flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between' }}
                     >
                         <Grid size={{ xs: 12, sm: 'auto' }}>
-                            <Stack spacing={1}>
+                            <Stack spacing={0.5}>
                                 <Typography variant="overline" sx={{ letterSpacing: 1.5, opacity: 0.9 }}>
                                     The Roomies
                                 </Typography>
-                                <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-                                    Room Expenses Dashboard
+                                <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
+                                    {getGreeting()}, {authData?.FullName?.split(' ')[0] || 'there'}
                                 </Typography>
                                 <Typography variant="body1" sx={{ maxWidth: 640, opacity: 0.95 }}>
-                                    Track shared expenses, compare contributions, and settle balances — grouped by Nepali month.
+                                    Here's your room expense overview for {monthLabel || 'the selected Nepali month'}.
                                 </Typography>
                             </Stack>
                         </Grid>

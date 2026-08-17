@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useTheme, alpha } from '@mui/material/styles';
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Collapse, TextField, InputAdornment, IconButton, Tooltip, Box, Fade, Popper, Paper, Grow } from '@mui/material';
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Collapse, TextField, InputAdornment, IconButton, Tooltip, Box, Fade, Popper, Paper, Grow, Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuItemLists, secondaryListItems } from './MenuItemLists';
 import { ClearRounded, ExpandLess, ExpandMore, SearchRounded, FiberManualRecord } from '@mui/icons-material';
@@ -216,37 +216,25 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
                                     minHeight: 44,
                                     pl: sidebarCollapsed && level === 0 ? 0 : paddingLeft,
                                     position: 'relative',
-                                    transition: 'all 0.2s ease',
-                                    '&::before': active && !sidebarCollapsed ? {
-                                        content: '""',
-                                        position: 'absolute',
-                                        left: 0,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        width: 3,
-                                        height: 32,
-                                        backgroundColor: theme.palette.primary.main,
-                                        borderRadius: '0 4px 4px 0',
-                                    } : {},
+                                    transition: 'background-color 0.15s ease, color 0.15s ease',
                                     '&.Mui-selected': {
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
                                         color: theme.palette.primary.main,
                                         '&:hover': {
-                                            backgroundColor: alpha(theme.palette.primary.main, 0.18),
+                                            backgroundColor: alpha(theme.palette.primary.main, 0.16),
                                         },
                                         '& .MuiListItemIcon-root': {
                                             color: theme.palette.primary.main,
                                         },
                                     },
                                     '&:hover': {
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.06),
                                         '& .MuiListItemIcon-root': {
                                             color: theme.palette.primary.main,
                                         },
                                         '& .MuiListItemText-primary': {
                                             color: theme.palette.primary.main,
                                         },
-                                        transform: 'translateX(4px)',
                                     },
                                 }}
                             >
@@ -355,7 +343,33 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
                 </Collapse>
 
                 <List component="nav" sx={{ py: 0, flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-                    {renderMenuItems(filteredMainItems)}
+                    {filteredMainItems.map((item, index) => {
+                        const itemKey = generateKey(item, '', 0);
+                        const sectionChanged = index === 0 || item.section !== filteredMainItems[index - 1].section;
+                        return (
+                            <React.Fragment key={itemKey}>
+                                {!sidebarCollapsed && sectionChanged && item.section && (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            display: 'block',
+                                            px: 2.5,
+                                            pt: index === 0 ? 1 : 2,
+                                            pb: 0.5,
+                                            color: alpha(theme.palette.text.secondary, 0.6),
+                                            fontWeight: 600,
+                                            textTransform: 'uppercase',
+                                            fontSize: '0.65rem',
+                                            letterSpacing: '0.08em',
+                                        }}
+                                    >
+                                        {item.section}
+                                    </Typography>
+                                )}
+                                {renderMenuItems([item], 0, '')}
+                            </React.Fragment>
+                        );
+                    })}
                     {!sidebarCollapsed && filteredMainItems.length === 0 && searchTerm && (
                         <ListItem>
                             <ListItemText primary="No menu items found" primaryTypographyProps={{ variant: 'body2', color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }} />
@@ -370,6 +384,23 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
                         borderTop: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
                         width: '100%',
                     }}>
+                        {!sidebarCollapsed && (
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    display: 'block',
+                                    px: 2.5,
+                                    pb: 0.5,
+                                    color: alpha(theme.palette.text.secondary, 0.6),
+                                    fontWeight: 600,
+                                    textTransform: 'uppercase',
+                                    fontSize: '0.65rem',
+                                    letterSpacing: '0.08em',
+                                }}
+                            >
+                                System
+                            </Typography>
+                        )}
                         <List dense sx={{ py: 0 }}>
                             {filteredSecondaryItems.map((item) => {
                                 const menuText = getMenuText(item);

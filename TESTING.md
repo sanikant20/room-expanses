@@ -13,7 +13,7 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2026-08-16** — backend 73 tests, frontend 37 tests,
+Last verified green: **2026-08-17** — backend 73 tests, frontend 37 tests,
 frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 
 ## Test inventory

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { alpha, Box, Container, Stack, useTheme } from '@mui/material';
+import { alpha, Box, Container, Stack } from '@mui/material';
 import PublicDesktopHeader from './PublicDesktopHeader';
 import PublicMobileHeader from './PublicMobileHeader';
 import { Outlet } from 'react-router-dom';
 import PublicFooter from './PublicFooter';
 
 const PublicLayout = () => {
-    const theme = useTheme();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const handleMobileMenuToggle = () => {
@@ -85,8 +84,7 @@ const PublicLayout = () => {
                     component="footer"
                     sx={{
                         mt: 'auto',
-                        borderRadius: '15px 15px 0 0',
-                        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+                        width: '100%',
                     }}
                 >
                     <PublicFooter />

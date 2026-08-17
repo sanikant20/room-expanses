@@ -18,15 +18,34 @@ const PublicMenuContent = ({ isMobile = false, onMenuClose }) => {
     const location = useLocation();
 
     const handleNavigation = (path) => {
-        navigate(path);
+        const anchorIndex = path.indexOf('#');
+        const route = anchorIndex >= 0 ? path.slice(0, anchorIndex) : path;
+        const anchor = anchorIndex >= 0 ? path.slice(anchorIndex + 1) : null;
+
+        if (anchor) {
+            const scrollToSection = () => {
+                document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+            if (location.pathname === route || route === '') {
+                scrollToSection();
+            } else {
+                navigate(route);
+                setTimeout(scrollToSection, 100);
+            }
+        } else {
+            navigate(path);
+        }
+
         if (isMobile && onMenuClose) {
             onMenuClose();
         }
     };
 
     const isActive = (path) => {
-        if (path === '/' && location.pathname === '/') return true;
-        if (path !== '/' && location.pathname.startsWith(path)) return true;
+        const anchorIndex = path.indexOf('#');
+        const route = anchorIndex >= 0 ? path.slice(0, anchorIndex) : path;
+        if (route === '/' && location.pathname === '/') return true;
+        if (route !== '/' && route && location.pathname.startsWith(route)) return true;
         return false;
     };
 

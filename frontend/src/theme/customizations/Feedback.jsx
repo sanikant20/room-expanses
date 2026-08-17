@@ -9,7 +9,6 @@ export const feedbackCustomizations = {
                 backgroundColor: alpha(theme.palette.primary.light, 0.05),
                 color: theme.palette.text.primary,
                 border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                // boxShadow: neumorphInset.boxShadow,
                 '& .MuiAlert-icon': {
                     color: theme.palette.primary.main,
                 },
@@ -67,10 +66,9 @@ export const feedbackCustomizations = {
             root: ({ theme }) => ({
                 '& .MuiDialog-paper': {
                     borderRadius: theme.shape.borderRadius,
-                    border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
-                    // boxShadow: neumorphShadow.boxShadow,
-                    backgroundColor: alpha(theme.palette.background.paper, 0.98),
-                    backdropFilter: 'blur(8px)',
+                    border: `1px solid ${theme.palette.divider}`,
+                    boxShadow: theme.shadows[5],
+                    backgroundColor: theme.palette.background.paper,
                 },
             }),
         },
@@ -81,7 +79,6 @@ export const feedbackCustomizations = {
                 height: 6,
                 borderRadius: 99,
                 backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                // boxShadow: neumorphInset.boxShadow,
                 overflow: 'hidden',
                 ...theme.applyStyles('dark', {
                     backgroundColor: alpha(theme.palette.primary.main, 0.12),
@@ -89,8 +86,7 @@ export const feedbackCustomizations = {
             }),
             bar: ({ theme }) => ({
                 borderRadius: 99,
-                background: `linear-gradient(90deg, ${theme.palette.primary.light}, ${theme.palette.primary.main})`,
-                // boxShadow: neumorphShadow.boxShadow,
+                background: theme.palette.primary.main,
             }),
         },
     },
@@ -99,10 +95,10 @@ export const feedbackCustomizations = {
             root: ({ theme }) => ({
                 '& .MuiSnackbarContent-root': {
                     borderRadius: theme.shape.borderRadius,
-                    // boxShadow: neumorphShadow.boxShadow,
-                    border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
-                    backgroundColor: alpha(theme.palette.background.paper, 0.98),
-                    backdropFilter: 'blur(8px)',
+                    boxShadow: theme.shadows[4],
+                    border: `1px solid ${theme.palette.divider}`,
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
                 },
             }),
         },

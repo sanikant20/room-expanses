@@ -8,16 +8,6 @@ import { tabClasses } from '@mui/material/Tab';
 import { gray, brand } from '../ThemePrimitives';
 import { UnfoldMoreRounded } from '@mui/icons-material';
 
-const getNeumorphShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
-
-const getNeumorphInset = (mode) =>
-    mode === 'dark'
-        ? 'inset 4px 4px 8px rgba(0, 0, 0, 0.35), inset -4px -4px 8px rgba(60, 60, 80, 0.12)'
-        : 'inset 4px 4px 8px rgba(163, 177, 198, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.5)';
-
 export const navigationCustomizations = {
     MuiMenuItem: {
         styleOverrides: {
@@ -25,14 +15,13 @@ export const navigationCustomizations = {
                 borderRadius: theme.shape.borderRadius,
                 padding: '8px 12px',
                 margin: '2px 4px',
-                transition: 'all 0.2s ease',
+                transition: 'background-color 0.15s ease',
                 [`&.${menuItemClasses.focusVisible}`]: {
                     backgroundColor: 'transparent',
                 },
                 [`&.${menuItemClasses.selected}`]: {
                     backgroundColor: alpha(theme.palette.primary.main, 0.08),
                     color: theme.palette.primary.main,
-                    boxShadow: getNeumorphInset(theme.palette.mode),
                     [`&.${menuItemClasses.focusVisible}`]: {
                         backgroundColor: alpha(theme.palette.action.selected, 0.3),
                     },
@@ -42,7 +31,6 @@ export const navigationCustomizations = {
                 },
                 '&:hover': {
                     backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                    transform: 'translateX(2px)',
                 },
             }),
         },
@@ -59,20 +47,16 @@ export const navigationCustomizations = {
             paper: ({ theme }) => ({
                 marginTop: '4px',
                 borderRadius: theme.shape.borderRadius,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                border: `1px solid ${theme.palette.divider}`,
                 backgroundImage: 'none',
-                background: alpha(theme.palette.background.paper, 0.98),
-                backdropFilter: 'blur(8px)',
-                boxShadow: getNeumorphShadow(theme.palette.mode),
+                background: theme.palette.background.paper,
+                boxShadow: theme.shadows[3],
                 padding: '4px',
                 [`& .${buttonBaseClasses.root}`]: {
                     '&.Mui-selected': {
                         backgroundColor: alpha(theme.palette.action.selected, 0.3),
                     },
                 },
-                ...theme.applyStyles('dark', {
-                    background: alpha(gray[900], 0.98),
-                }),
             }),
         },
     },
@@ -86,21 +70,17 @@ export const navigationCustomizations = {
             root: ({ theme }) => ({
                 borderRadius: theme.shape.borderRadius,
                 border: '1px solid',
-                borderColor: alpha(gray[200], 0.5),
-                backgroundColor: alpha(theme.palette.primary.light, 0.02),
-                boxShadow: getNeumorphInset(theme.palette.mode),
-                transition: 'all 0.2s ease',
+                borderColor: alpha(gray[200], 0.6),
+                backgroundColor: theme.palette.background.paper,
+                boxShadow: 'none',
+                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                 '&:hover': {
                     borderColor: brand[300],
-                    backgroundColor: alpha(theme.palette.primary.light, 0.04),
-                    boxShadow: theme.palette.mode === 'dark'
-                        ? 'inset 4px 4px 8px rgba(0, 0, 0, 0.25), inset -4px -4px 8px rgba(60, 60, 80, 0.1)'
-                        : 'inset 4px 4px 8px rgba(163, 177, 198, 0.2), inset -4px -4px 8px rgba(255, 255, 255, 0.4)',
                 },
                 [`&.${selectClasses.focused}`]: {
                     outlineOffset: 0,
                     borderColor: brand[400],
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: `0 0 0 3px ${alpha(brand[500], 0.1)}`,
                 },
                 '&:before, &:after': {
                     display: 'none',
@@ -134,23 +114,7 @@ export const navigationCustomizations = {
                 position: 'relative',
                 textDecoration: 'none',
                 width: 'fit-content',
-                transition: 'all 0.3s ease',
-                '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    width: '100%',
-                    height: '2px',
-                    bottom: -2,
-                    left: 0,
-                    backgroundColor: theme.palette.primary.main,
-                    opacity: 0,
-                    transition: 'all 0.3s ease',
-                    borderRadius: '2px',
-                },
-                '&:hover::before': {
-                    opacity: 0.6,
-                    width: '100%',
-                },
+                transition: 'color 0.2s ease',
                 '&:hover': {
                     color: theme.palette.primary.main,
                 },
@@ -165,7 +129,7 @@ export const navigationCustomizations = {
     MuiDrawer: {
         styleOverrides: {
             paper: ({ theme }) => ({
-                backgroundColor: theme.palette.background.default,
+                backgroundColor: theme.palette.background.paper,
             }),
         },
     },
@@ -174,25 +138,23 @@ export const navigationCustomizations = {
             root: ({ theme }) => ({
                 borderRadius: theme.shape.borderRadius,
                 margin: '0 2px',
-                transition: 'all 0.2s ease',
+                transition: 'background-color 0.15s ease',
                 '&:hover': {
                     backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                    transform: 'scale(1.05)',
                 },
                 '&.Mui-selected': {
                     color: 'white',
                     backgroundColor: theme.palette.primary.main,
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                     '&:hover': {
                         backgroundColor: theme.palette.primary.dark,
-                        transform: 'scale(1.05)',
                     },
                 },
                 ...theme.applyStyles('dark', {
                     '&.Mui-selected': {
                         color: 'white',
                         backgroundColor: theme.palette.primary.main,
-                boxShadow: getNeumorphShadow(theme.palette.mode),
+                        boxShadow: theme.shadows[1],
                     },
                 }),
             }),
@@ -202,10 +164,9 @@ export const navigationCustomizations = {
         styleOverrides: {
             root: { minHeight: 'fit-content' },
             indicator: ({ theme }) => ({
-                backgroundColor: theme.palette.grey[800],
-                ...theme.applyStyles('dark', {
-                    backgroundColor: theme.palette.grey[200],
-                }),
+                backgroundColor: theme.palette.primary.main,
+                height: 3,
+                borderRadius: '3px 3px 0 0',
             }),
         },
     },
@@ -221,25 +182,22 @@ export const navigationCustomizations = {
                 borderRadius: theme.shape.borderRadius,
                 border: '1px solid',
                 borderColor: 'transparent',
-                transition: 'all 0.2s ease',
+                transition: 'color 0.15s ease, background-color 0.15s ease',
                 fontWeight: 500,
                 fontSize: '0.875rem',
                 ':hover': {
                     color: theme.palette.text.primary,
                     backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                    borderColor: alpha(theme.palette.primary.main, 0.1),
                 },
                 [`&.${tabClasses.selected}`]: {
                     color: theme.palette.primary.main,
                     backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                    boxShadow: getNeumorphInset(theme.palette.mode),
-                    borderColor: alpha(theme.palette.primary.main, 0.1),
+                    borderColor: alpha(theme.palette.primary.main, 0.15),
                 },
                 ...theme.applyStyles('dark', {
                     ':hover': {
                         color: theme.palette.text.primary,
                         backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                        borderColor: alpha(theme.palette.primary.main, 0.15),
                     },
                     [`&.${tabClasses.selected}`]: {
                         color: theme.palette.primary.light,
@@ -274,12 +232,12 @@ export const navigationCustomizations = {
                 '&.Mui-active': {
                     border: 'none',
                     color: theme.palette.primary.main,
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                 },
                 '&.Mui-completed': {
                     border: 'none',
                     color: theme.palette.success.main,
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                 },
             }),
         },

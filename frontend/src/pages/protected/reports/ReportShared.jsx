@@ -5,8 +5,9 @@ import DataTable from '../../../components/table/DataTable';
 import { StyledTableCell } from '../../../components/table/StyledTableCell';
 import { NepaliYearMonthPicker } from '../../../components/date/NepaliYearMonthPicker';
 import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
+import { Skeleton } from '@mui/material';
 
-export const StatBadge = ({ label, value, color }) => (
+export const StatBadge = ({ label, value, color, isLoading = false }) => (
     <Box sx={{
         px: 1.5,
         py: 0.5,
@@ -17,16 +18,20 @@ export const StatBadge = ({ label, value, color }) => (
         flex: '1 1 0%',
     }}>
         <InputLabel sx={{ fontSize: '0.7rem', mb: 0 }}>{label}</InputLabel>
-        <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color }}>
-            {value}
-        </Box>
+        {isLoading ? (
+            <Skeleton width={70} height={18} sx={{ bgcolor: alpha(color, 0.15) }} />
+        ) : (
+            <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color }}>
+                {value}
+            </Box>
+        )}
     </Box>
 );
 
-export const StatBadges = ({ items = [] }) => (
+export const StatBadges = ({ items = [], isLoading = false }) => (
     <Stack direction="row" alignItems="center" sx={{ flexWrap: 'wrap', gap: 1, flex: '1 1 0%', minWidth: 0 }}>
         {items.map((item, index) => (
-            <StatBadge key={index} {...item} />
+            <StatBadge key={index} {...item} isLoading={isLoading} />
         ))}
     </Stack>
 );

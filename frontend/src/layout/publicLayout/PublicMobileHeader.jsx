@@ -7,6 +7,7 @@ import {
     IconButton,
     Drawer,
     Divider,
+    List,
     ListItem,
     ListItemButton,
     ListItemText,
@@ -23,6 +24,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../../context/useThemeMode';
 import LoginModalButton from './LoginModalButton';
+import PublicMenuContent from './PublicMenuContent';
 
 const LogoImage = styled('img')(({ theme }) => ({
     width: 40,
@@ -252,7 +254,9 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
 
                     {/* Mobile Menu Items */}
                     <Box sx={{ flex: 1, overflow: 'auto', p: 1.5 }}>
-                        {/* <PublicMenuContent isMobile onMenuClose={onMenuClose} /> */}
+                        <List sx={{ py: 0 }}>
+                            <PublicMenuContent isMobile onMenuClose={onMenuClose} />
+                        </List>
 
                         {/* Theme Toggle */}
                         <Divider sx={{ my: 1.5 }} />

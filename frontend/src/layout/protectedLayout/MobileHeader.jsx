@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { styled, useTheme, alpha } from '@mui/material/styles';
-import { Box, Chip, IconButton, Tooltip, Fade } from '@mui/material';
-import { MenuTwoTone, NotificationsNoneRounded, CalendarTodayRounded, WbSunnyRounded, NightsStayRounded } from '@mui/icons-material';
+import { Box, Chip, IconButton, Tooltip } from '@mui/material';
+import { MenuTwoTone, CalendarTodayRounded, WbSunnyRounded, NightsStayRounded } from '@mui/icons-material';
 import { tabsClasses } from '@mui/material/Tabs';
 import AppBar from '@mui/material/AppBar';
 import Stack from '@mui/material/Stack';
 import MuiToolbar from '@mui/material/Toolbar';
 import { useNavigate } from 'react-router-dom';
 import OptionsMenu from './Optionsmenu';
-import dayjs from 'dayjs';
 import { useThemeMode } from '../../context/useThemeMode';
 import { convertToBSFormat } from '../../utils/dateConverter';
 import MobileSideMenu from './MobileSideMenu';
@@ -19,7 +18,6 @@ const LogoImage = styled('img')(({ theme }) => ({
     borderRadius: 10,
     objectFit: 'cover',
     flexShrink: 0,
-    boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.2)}`,
     backgroundColor: theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.primary.main,
 }));
 
@@ -59,53 +57,14 @@ const DateChip = styled(Chip)(({ theme }) => ({
     },
 }));
 
-const FloatingActionButton = styled(IconButton)(({ theme }) => ({
-    position: 'fixed',
-    bottom: 24,
-    right: 24,
-    zIndex: 1200,
-    width: 56,
-    height: 56,
-    backgroundColor: theme.palette.primary.main,
-    color: 'white',
-    boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-    transition: 'all 0.3s ease',
-    '&:hover': {
-        backgroundColor: theme.palette.primary.dark,
-        transform: 'scale(1.05)',
-        boxShadow: `0 6px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
-    },
-}));
-
 export default function MobileHeader() {
     const theme = useTheme();
     const [open, setOpen] = useState(false);
-    const [, setCurrentTime] = useState(dayjs());
-    const [showFAB, setShowFAB] = useState(false);
     const { mode, toggleThemeMode } = useThemeMode();
     const navigate = useNavigate();
 
     const toggleDrawer = (newOpen) => () => {
         setOpen(newOpen);
-    };
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(dayjs());
-        }, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Show FAB when scrolling down on mobile
-    useEffect(() => {
-        const handleScroll = () => {
-            setShowFAB(window.scrollY > 200);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
@@ -117,7 +76,7 @@ export default function MobileHeader() {
                     boxShadow: 'none',
                     bgcolor: 'background.paper',
                     backgroundImage: 'none',
-                    borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                    borderBottom: `1px solid ${theme.palette.divider}`,
                     backdropFilter: 'blur(20px)',
                     backgroundColor: alpha(theme.palette.background.paper, 0.95),
                     borderRadius: 0,
@@ -142,13 +101,11 @@ export default function MobileHeader() {
                                     width: 40,
                                     height: 40,
                                     borderRadius: 2,
-                                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                                    color: theme.palette.primary.main,
-                                    border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
-                                    transition: 'all 0.2s ease',
+                                    color: theme.palette.text.secondary,
+                                    border: `1px solid ${theme.palette.divider}`,
                                     '&:hover': {
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                                        transform: 'scale(1.05)',
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                        color: theme.palette.primary.main,
                                     },
                                 }}
                             >
@@ -161,8 +118,8 @@ export default function MobileHeader() {
                                 alt="logo"
                                 onClick={() => navigate('/dashboard')}
                                 sx={{
-                                    width: 48,
-                                    height: 48,
+                                    width: 40,
+                                    height: 40,
                                     objectFit: 'contain',
                                     borderRadius: '10%',
                                     backgroundColor: theme.palette.common.white,
@@ -172,7 +129,6 @@ export default function MobileHeader() {
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {/* Date Display Chip */}
                             <Tooltip title="Current date (Nepali BS)" arrow placement="bottom">
                                 <DateChip
                                     icon={<CalendarTodayRounded />}
@@ -186,12 +142,14 @@ export default function MobileHeader() {
                                 <IconButton
                                     onClick={toggleThemeMode}
                                     size="small"
+                                    aria-label={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
                                     sx={{
                                         borderRadius: 2,
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                                        border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                                        border: `1px solid ${theme.palette.divider}`,
+                                        color: theme.palette.text.secondary,
                                         '&:hover': {
-                                            backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                                            backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                            color: theme.palette.primary.main,
                                         },
                                         width: 34,
                                         height: 34,
@@ -205,17 +163,6 @@ export default function MobileHeader() {
                     </Stack>
                 </Toolbar>
             </AppBar>
-
-            {/* Floating Action Button for Mobile */}
-            <Fade in={showFAB}>
-                <FloatingActionButton
-                    onClick={scrollToTop}
-                    size="medium"
-                    aria-label="Scroll to top"
-                >
-                    <MenuTwoTone sx={{ transform: 'rotate(90deg)' }} />
-                </FloatingActionButton>
-            </Fade>
 
             {/* Mobile Side Menu */}
             <MobileSideMenu

@@ -2,16 +2,6 @@ import { alpha, svgIconClasses, typographyClasses, buttonBaseClasses, chipClasse
 import { gray, brand } from '../ThemePrimitives';
 import { defaultSuccessColor, defaultErrorColor, defaultWarningColor } from '../ThemeColors';
 
-const getNeumorphShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
-
-const getNeumorphInset = (mode) =>
-    mode === 'dark'
-        ? 'inset 4px 4px 8px rgba(0, 0, 0, 0.35), inset -4px -4px 8px rgba(60, 60, 80, 0.12)'
-        : 'inset 4px 4px 8px rgba(163, 177, 198, 0.3), inset -4px -4px 8px rgba(255, 255, 255, 0.5)';
-
 export const dataDisplayCustomizations = {
     MuiList: {
         styleOverrides: {
@@ -99,14 +89,13 @@ export const dataDisplayCustomizations = {
             root: ({ theme }) => ({
                 border: '1px solid',
                 borderRadius: '999px',
-                boxShadow: getNeumorphInset(theme.palette.mode),
-                transition: 'all 0.2s ease',
+                boxShadow: 'none',
+                transition: 'background-color 0.15s ease, border-color 0.15s ease',
                 [`& .${chipClasses.label}`]: {
-                    fontWeight: 600,
+                    fontWeight: 500,
                 },
                 '&:hover': {
-                    transform: 'scale(1.02)',
-                    boxShadow: getNeumorphShadow(theme.palette.mode),
+                    boxShadow: theme.shadows[1],
                 },
                 variants: [
                     {
@@ -264,12 +253,12 @@ export const dataDisplayCustomizations = {
                     minWidth: 0,
                     width: 32,
                     height: 32,
-                    boxShadow: getNeumorphInset(theme.palette.mode),
+                    boxShadow: 'none',
                     border: '1px solid',
                     borderColor: alpha(gray[200], 0.5),
-                    backgroundColor: alpha(theme.palette.primary.light, 0.02),
+                    backgroundColor: theme.palette.background.paper,
                     '&:hover': {
-                        backgroundColor: alpha(theme.palette.primary.light, 0.08),
+                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
                         borderColor: alpha(gray[300], 0.5),
                     },
                 },

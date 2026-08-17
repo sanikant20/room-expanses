@@ -5,17 +5,46 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import InstagramIcon from '@mui/icons-material/Instagram';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+
+const SocialLinks = [
+    { icon: <FacebookIcon />, label: 'Facebook', hoverColor: '#1877f2' },
+    { icon: <TwitterIcon />, label: 'Twitter', hoverColor: '#1da1f2' },
+    { icon: <LinkedInIcon />, label: 'LinkedIn', hoverColor: '#0077b5' },
+    { icon: <InstagramIcon />, label: 'Instagram', hoverColor: '#e4405f' },
+];
+
+const QuickLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Login', to: '/login' },
+    { label: 'Dashboard', to: '/dashboard' },
+];
+
+const ProductLinks = [
+    { label: 'Expenses', to: '/expenses' },
+    { label: 'Partners', to: '/partners' },
+    { label: 'Reports', to: '/reports' },
+    { label: 'Settlement', to: '/settlement' },
+];
+
+const ContactInfo = [
+    { icon: <LocationOnOutlinedIcon fontSize="small" />, label: 'Kathmandu, Nepal' },
+    { icon: <PhoneOutlinedIcon fontSize="small" />, label: '+977 1 4000000 (placeholder)' },
+    { icon: <EmailOutlinedIcon fontSize="small" />, label: 'support@theroomies.app (placeholder)' },
+];
 
 const PublicFooter = () => {
     const theme = useTheme();
-    const isDark = theme.palette.mode === 'dark';
 
     return (
         <Box
             component="footer"
             sx={{
-                bgcolor: isDark ? 'grey.900' : 'primary.main',
-                color: isDark ? 'text.primary' : 'primary.contrastText',
+                bgcolor: 'background.paper',
+                color: 'text.primary',
+                borderTop: `1px solid ${theme.palette.divider}`,
                 py: 6,
                 mt: 'auto'
             }}
@@ -23,172 +52,98 @@ const PublicFooter = () => {
             <Container maxWidth="xl">
                 <Grid container spacing={4}>
                     {/* Company Info */}
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Typography variant="h6" gutterBottom fontWeight="bold">
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
                             The Roomies
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
+                        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
                             Track shared expenses, settle balances, and stay organized in Nepali months.
                         </Typography>
                         <Stack direction="row" spacing={1}>
-                            <IconButton
-                                component="a"
-                                href="https://facebook.com"
-                                target="_blank"
-                                sx={{
-                                    color: 'inherit',
-                                    opacity: 0.7,
-                                    '&:hover': { color: '#1877f2', opacity: 1 }
-                                }}
-                            >
-                                <FacebookIcon />
-                            </IconButton>
-                            <IconButton
-                                component="a"
-                                href="https://twitter.com"
-                                target="_blank"
-                                sx={{
-                                    color: 'inherit',
-                                    opacity: 0.7,
-                                    '&:hover': { color: '#1da1f2', opacity: 1 }
-                                }}
-                            >
-                                <TwitterIcon />
-                            </IconButton>
-                            <IconButton
-                                component="a"
-                                href="https://linkedin.com"
-                                target="_blank"
-                                sx={{
-                                    color: 'inherit',
-                                    opacity: 0.7,
-                                    '&:hover': { color: '#0077b5', opacity: 1 }
-                                }}
-                            >
-                                <LinkedInIcon />
-                            </IconButton>
-                            <IconButton
-                                component="a"
-                                href="https://instagram.com"
-                                target="_blank"
-                                sx={{
-                                    color: 'inherit',
-                                    opacity: 0.7,
-                                    '&:hover': { color: '#e4405f', opacity: 1 }
-                                }}
-                            >
-                                <InstagramIcon />
-                            </IconButton>
+                            {SocialLinks.map(({ icon, label, hoverColor }) => (
+                                <IconButton
+                                    key={label}
+                                    component="a"
+                                    href="https://facebook.com"
+                                    target="_blank"
+                                    aria-label={label}
+                                    sx={{
+                                        color: 'text.secondary',
+                                        '&:hover': { color: hoverColor }
+                                    }}
+                                >
+                                    {icon}
+                                </IconButton>
+                            ))}
                         </Stack>
                     </Grid>
 
                     {/* Quick Links */}
                     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Typography variant="h6" gutterBottom fontWeight="bold">
+                        <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
                             Quick Links
                         </Typography>
                         <Stack spacing={1}>
-                            <Link
-                                component={RouterLink}
-                                to="/"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                Home
-                            </Link>
-                            <Link
-                                component={RouterLink}
-                                to="/about"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                About Us
-                            </Link>
-                            <Link
-                                component={RouterLink}
-                                to="/services"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                Services
-                            </Link>
-                            <Link
-                                component={RouterLink}
-                                to="/contact"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                Contact
-                            </Link>
+                            {QuickLinks.map(({ label, to }) => (
+                                <Link
+                                    key={label}
+                                    component={RouterLink}
+                                    to={to}
+                                    color="text.secondary"
+                                    sx={{ textDecoration: 'none', '&:hover': { color: 'primary.main' } }}
+                                >
+                                    {label}
+                                </Link>
+                            ))}
                         </Stack>
                     </Grid>
 
-                    {/* Resources */}
-                    <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                        <Typography variant="h6" gutterBottom fontWeight="bold">
-                            Resources
+                    {/* Product */}
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
+                            Product
                         </Typography>
                         <Stack spacing={1}>
-                            <Link
-                                component={RouterLink}
-                                to="/blog"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                Blog
-                            </Link>
-                            <Link
-                                component={RouterLink}
-                                to="/faq"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                FAQ
-                            </Link>
-                            <Link
-                                component={RouterLink}
-                                to="/support"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                Support
-                            </Link>
-                            <Link
-                                component={RouterLink}
-                                to="/privacy"
-                                color="inherit"
-                                sx={{ textDecoration: 'none', opacity: 0.8, '&:hover': { opacity: 1 } }}
-                            >
-                                Privacy Policy
-                            </Link>
+                            {ProductLinks.map(({ label, to }) => (
+                                <Link
+                                    key={label}
+                                    component={RouterLink}
+                                    to={to}
+                                    color="text.secondary"
+                                    sx={{ textDecoration: 'none', '&:hover': { color: 'primary.main' } }}
+                                >
+                                    {label}
+                                </Link>
+                            ))}
                         </Stack>
                     </Grid>
 
                     {/* Contact Info */}
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                        <Typography variant="h6" gutterBottom fontWeight="bold">
+                    <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                        <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
                             Contact Us
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                            📍 Kathmandu, Nepal
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                            📞 +977 1 4000000
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                            ✉️ support@theroomies.app
-                        </Typography>
+                        <Stack spacing={1.25}>
+                            {ContactInfo.map(({ icon, label }) => (
+                                <Stack key={label} direction="row" spacing={0.75} alignItems="flex-start">
+                                    <Box sx={{ color: 'text.secondary', display: 'flex', mt: 0.25, flexShrink: 0 }}>{icon}</Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {label}
+                                    </Typography>
+                                </Stack>
+                            ))}
+                        </Stack>
                     </Grid>
                 </Grid>
 
-                <Divider sx={{ my: 4, borderColor: isDark ? 'divider' : 'rgba(255,255,255,0.15)' }} />
+                <Divider sx={{ my: 4 }} />
 
                 {/* Copyright */}
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
-                    <Typography variant="body2" color={isDark ? 'text.secondary' : 'primary.contrastText'}>
+                    <Typography variant="body2" color="text.secondary">
                         © {new Date().getFullYear()} <span
                             onClick={() => window.open('https://easysoftware.com.np/', '_blank')}
-                            style={{ color: isDark ? theme.palette.primary.main : 'inherit', fontWeight: 600, cursor: 'pointer' }}>
+                            style={{ color: theme.palette.primary.main, fontWeight: 600, cursor: 'pointer' }}>
                             The Roomies
                         </span> All rights reserved.
                     </Typography>

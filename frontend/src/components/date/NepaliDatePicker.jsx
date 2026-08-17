@@ -15,10 +15,7 @@ import NepaliDate from 'nepali-date-converter';
 import Calendar from '@sbmdkl/nepali-datepicker-reactjs';
 import '@sbmdkl/nepali-datepicker-reactjs/dist/index.css';
 
-const getNeumorphShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
+
 
 const DatePickerWrapper = styled(Box)(({ theme }) => ({
     position: 'relative',
@@ -72,7 +69,7 @@ const DatePickerWrapper = styled(Box)(({ theme }) => ({
         overflow: 'hidden',
         fontSize: '0.875rem',
         color: theme.palette.text.primary,
-        boxShadow: getNeumorphShadow(theme.palette.mode),
+        boxShadow: theme.shadows[4],
     },
     // Header (library class `header` + `theme-header-default`)
     '& ._1Op28': {
@@ -151,7 +148,7 @@ const DatePickerWrapper = styled(Box)(({ theme }) => ({
         backgroundColor: theme.palette.primary.main,
         color: theme.palette.primary.contrastText,
         borderRadius: `${formRadius}px`,
-        boxShadow: getNeumorphShadow(theme.palette.mode),
+        boxShadow: theme.shadows[2],
         '&:hover': {
             backgroundColor: theme.palette.primary.dark,
         },
@@ -201,10 +198,10 @@ const DatePickerWrapper = styled(Box)(({ theme }) => ({
         },
         '& ._2xcMq': {
             backgroundColor: alpha(theme.palette.background.paper, 0.95),
-            boxShadow: '6px 6px 12px rgba(0, 0, 0, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.05)',
+            boxShadow: theme.shadows[4],
         },
         '& ._1ImcB': {
-            boxShadow: '6px 6px 12px rgba(0, 0, 0, 0.5), -6px -6px 12px rgba(255, 255, 255, 0.05)',
+            boxShadow: theme.shadows[2],
         },
     }),
 }));

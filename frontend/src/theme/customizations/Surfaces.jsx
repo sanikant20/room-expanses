@@ -1,15 +1,4 @@
 import { alpha } from '@mui/material/styles';
-import { gray } from '../ThemePrimitives';
-
-const getNeumorphShadow = (mode) =>
-    mode === 'dark'
-        ? '6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(60, 60, 80, 0.15)'
-        : '6px 6px 12px rgba(163, 177, 198, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.6)';
-
-const getNeumorphShadowLg = (mode) =>
-    mode === 'dark'
-        ? '8px 8px 16px rgba(0, 0, 0, 0.45), -8px -8px 16px rgba(60, 60, 80, 0.12)'
-        : '8px 8px 16px rgba(163, 177, 198, 0.5), -8px -8px 16px rgba(255, 255, 255, 0.7)';
 
 export const surfacesCustomizations = {
     MuiAccordion: {
@@ -19,24 +8,26 @@ export const surfacesCustomizations = {
         },
         styleOverrides: {
             root: ({ theme }) => ({
-                padding: 4,
-                overflow: 'clip',
-                backgroundColor: alpha(theme.palette.primary.light, 0.03),
+                padding: 0,
+                overflow: 'hidden',
+                backgroundColor: theme.palette.background.paper,
                 border: '1px solid',
-                borderColor: alpha(theme.palette.primary.main, 0.08),
-                boxShadow: getNeumorphShadow(theme.palette.mode),
+                borderColor: theme.palette.divider,
                 borderRadius: theme.shape.borderRadius,
                 marginBottom: 8,
-                transition: 'all 0.3s ease',
+                transition: 'border-color 0.2s ease',
                 ':before': {
                     backgroundColor: 'transparent',
                 },
                 '&:not(:last-of-type)': {
-                    borderBottom: 'none',
+                    borderBottom: `1px solid ${theme.palette.divider}`,
                 },
                 '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: getNeumorphShadowLg(theme.palette.mode),
+                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                },
+                '&.Mui-expanded': {
+                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                    boxShadow: theme.shadows[2],
                 },
             }),
         },
@@ -47,7 +38,7 @@ export const surfacesCustomizations = {
                 border: 'none',
                 borderRadius: theme.shape.borderRadius,
                 padding: '8px 12px',
-                transition: 'all 0.2s ease',
+                transition: 'background-color 0.2s ease',
                 '&:hover': {
                     backgroundColor: alpha(theme.palette.primary.main, 0.04),
                 },
@@ -73,7 +64,7 @@ export const surfacesCustomizations = {
         },
         styleOverrides: {
             root: ({ theme }) => ({
-                transition: 'all 0.3s ease',
+                transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
                 borderRadius: theme.shape.borderRadius,
                 variants: [
                     {
@@ -81,10 +72,8 @@ export const surfacesCustomizations = {
                             variant: 'outlined',
                         },
                         style: {
-                            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                            boxShadow: getNeumorphShadow(theme.palette.mode),
-                            background: alpha(theme.palette.background.paper, 0.95),
-                            backdropFilter: 'blur(8px)',
+                            border: `1px solid ${theme.palette.divider}`,
+                            background: theme.palette.background.paper,
                         },
                     },
                     {
@@ -92,7 +81,7 @@ export const surfacesCustomizations = {
                             elevation: 1,
                         },
                         style: {
-                            boxShadow: getNeumorphShadow(theme.palette.mode),
+                            boxShadow: theme.shadows[1],
                         },
                     },
                     {
@@ -100,7 +89,15 @@ export const surfacesCustomizations = {
                             elevation: 2,
                         },
                         style: {
-                            boxShadow: getNeumorphShadowLg(theme.palette.mode),
+                            boxShadow: theme.shadows[2],
+                        },
+                    },
+                    {
+                        props: {
+                            elevation: 3,
+                        },
+                        style: {
+                            boxShadow: theme.shadows[3],
                         },
                     },
                 ],
@@ -110,17 +107,15 @@ export const surfacesCustomizations = {
     MuiCard: {
         styleOverrides: {
             root: ({ theme }) => ({
-                padding: 1,
                 marginBottom: 8,
-                // gap: 16,
-                transition: 'all 100ms ease',
-                backgroundColor: gray[50],
-                borderRadius: (theme.vars || theme).shape.borderRadius,
+                transition: 'box-shadow 200ms ease, border-color 200ms ease',
+                backgroundColor: (theme.vars || theme).palette.background.paper,
+                borderRadius: theme.shape.borderRadius,
                 border: `1px solid ${(theme.vars || theme).palette.divider}`,
                 boxShadow: 'none',
-                ...theme.applyStyles('dark', {
-                    backgroundColor: gray[800],
-                }),
+                '&:hover': {
+                    boxShadow: theme.shadows[2],
+                },
                 variants: [
                     {
                         props: {
@@ -129,9 +124,9 @@ export const surfacesCustomizations = {
                         style: {
                             border: `1px solid ${(theme.vars || theme).palette.divider}`,
                             boxShadow: 'none',
-                            background: 'hsl(0, 0%, 100%)',
+                            background: (theme.vars || theme).palette.background.paper,
                             ...theme.applyStyles('dark', {
-                                background: alpha(gray[900], 0.4),
+                                background: (theme.vars || theme).palette.background.paper,
                             }),
                         },
                     },
