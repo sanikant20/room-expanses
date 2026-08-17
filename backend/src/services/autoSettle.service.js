@@ -6,7 +6,7 @@ import { settleAllCascade } from "./settlement.service.js";
 
 const NepaliDate = NepaliDateModule.default || NepaliDateModule;
 
-const AUTO_SETTLE_CRON = "15 20 * * *";
+const AUTO_SETTLE_CRON = "15 8 * * *";
 const AUTO_SETTLE_TIMEZONE = "Asia/Kathmandu";
 
 /**
