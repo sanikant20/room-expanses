@@ -219,7 +219,7 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
             },
         },
         {
-            key: 'status', label: 'Status',
+            key: 'status', label: 'Settlement Status',
             filterValue: (row) => (row.settled ? 'Settled' : 'Pending'),
             render: (row) => (
                 row.settled

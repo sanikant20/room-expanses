@@ -48,12 +48,6 @@ export const PARTNER_STATUS = [
     { value: 'inactive', label: 'Inactive' },
 ]
 
-export const SETTLEMENT_STATUS = [
-    { value: 'receive', label: 'To Receive', color: 'success' },
-    { value: 'pay', label: 'To Pay', color: 'error' },
-    { value: 'settled', label: 'Settled', color: 'default' },
-]
-
 export const PAYMENT_STATUS = [
     { value: 'pending', label: 'Pending', color: 'warning' },
     { value: 'paid', label: 'Paid', color: 'info' },
@@ -65,4 +59,4 @@ export const BS_YEAR_RANGE = {
     max: 2090,
 }
 
-export const DEFAULT_BS_YEAR = 2081
+export const DEFAULT_BS_YEAR = 2083

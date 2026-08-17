@@ -1,6 +1,7 @@
 import { Expense } from "../models/expense.model.js";
 import { Partner } from "../models/partner.model.js";
 import { Settlement } from "../models/settlement.model.js";
+import { Group } from "../models/group.model.js";
 import { computeSettlement, computeTransactions } from "./calculation.service.js";
 
 const settlementPopulates = () => [
@@ -121,7 +122,6 @@ export const settleScope = async ({ year, month, category = null, group = null, 
  * A settlement is considered auto-settled when every recorded settle action
  * came from the auto-settle job (source "auto"). For legacy records without
  * a settleActions history, an unset settledBy means the auto job settled it.
- * Auto-settled settlements cannot be reverted.
  */
 export const isAutoSettled = (record) => {
   if (!record) return false;
@@ -135,15 +135,11 @@ export const isAutoSettled = (record) => {
  * Reverts a single scope. Deletes the record and unsets the settled flag
  * on the expenses it covered (based on the stored fromDate/toDate, or the
  * full month when the record was a whole-month settlement).
- * Returns { reverted, blocked } — blocked is true for auto-settled scopes.
+ * Returns { reverted }.
  */
 export const revertScope = async ({ year, month, category = null, group = null }) => {
   const record = await Settlement.findOne({ bsYear: year, bsMonth: month, category, group });
-  if (!record) return { reverted: false, blocked: false };
-
-  if (isAutoSettled(record)) {
-    return { reverted: false, blocked: true };
-  }
+  if (!record) return { reverted: false };
 
   await record.deleteOne();
 
@@ -162,7 +158,7 @@ export const revertScope = async ({ year, month, category = null, group = null }
     settledAt: null,
   });
 
-  return { reverted: true, blocked: false };
+  return { reverted: true };
 };
 
 /**
@@ -180,17 +176,11 @@ export const settleAllCascade = async ({ year, month, fromDate = null, toDate = 
   const primary = await settleScope({ year, month, category: "primary", group: null, fromDate, toDate, settledBy });
   results.push({ scope: "primary", alreadySettled: primary.alreadySettled, record: primary.record });
 
-  const groups = await Expense.distinct("group", {
-    bsYear: year,
-    bsMonth: month,
-    category: "secondary",
-    group: { $ne: null },
-    ...dateRangeFilter(fromDate, toDate),
-  });
+  const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
 
-  for (const groupId of groups) {
-    const secondary = await settleScope({ year, month, category: "secondary", group: groupId, fromDate, toDate, settledBy });
-    results.push({ scope: "secondary", group: groupId, alreadySettled: secondary.alreadySettled, record: secondary.record });
+  for (const group of activeGroups) {
+    const secondary = await settleScope({ year, month, category: "secondary", group: group._id, fromDate, toDate, settledBy });
+    results.push({ scope: "secondary", group: group._id, alreadySettled: secondary.alreadySettled, record: secondary.record });
   }
 
   return results;
@@ -198,8 +188,7 @@ export const settleAllCascade = async ({ year, month, fromDate = null, toDate = 
 
 /**
  * Reverts the whole month across every scope that has a settled record.
- * Used by the "All Summary" revert. If any scope is auto-settled, the whole
- * revert is blocked (no partial revert) and each affected scope is flagged.
+ * Used by the "All Summary" revert.
  */
 export const revertAllCascade = async ({ year, month }) => {
   const scopeDefs = [
@@ -218,26 +207,10 @@ export const revertAllCascade = async ({ year, month }) => {
     scopeDefs.push({ scope: "secondary", category: "secondary", group: groupId });
   }
 
-  const records = await Settlement.find({
-    bsYear: year,
-    bsMonth: month,
-    $or: scopeDefs.map(({ category, group }) => ({ category, group })),
-  });
-
-  const autoSettledScopes = records.filter((record) => isAutoSettled(record));
-  if (autoSettledScopes.length > 0) {
-    return scopeDefs.map(({ scope, group }) => ({
-      scope,
-      group,
-      reverted: false,
-      blocked: true,
-    }));
-  }
-
   const results = [];
   for (const { scope, category, group } of scopeDefs) {
     const { reverted } = await revertScope({ year, month, category, group });
-    results.push({ scope, group, reverted, blocked: false });
+    results.push({ scope, group, reverted });
   }
 
   return results;

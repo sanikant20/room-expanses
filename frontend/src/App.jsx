@@ -40,8 +40,10 @@ const LandingPage = lazy(() => import('./pages/public/LandingPage'));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000,
-      gcTime: 5 * 60 * 1000,
+      // staleTime: 60 * 1000,
+      // gcTime: 5 * 60 * 1000,
+      staleTime: 0,
+      gcTime: 0,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -67,7 +69,7 @@ const AxiosInterceptorSetup = () => {
 const HealthPoller = () => {
   useEffect(() => {
     const ping = () => {
-      AxiosConfig.get('/health').catch(() => {});
+      AxiosConfig.get('/health').catch(() => { });
     };
     ping();
     const interval = setInterval(ping, 5 * 60 * 1000);

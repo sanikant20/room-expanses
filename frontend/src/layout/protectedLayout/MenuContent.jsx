@@ -4,6 +4,7 @@ import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Coll
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuItemLists, secondaryListItems } from './MenuItemLists';
 import { ClearRounded, ExpandLess, ExpandMore, SearchRounded, FiberManualRecord } from '@mui/icons-material';
+import { isPartnerAccount } from '../../helper/getAuthData';
 
 const generateKey = (item, parentIndex = '', level = 0) => {
     return `${parentIndex}-${level}-${item.menu}`.replace(/\s+/g, '-');
@@ -176,7 +177,8 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
         return false;
     };
 
-    const filteredMainItems = searchTerm ? MenuItemLists.filter(item => itemMatchesSearch(item)) : MenuItemLists;
+    const filteredMainItems = (searchTerm ? MenuItemLists.filter(item => itemMatchesSearch(item)) : MenuItemLists)
+        .filter(item => !(item.adminOnly && isPartnerAccount()));
     const filteredSecondaryItems = searchTerm ? secondaryListItems.filter(item => getMenuText(item).toLowerCase().includes(searchTerm.toLowerCase())) : secondaryListItems;
 
     const renderMenuItems = (items, level = 0, parentIndex = '') => {

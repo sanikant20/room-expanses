@@ -99,7 +99,7 @@ export const computeSettlement = (expenses, activePartners) => {
     paid: 0,
     expected: 0,
     balance: 0,
-    status: "settled",
+    settled: false,
   }));
   const rowById = new Map(rows.map((row) => [row.partner._id.toString(), row]));
 
@@ -118,7 +118,6 @@ export const computeSettlement = (expenses, activePartners) => {
     row.paid = round2(row.paid);
     row.expected = round2(row.expected);
     row.balance = round2(row.paid - row.expected);
-    row.status = row.balance > 0.005 ? "receive" : row.balance < -0.005 ? "pay" : "settled";
   });
 
   const summary = computeSummary(expenses);

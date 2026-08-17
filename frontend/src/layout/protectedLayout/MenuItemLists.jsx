@@ -28,6 +28,7 @@ export const MenuItemLists = [
         translationKey: 'menu.partners',
         icon: <GroupsRounded />,
         route: '/partners',
+        adminOnly: true,
     },
     {
         section: 'Insights',

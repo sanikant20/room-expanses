@@ -6,7 +6,6 @@ import { NepaliYearMonthPicker } from '../../../components/date/NepaliYearMonthP
 import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
 import { convertToBSFormat } from '../../../utils/dateConverter';
 import { useGetActiveGroups } from '../../../apis/groupAPI/GroupAPI';
-import { SETTLEMENT_STATUS } from '../../../constant/constant';
 
 export const SettlementMonthPicker = ({ value, onChange }) => (
     <NepaliYearMonthPicker
@@ -105,7 +104,6 @@ export const SettlementSummaryCard = ({ title, value, subtitle, color, isLoading
 
 export const SettlementSummaryCards = ({ data, isLoading = false }) => {
     const partnerCount = (data?.rows || []).length;
-    const avgContribution = partnerCount > 0 ? ((data?.expectedTotal || 0) / partnerCount) : 0;
     return (
         <Stack
             direction="row"
@@ -115,9 +113,9 @@ export const SettlementSummaryCards = ({ data, isLoading = false }) => {
                 gap: { xs: 2.5, sm: 2 },
             }}
         >
-            <SettlementSummaryCard title="Total Spent" value={formatToNepaliCurrency(data?.grandTotal || 0)} color="primary" subtitle={`${data?.expenseCount || 0} record(s)`} isLoading={isLoading} />
-            <SettlementSummaryCard title="Average Contribution" value={formatToNepaliCurrency(avgContribution)} color="warning" subtitle={`Avg share per partner (${partnerCount} partner(s))`} isLoading={isLoading} />
-            <SettlementSummaryCard title="Net Balance" value={formatToNepaliCurrency(data?.netBalance || 0)} color="success" subtitle="Should always be 0 (self-balancing)" isLoading={isLoading} />
+            <SettlementSummaryCard title="Total Expenses" value={data?.expenseCount || 0} color="primary" subtitle="record(s)" isLoading={isLoading} />
+            <SettlementSummaryCard title="Total Amount" value={formatToNepaliCurrency(data?.grandTotal || 0)} color="warning" subtitle={`${partnerCount} partner(s)`} isLoading={isLoading} />
+            <SettlementSummaryCard title="Partners" value={partnerCount} color="success" subtitle="involved in this scope" isLoading={isLoading} />
         </Stack>
     );
 };
@@ -171,17 +169,22 @@ export const SettlementTable = ({ data, isLoading, filename, extra, actions }) =
             ),
         },
         {
-            key: 'status', label: 'Status',
-            render: (row) => {
-                const status = SETTLEMENT_STATUS.find((s) => s.value === row.status) || {};
-                return (
-                    <Chip
-                        label={status.label || row.status}
-                        color={status.color || 'default'}
-                        size="small"
-                    />
-                );
-            },
+            key: 'settled', label: 'Settlement Status',
+            filterValue: (row) => (row.settled ? 'Settled' : 'Pending'),
+            render: (row) => (
+                row.settled
+                    ? (
+                        <Chip
+                            size="small"
+                            color="success"
+                            icon={<CheckCircleRounded />}
+                            label="Settled"
+                        />
+                    )
+                    : (
+                        <Chip size="small" variant="outlined" label="Pending" />
+                    )
+            ),
         },
     ], []);
 

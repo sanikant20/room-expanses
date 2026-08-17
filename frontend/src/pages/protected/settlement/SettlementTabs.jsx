@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BalanceRounded, CalculateRounded, CompareArrowsRounded, ReceiptLongRounded, StarOutlineRounded, StarRounded } from '@mui/icons-material';
+import { BalanceRounded, CalculateRounded, CompareArrowsRounded, ReceiptLongRounded } from '@mui/icons-material';
 import CustomTab from '../../../components/custom/CustomTab';
 import { formatYearMonthString, getCurrentBsYearMonth } from '../../../utils/nepaliDate';
 import { isPartnerAccount } from '../../../helper/getAuthData';
@@ -16,9 +16,13 @@ const SettlementTabs = () => {
     });
     const [group, setGroup] = useState('all');
 
+    const handleGroupChange = (newGroup) => {
+        setGroup(newGroup);
+    };
+
     const tabs = [
         {
-            label: 'All Summary',
+            label: 'Settlement Summary',
             icon: <BalanceRounded />,
             content: (
                 <SettlementSummary
@@ -27,62 +31,11 @@ const SettlementTabs = () => {
                     subtitlePrefix="Total settlement summary"
                     filename="Settlement Summary"
                     allowSettle={!isPartner}
-                    selectedMonth={selectedMonth}
-                    onMonthChange={setSelectedMonth}
-                />
-            ),
-        },
-        {
-            label: 'My Payments',
-            icon: <ReceiptLongRounded />,
-            content: (
-                <SettlementMyPayments
-                    selectedMonth={selectedMonth}
-                    onMonthChange={setSelectedMonth}
-                />
-            ),
-        },
-        {
-            label: 'Primary Summary',
-            icon: <StarRounded />,
-            content: (
-                <SettlementSummary
-                    title="Primary Settlement"
-                    icon={<StarRounded />}
-                    subtitlePrefix="Settlement for primary expenses"
-                    filename="Primary Settlement Summary"
-                    allowSettle={!isPartner}
-                    category="primary"
-                    selectedMonth={selectedMonth}
-                    onMonthChange={setSelectedMonth}
-                />
-            ),
-        },
-        {
-            label: 'Secondary Summary',
-            icon: <StarOutlineRounded />,
-            content: (
-                <SettlementSummary
-                    title="Secondary Settlement"
-                    icon={<StarOutlineRounded />}
-                    subtitlePrefix="Settlement for secondary expenses"
-                    filename="Secondary Settlement Summary"
-                    allowSettle={!isPartner}
-                    category="secondary"
+                    showCategoryFilter
                     selectedMonth={selectedMonth}
                     onMonthChange={setSelectedMonth}
                     group={group}
-                    onGroupChange={setGroup}
-                />
-            ),
-        },
-        {
-            label: 'Calculations',
-            icon: <CalculateRounded />,
-            content: (
-                <SettlementCalculation
-                    selectedMonth={selectedMonth}
-                    onMonthChange={setSelectedMonth}
+                    onGroupChange={handleGroupChange}
                 />
             ),
         },
@@ -98,6 +51,27 @@ const SettlementTabs = () => {
                 />
             ),
         },
+        {
+            label: 'My Payments',
+            icon: <ReceiptLongRounded />,
+            content: (
+                <SettlementMyPayments
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                />
+            ),
+        },
+        {
+            label: 'Calculations',
+            icon: <CalculateRounded />,
+            content: (
+                <SettlementCalculation
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                />
+            ),
+        },
+
     ];
 
     return <CustomTab tabs={tabs} storageKey={isPartner ? 'settlementActiveTabPartner' : 'settlementActiveTab'} />;

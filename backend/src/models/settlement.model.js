@@ -30,6 +30,16 @@ const transactionSchema = new Schema(
       type: Date,
       default: null,
     },
+    confirmedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    confirmedByType: {
+      type: String,
+      enum: ["admin", "partner", null],
+      default: null,
+    },
   },
   { _id: false }
 );

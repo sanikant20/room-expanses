@@ -1,6 +1,7 @@
 import { Expense } from "../models/expense.model.js";
 import { Partner } from "../models/partner.model.js";
 import { Settlement } from "../models/settlement.model.js";
+import { Group } from "../models/group.model.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import mongoose from "mongoose";
@@ -72,23 +73,33 @@ const resolveTransactionScope = (req) => {
   };
 };
 
-const updateTransactionPayment = async (scope, payment) => {
-  const record = await Settlement.findOneAndUpdate(
-    {
-      bsYear: scope.year,
-      bsMonth: scope.month,
-      category: scope.category,
-      group: scope.group,
-      status: "settled",
-      "transactions.from": scope.from,
-      "transactions.to": scope.to,
-    },
-    { $set: payment }
-  );
+const updateTransactionPayment = async (scope, updates) => {
+  const filter = {
+    bsYear: scope.year,
+    bsMonth: scope.month,
+    status: "settled",
+    "transactions.from": scope.from,
+    "transactions.to": scope.to,
+  };
+
+  if (scope.category != null) filter.category = scope.category;
+  if (scope.group != null) filter.group = scope.group;
+
+  const record = await Settlement.findOne(filter);
 
   if (!record) {
     throw new ApiError(404, "Settled transaction not found for this month");
   }
+
+  const tx = record.transactions.find(
+    (t) => String(t.from) === scope.from && String(t.to) === scope.to
+  );
+  if (!tx) {
+    throw new ApiError(404, "Transaction not found in settlement record");
+  }
+
+  Object.assign(tx, updates);
+  await record.save();
 };
 
 export const markTransactionPaid = asyncHandler(async (req, res) => {
@@ -99,8 +110,8 @@ export const markTransactionPaid = asyncHandler(async (req, res) => {
   }
 
   await updateTransactionPayment(scope, {
-    "transactions.$.paymentStatus": "paid",
-    "transactions.$.paidAt": new Date(),
+    paymentStatus: "paid",
+    paidAt: new Date(),
   });
 
   return res.status(200).json({
@@ -116,15 +127,18 @@ export const confirmTransactionReceipt = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Only the receiving partner can confirm this transaction");
   }
 
-  const record = await Settlement.findOne({
+  const baseFilter = {
     bsYear: scope.year,
     bsMonth: scope.month,
-    category: scope.category,
-    group: scope.group,
     status: "settled",
     "transactions.from": scope.from,
     "transactions.to": scope.to,
-  });
+  };
+
+  if (scope.category != null) baseFilter.category = scope.category;
+  if (scope.group != null) baseFilter.group = scope.group;
+
+  const record = await Settlement.findOne(baseFilter);
 
   if (!record) {
     throw new ApiError(404, "Settled transaction not found for this month");
@@ -141,8 +155,10 @@ export const confirmTransactionReceipt = asyncHandler(async (req, res) => {
   }
 
   await updateTransactionPayment(scope, {
-    "transactions.$.paymentStatus": "confirmed",
-    "transactions.$.confirmedAt": new Date(),
+    paymentStatus: "confirmed",
+    confirmedAt: new Date(),
+    confirmedBy: req.user?._id || null,
+    confirmedByType: req.userType || null,
   });
 
   return res.status(200).json({
@@ -155,9 +171,11 @@ export const resetTransactionPayment = asyncHandler(async (req, res) => {
   const scope = resolveTransactionScope(req);
 
   await updateTransactionPayment(scope, {
-    "transactions.$.paymentStatus": "pending",
-    "transactions.$.paidAt": null,
-    "transactions.$.confirmedAt": null,
+    paymentStatus: "pending",
+    paidAt: null,
+    confirmedAt: null,
+    confirmedBy: null,
+    confirmedByType: null,
   });
 
   return res.status(200).json({
@@ -169,6 +187,29 @@ export const resetTransactionPayment = asyncHandler(async (req, res) => {
 const fetchSettlementRecord = (bsYear, bsMonth, category = null, group = null) =>
   Settlement.findOne({ bsYear, bsMonth, category, group }).populate(settlementPopulates());
 
+const fetchSecondaryAggregatedStatus = async (bsYear, bsMonth) => {
+  const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
+  if (activeGroups.length === 0) return { status: "pending" };
+
+  const records = await Settlement.find({
+    bsYear,
+    bsMonth,
+    category: "secondary",
+    group: { $in: activeGroups.map((g) => g._id) },
+  }).populate(settlementPopulates());
+
+  const allSettled = records.length === activeGroups.length && records.every((r) => r.status === "settled");
+
+  const transactions = records.flatMap((r) => r.transactions || []);
+  const settleActions = records.flatMap((r) => r.settleActions || []);
+
+  return {
+    status: allSettled ? "settled" : "pending",
+    transactions,
+    settleActions,
+  };
+};
+
 export const getSettlement = asyncHandler(async (req, res) => {
   const filter = buildFilter(req);
 
@@ -176,18 +217,60 @@ export const getSettlement = asyncHandler(async (req, res) => {
   const expenses = await Expense.find(filter);
 
   const settlement = computeSettlement(expenses, activePartners);
-  const record = await fetchSettlementRecord(
-    Number(req.query.bsYear),
-    Number(req.query.bsMonth),
-    resolveCategory(req.query.category),
-    resolveGroup(req.query.group)
-  );
+
+  const category = resolveCategory(req.query.category);
+  const group = resolveGroup(req.query.group);
+  const bsYear = Number(req.query.bsYear);
+  const bsMonth = Number(req.query.bsMonth);
+
+  let isSettled = false;
+  let aggregatedTransactions = null;
+  let aggregatedSettleActions = null;
+
+  if (category === null) {
+    const primaryRecord = await fetchSettlementRecord(bsYear, bsMonth, "primary", null);
+    const secondaryStatus = await fetchSecondaryAggregatedStatus(bsYear, bsMonth);
+    isSettled = !!primaryRecord && secondaryStatus.status === "settled";
+    aggregatedTransactions = secondaryStatus.transactions || [];
+    aggregatedSettleActions = secondaryStatus.settleActions || [];
+    if (primaryRecord?.transactions) {
+      aggregatedTransactions = [...primaryRecord.transactions, ...aggregatedTransactions];
+    }
+    if (primaryRecord?.settleActions) {
+      aggregatedSettleActions = [...primaryRecord.settleActions, ...aggregatedSettleActions];
+    }
+  } else if (category === "secondary" && !group) {
+    const secondaryStatus = await fetchSecondaryAggregatedStatus(bsYear, bsMonth);
+    isSettled = secondaryStatus.status === "settled";
+    aggregatedTransactions = secondaryStatus.transactions || [];
+    aggregatedSettleActions = secondaryStatus.settleActions || [];
+  } else {
+    const record = await fetchSettlementRecord(bsYear, bsMonth, category, group);
+    isSettled = record?.status === "settled";
+    aggregatedTransactions = record?.transactions || null;
+    aggregatedSettleActions = record?.settleActions || null;
+  }
+
+  for (const row of settlement.rows) {
+    row.settled = isSettled;
+  }
+
+  const hasScopeFilter = category || group;
+  if (hasScopeFilter) {
+    settlement.rows = settlement.rows.filter(
+      (row) => row.paid > 0 || row.expected > 0
+    );
+  }
 
   return res.status(200).json({
     success: true,
     message: "Settlement fetched successfully",
     ...settlement,
-    settlement: record,
+    settlement: {
+      status: isSettled ? "settled" : "pending",
+      transactions: aggregatedTransactions,
+      settleActions: aggregatedSettleActions,
+    },
   });
 });
 
@@ -227,6 +310,42 @@ export const getCalculations = asyncHandler(async (req, res) => {
   });
 });
 
+const settleIfAllSubScopesSettled = async (year, month, settledBy) => {
+  const primaryRecord = await Settlement.findOne({
+    bsYear: year,
+    bsMonth: month,
+    category: "primary",
+    group: null,
+    status: "settled",
+  });
+  if (!primaryRecord) return false;
+
+  const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
+  if (activeGroups.length === 0) return false;
+
+  for (const g of activeGroups) {
+    const groupRecord = await Settlement.findOne({
+      bsYear: year,
+      bsMonth: month,
+      category: "secondary",
+      group: g._id,
+      status: "settled",
+    });
+    if (!groupRecord) return false;
+  }
+
+  const existingAll = await Settlement.findOne({
+    bsYear: year,
+    bsMonth: month,
+    category: null,
+    group: null,
+  });
+  if (existingAll) return false;
+
+  await settleScope({ year, month, category: null, group: null, settledBy });
+  return true;
+};
+
 export const settleMonth = asyncHandler(async (req, res) => {
   const { bsYear, bsMonth } = req.body;
   const category = resolveCategory(req.body.category);
@@ -234,9 +353,6 @@ export const settleMonth = asyncHandler(async (req, res) => {
 
   if (!bsYear || !bsMonth) {
     throw new ApiError(400, "bsYear and bsMonth are required");
-  }
-  if (category === "secondary" && !group) {
-    throw new ApiError(400, "Group is required to settle secondary expenses");
   }
 
   const year = Number(bsYear);
@@ -261,6 +377,39 @@ export const settleMonth = asyncHandler(async (req, res) => {
     });
   }
 
+  if (category === "secondary" && !group) {
+    const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
+
+    if (activeGroups.length === 0) {
+      throw new ApiError(400, "No active secondary groups found");
+    }
+
+    let settledAny = false;
+    for (const g of activeGroups) {
+      const { alreadySettled } = await settleScope({
+        year,
+        month,
+        category: "secondary",
+        group: g._id,
+        settledBy: req.user?._id,
+      });
+      if (!alreadySettled) settledAny = true;
+    }
+
+    if (!settledAny) {
+      throw new ApiError(409, "All secondary groups are already settled");
+    }
+
+    const allCreated = await settleIfAllSubScopesSettled(year, month, req.user?._id);
+
+    return res.status(200).json({
+      success: true,
+      message: allCreated
+        ? `Settled ${activeGroups.length} secondary group(s) and All (combined) successfully`
+        : `Settled ${activeGroups.length} secondary group(s) successfully`,
+    });
+  }
+
   const { alreadySettled } = await settleScope({
     year,
     month,
@@ -272,9 +421,13 @@ export const settleMonth = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Settlement for this month is already settled");
   }
 
+  const allCreated = await settleIfAllSubScopesSettled(year, month, req.user?._id);
+
   return res.status(200).json({
     success: true,
-    message: "Settlement marked as settled successfully",
+    message: allCreated
+      ? "Settlement marked as settled successfully. All (combined) scope also settled."
+      : "Settlement marked as settled successfully",
   });
 });
 
@@ -286,18 +439,12 @@ export const revertSettlement = asyncHandler(async (req, res) => {
   if (!bsYear || !bsMonth) {
     throw new ApiError(400, "bsYear and bsMonth are required");
   }
-  if (category === "secondary" && !group) {
-    throw new ApiError(400, "Group is required to revert a secondary settlement");
-  }
 
   const year = Number(bsYear);
   const month = Number(bsMonth);
 
   if (category === null) {
     const results = await revertAllCascade({ year, month });
-    if (results.some(({ blocked }) => blocked)) {
-      throw new ApiError(409, "Auto-settled settlements cannot be reverted");
-    }
     const revertedAny = results.some(({ reverted }) => reverted);
     if (!revertedAny) {
       throw new ApiError(404, "No settled record found for this month");
@@ -309,13 +456,47 @@ export const revertSettlement = asyncHandler(async (req, res) => {
     });
   }
 
-  const { reverted, blocked } = await revertScope({ year, month, category, group });
-  if (blocked) {
-    throw new ApiError(409, "Auto-settled settlements cannot be reverted");
+  const revertStaleAllRecord = async () => {
+    await Settlement.deleteOne({ bsYear: year, bsMonth: month, category: null, group: null });
+  };
+
+  if (category === "secondary" && !group) {
+    const groupIds = await Settlement.distinct("group", {
+      bsYear: year,
+      bsMonth: month,
+      category: "secondary",
+      group: { $ne: null },
+    });
+
+    if (groupIds.length === 0) {
+      throw new ApiError(404, "No secondary settlements found for this month");
+    }
+
+    let revertedAny = false;
+    for (const groupId of groupIds) {
+      const { reverted } = await revertScope({ year, month, category: "secondary", group: groupId });
+      if (reverted) revertedAny = true;
+    }
+
+    if (!revertedAny) {
+      throw new ApiError(404, "No settled secondary groups found for this month");
+    }
+
+    await revertStaleAllRecord();
+
+    return res.status(200).json({
+      success: true,
+      message: `Reverted ${groupIds.length} secondary group(s) successfully`,
+      settlement: null,
+    });
   }
+
+  const { reverted } = await revertScope({ year, month, category, group });
   if (!reverted) {
     throw new ApiError(404, "No settled record found for this month");
   }
+
+  await revertStaleAllRecord();
 
   return res.status(200).json({
     success: true,

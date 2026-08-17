@@ -1,44 +1,114 @@
 import cron from "node-cron";
 import NepaliDateModule from "nepali-date-converter";
+import { Expense } from "../models/expense.model.js";
+import { Settlement } from "../models/settlement.model.js";
 import { settleAllCascade } from "./settlement.service.js";
-import { subtractBsMonths } from "./calculation.service.js";
 
 const NepaliDate = NepaliDateModule.default || NepaliDateModule;
 
-const AUTO_SETTLE_CRON = "30 0 * * *";
+const AUTO_SETTLE_CRON = "58 16 * * *";
 const AUTO_SETTLE_TIMEZONE = "Asia/Kathmandu";
 
 /**
- * Daily job: when today is the 1st day of a BS month, the previous BS month
- * has just ended — auto-settle it (All + Primary + each group's Secondary).
- * Expenses within that month get marked settled with no settledBy user,
- * which the UI reports as "Auto System".
+ * Returns today's BS date as { bsYear, bsMonth, bsDay }.
+ */
+const getTodayBsDate = () => {
+  const today = new NepaliDate();
+  return {
+    bsYear: today.getYear(),
+    bsMonth: today.getMonth() + 1,
+    bsDay: today.getDate(),
+  };
+};
+
+/**
+ * Settles a single BS month across all scopes.
+ */
+const settleMonth = async (bsYear, bsMonth, source) => {
+  const alreadySettled = await Settlement.findOne({
+    bsYear,
+    bsMonth,
+    category: null,
+    group: null,
+  });
+  if (alreadySettled) return null;
+
+  console.log(`[auto-settle] ${source}: settling ${bsYear}/${bsMonth}`);
+
+  const results = await settleAllCascade({
+    year: bsYear,
+    month: bsMonth,
+    settledBy: null,
+  });
+
+  const summary = results.map(({ scope, group, alreadySettled: done }) => ({
+    scope,
+    group: group ? String(group) : null,
+    alreadySettled: done,
+  }));
+  console.log(`[auto-settle] ${bsYear}/${bsMonth} done: ${JSON.stringify(summary)}`);
+  return summary;
+};
+
+/**
+ * Two-pronged auto-settle:
+ *
+ * 1. **Cron trigger** (daily at 00:30): When today is BS day 1, the
+ *    previous BS month has ended — settle it.
+ *
+ * 2. **Startup catch-up**: Scans for any unsettled BS month where
+ *    expenses exist for the NEXT month (proving the calendar moved on).
+ *    This catches months missed while the server was down.
  */
 export const startAutoSettleJob = () => {
-  cron.schedule(
-    AUTO_SETTLE_CRON,
-    async () => {
-      try {
-        const today = new NepaliDate();
-        if (today.getDate() !== 1) return;
+  const runByBsDate = async () => {
+    try {
+      const { bsYear, bsMonth, bsDay } = getTodayBsDate();
+      if (bsDay !== 1) return;
 
-        const { bsYear, bsMonth } = subtractBsMonths(today.getYear(), today.getMonth() + 1, 1);
-        console.log(`[auto-settle] Auto-settling previous month ${bsYear}/${bsMonth}...`);
+      // Previous month
+      const prevMonth = bsMonth === 1
+        ? { bsYear: bsYear - 1, bsMonth: 12 }
+        : { bsYear, bsMonth: bsMonth - 1 };
 
-        const results = await settleAllCascade({ year: bsYear, month: bsMonth, settledBy: null });
+      await settleMonth(prevMonth.bsYear, prevMonth.bsMonth, "cron");
+    } catch (error) {
+      console.error("[auto-settle] Cron settle failed:", error);
+    }
+  };
 
-        const summary = results.map(({ scope, group, alreadySettled }) => ({
-          scope,
-          group: group ? String(group) : null,
-          alreadySettled,
-        }));
-        console.log(`[auto-settle] Done: ${JSON.stringify(summary)}`);
-      } catch (error) {
-        console.error("[auto-settle] Failed to auto-settle:", error);
+  const runCatchUp = async () => {
+    try {
+      const unsettledMonths = await Expense.aggregate([
+        { $match: { settled: false } },
+        { $group: { _id: { bsYear: "$bsYear", bsMonth: "$bsMonth" } } },
+      ]);
+
+      for (const { _id } of unsettledMonths) {
+        const { bsYear, bsMonth } = _id;
+        const nextMonth = bsMonth >= 12
+          ? { bsYear: bsYear + 1, bsMonth: 1 }
+          : { bsYear, bsMonth: bsMonth + 1 };
+
+        const nextHasExpenses = await Expense.exists({
+          bsYear: nextMonth.bsYear,
+          bsMonth: nextMonth.bsMonth,
+        });
+        if (!nextHasExpenses) continue;
+
+        await settleMonth(bsYear, bsMonth, "startup catch-up");
       }
-    },
-    { timezone: AUTO_SETTLE_TIMEZONE }
-  );
+    } catch (error) {
+      console.error("[auto-settle] Catch-up settle failed:", error);
+    }
+  };
 
-  console.log(`[auto-settle] Job scheduled (${AUTO_SETTLE_CRON} ${AUTO_SETTLE_TIMEZONE})`);
+  // Run both on startup so any missed months are caught up immediately
+  runByBsDate();
+  runCatchUp();
+
+  // Schedule daily cron
+  cron.schedule(AUTO_SETTLE_CRON, runByBsDate, { timezone: AUTO_SETTLE_TIMEZONE });
+
+  console.log(`[auto-settle] Scheduled (${AUTO_SETTLE_CRON} ${AUTO_SETTLE_TIMEZONE}) + runs on startup`);
 };

@@ -9,6 +9,7 @@ import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
 import { getNepaliMonthLabel, PAYMENT_STATUS } from '../../../../constant/constant';
 import { SettlementMonthPicker } from '../SettlementShared';
+import netSettle from '../../../../utils/netSettle';
 import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
 import { useDialogState } from '../../../../hooks/useUIState';
 import { toast } from 'react-toastify';
@@ -40,7 +41,21 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
     const settlement = data?.settlement;
     const isSettled = settlement?.status === 'settled';
 
-    const transactions = useMemo(() => (isSettled ? settlement?.transactions || [] : []), [isSettled, settlement?.transactions]);
+    const transactions = useMemo(() => {
+        if (!isSettled) return [];
+        const txs = settlement?.transactions || [];
+        const map = new Map();
+        for (const tx of txs) {
+            const key = `${tx.from?._id || tx.from}->${tx.to?._id || tx.to}`;
+            const current = map.get(key);
+            if (current) {
+                current.amount = Math.round((current.amount + (Number(tx.amount) || 0)) * 100) / 100;
+            } else {
+                map.set(key, { ...tx });
+            }
+        }
+        return netSettle([...map.values()]);
+    }, [isSettled, settlement?.transactions]);
 
     const myPayments = useMemo(() => (
         transactions.filter((tx) => String(tx.from?._id || tx.from) === String(myId))
@@ -238,7 +253,20 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
                                 Confirm
                             </Button>
                         )}
-                        {status !== 'pending' && (
+                        {status === 'paid' && (
+                            <Tooltip title="Reset payment status to pending">
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="warning"
+                                    startIcon={<ReplayRounded />}
+                                    onClick={() => showDialog(row, 'reset')}
+                                >
+                                    Reset
+                                </Button>
+                            </Tooltip>
+                        )}
+                        {status === 'confirmed' && row.confirmedByType === 'admin' && (
                             <Tooltip title="Reset payment status to pending">
                                 <Button
                                     size="small"
@@ -268,62 +296,50 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
 
     return (
         <Stack spacing={2}>
-            {isSettled ? (
-                isPartner ? (
-                    <>
-                        <CustomCard
-                            icon={<PaymentsRounded />}
-                            title="You Pay"
-                            subtitle="Payments you need to make to your partners"
-                            headerColor="#2e7d32"
-                        >
-                            <DataTable
-                                columns={payColumns}
-                                data={myPayments}
-                                loading={isLoading}
-                                download={{ enabled: true, filename: 'My Payments', excludeColumns: ['sn', 'action'] }}
-                                extra={<SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />}
-                            />
-                        </CustomCard>
-                        <CustomCard
-                            icon={<ReceiptLongRounded />}
-                            title="You Receive"
-                            subtitle="Payments your partners owe you"
-                            headerColor="#1976d2"
-                        >
-                            <DataTable
-                                columns={receiveColumns}
-                                data={myReceives}
-                                loading={isLoading}
-                                download={{ enabled: true, filename: 'My Receivables', excludeColumns: ['sn', 'action'] }}
-                                extra={<SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />}
-                            />
-                        </CustomCard>
-                    </>
-                ) : (
+            {isPartner ? (
+                <>
                     <CustomCard
-                        icon={<CompareArrowsRounded />}
-                        title="All Pays & Receives"
-                        subtitle="All payment transactions for this month"
+                        icon={<PaymentsRounded />}
+                        title="You Pay"
+                        subtitle="Payments you need to make to your partners"
+                        headerColor="#2e7d32"
                     >
                         <DataTable
-                            columns={adminColumns}
-                            data={transactions}
+                            columns={payColumns}
+                            data={myPayments}
                             loading={isLoading}
-                            download={{ enabled: true, filename: 'All Pays & Receives', excludeColumns: ['sn', 'actions'] }}
+                            download={{ enabled: true, filename: 'My Payments', excludeColumns: ['sn', 'action'] }}
                             extra={<SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />}
                         />
                     </CustomCard>
-                )
+                    <CustomCard
+                        icon={<ReceiptLongRounded />}
+                        title="You Receive"
+                        subtitle="Payments your partners owe you"
+                        headerColor="#1976d2"
+                    >
+                        <DataTable
+                            columns={receiveColumns}
+                            data={myReceives}
+                            loading={isLoading}
+                            download={{ enabled: true, filename: 'My Receivables', excludeColumns: ['sn', 'action'] }}
+                            extra={<SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />}
+                        />
+                    </CustomCard>
+                </>
             ) : (
-                <CustomCard icon={<CompareArrowsRounded />} title="My Payments">
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            {isPartner
-                                ? 'This month has not been settled yet. Please wait for the admin to settle it.'
-                                : 'This month has not been settled yet. Please settle the month from the primary or secondary summary tabs.'}
-                        </Typography>
-                    </Box>
+                <CustomCard
+                    icon={<CompareArrowsRounded />}
+                    title="All Pays & Receives"
+                    subtitle="All payment transactions for this month"
+                >
+                    <DataTable
+                        columns={adminColumns}
+                        data={transactions}
+                        loading={isLoading}
+                        download={{ enabled: true, filename: 'All Pays & Receives', excludeColumns: ['sn', 'actions'] }}
+                        extra={<SettlementMonthPicker value={selectedMonth} onChange={onMonthChange} />}
+                    />
                 </CustomCard>
             )}
 

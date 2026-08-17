@@ -50,6 +50,8 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
                         alignItems={{ xs: 'stretch', md: 'flex-end' }}
                         sx={{ flexWrap: 'wrap', width: '100%' }}
                     >
+                        <ReportMonthPicker value={selectedMonth} onChange={onMonthChange} />
+
                         <Stack spacing={0.25} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
                             <InputLabel>Partner</InputLabel>
                             <Autocomplete
@@ -63,7 +65,6 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
                                 sx={{ minWidth: { xs: 0, md: 220 }, width: { xs: '100%', md: 'auto' } }}
                             />
                         </Stack>
-                        <ReportMonthPicker value={selectedMonth} onChange={onMonthChange} />
                     </Stack>
                 }
             />
