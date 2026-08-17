@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Autocomplete, InputLabel, Stack, TextField } from '@mui/material';
 import CustomCard from '../../../components/custom/CustomCard';
 import { PersonRounded } from '@mui/icons-material';
@@ -7,11 +6,9 @@ import { useGetPartnerReport } from '../../../apis/reportAPI/ReportAPI';
 import { useGetPartners } from '../../../apis/partnerAPI/PartnerAPI';
 import { parseYearMonthString } from '../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../constant/constant';
-import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
-import { ExpenseTable, ReportMonthPicker, StatBadges } from './ReportShared';
+import { ExpenseTable, ReportMonthPicker } from './ReportShared';
 
 const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
-    const theme = useTheme();
     const [selectedPartner, setSelectedPartner] = useState(null);
     const autoSelectedPartner = useRef(false);
 
@@ -30,7 +27,6 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
         partnerId: selectedPartner?._id,
         ...selectedMonthObj,
     });
-    const summary = partnerData?.summary || {};
 
     const monthLabel = selectedMonthObj.bsYear && selectedMonthObj.bsMonth
         ? `${getNepaliMonthLabel(selectedMonthObj.bsMonth)} ${selectedMonthObj.bsYear}`
@@ -42,15 +38,6 @@ const ReportPartnerWise = ({ selectedMonth, onMonthChange }) => {
             headerInline={false}
             title="Partner Report"
             subtitle={`Expenses paid by a partner for ${monthLabel || 'all months'}.`}
-            extra={
-                selectedPartner ? (
-                    <StatBadges isLoading={partnerLoading} items={[
-                        { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },
-                        { label: 'Primary', value: formatToNepaliCurrency(summary.primaryTotal || 0), color: theme.palette.success.main },
-                        { label: 'Secondary', value: formatToNepaliCurrency(summary.secondaryTotal || 0), color: theme.palette.warning.main },
-                    ]} />
-                ) : null
-            }
         >
             <ExpenseTable
                 data={partnerData?.expenses}

@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { InputLabel, MenuItem, Stack, TextField } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import CustomCard from '../../../components/custom/CustomCard';
 import { CategoryRounded } from '@mui/icons-material';
 import { useGetCategoryReport } from '../../../apis/reportAPI/ReportAPI';
 import { useGetActiveGroups } from '../../../apis/groupAPI/GroupAPI';
 import { parseYearMonthString } from '../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../constant/constant';
-import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
-import { ExpenseTable, ReportMonthPicker, StatBadges } from './ReportShared';
+import { ExpenseTable, ReportMonthPicker } from './ReportShared';
 
 const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
-    const theme = useTheme();
     const [category, setCategory] = useState('all');
     const [group, setGroup] = useState('all');
 
@@ -29,7 +26,6 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
         group: category === 'secondary' && group !== 'all' ? group : undefined,
         ...selectedMonthObj,
     });
-    const summary = categoryData?.summary || {};
 
     const monthLabel = selectedMonthObj.bsYear && selectedMonthObj.bsMonth
         ? `${getNepaliMonthLabel(selectedMonthObj.bsMonth)} ${selectedMonthObj.bsYear}`
@@ -41,13 +37,6 @@ const ReportCategoryWise = ({ selectedMonth, onMonthChange }) => {
             headerInline={false}
             title="Category Report"
             subtitle={`Expenses by category for ${monthLabel || 'all months'}.`}
-            extra={
-                <StatBadges isLoading={isLoading} items={[
-                    { label: `Total (${summary.expenseCount || 0} records)`, value: formatToNepaliCurrency(summary.grandTotal || 0), color: theme.palette.primary.main },
-                    { label: 'Primary', value: formatToNepaliCurrency(summary.primaryTotal || 0), color: theme.palette.success.main },
-                    { label: 'Secondary', value: formatToNepaliCurrency(summary.secondaryTotal || 0), color: theme.palette.warning.main },
-                ]} />
-            }
         >
             <ExpenseTable
                 data={categoryData?.expenses}
