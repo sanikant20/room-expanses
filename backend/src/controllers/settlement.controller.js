@@ -78,28 +78,25 @@ const updateTransactionPayment = async (scope, updates) => {
     bsYear: scope.year,
     bsMonth: scope.month,
     status: "settled",
-    "transactions.from": scope.from,
-    "transactions.to": scope.to,
   };
 
   if (scope.category != null) filter.category = scope.category;
   if (scope.group != null) filter.group = scope.group;
 
-  const record = await Settlement.findOne(filter);
+  const setFields = {};
+  for (const [key, value] of Object.entries(updates)) {
+    setFields[`transactions.$[tx].${key}`] = value;
+  }
 
-  if (!record) {
+  const result = await Settlement.updateMany(
+    filter,
+    { $set: setFields },
+    { arrayFilters: [{ "tx.from": scope.from, "tx.to": scope.to }] }
+  );
+
+  if (!result.matchedCount) {
     throw new ApiError(404, "Settled transaction not found for this month");
   }
-
-  const tx = record.transactions.find(
-    (t) => String(t.from) === scope.from && String(t.to) === scope.to
-  );
-  if (!tx) {
-    throw new ApiError(404, "Transaction not found in settlement record");
-  }
-
-  Object.assign(tx, updates);
-  await record.save();
 };
 
 export const markTransactionPaid = asyncHandler(async (req, res) => {

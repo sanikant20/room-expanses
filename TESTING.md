@@ -13,12 +13,12 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2026-08-17** — backend 73 tests, frontend 37 tests,
-frontend lint 0/0, frontend build OK, backend boots with 35 routes.
+Last verified green: **2026-08-18** — backend 69 tests, frontend 35 tests,
+frontend lint 0/0, frontend build OK.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (73 tests, Node built-in runner)
+### Backend — `backend/tests/` (69 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -33,16 +33,17 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   that `POST /register` is **not** exposed.
 - `settlement-payment.test.js` — pay/confirm role guards (partner who isn't the
   payer/receiver gets 403; missing from/to gets 400) and settlement service surface.
-- `settlement-logic.test.js` (24 tests) — the settlement state machine, all with
+- `settlement-logic.test.js` (20 tests) — the settlement state machine, all with
   model mocks (no DB):
   - `isAutoSettled` — auto-settled vs manual (`settledBy` + `settleActions` cases).
   - `settleScope` — already-settled shortcut, and E11000 race retry (re-fetches the
     existing record; asserts the second `findOne` happens).
   - `markTransactionPaid` — admin may mark any transaction paid; the payer partner may
-    mark their own; a partner who isn't the payer gets **403**; missing from/to → 400.
+    mark their own; a partner who isn't the payer gets **403**; missing from/to → 400;
+    no matching record → 404.
   - `confirmTransactionReceipt` — receiver-only 403; 404 when not found; 409 when not
     yet paid; marks the record confirmed; a non-receiver partner gets 403.
-  - `resetTransactionPayment` — only the payer may reset; admin may reset any.
+  - `resetTransactionPayment` — resets to pending; no matching record → 404.
   - Guard coverage — `settleMonth`/`revertSettlement` reject invalid scope/category
     (400) and refuse to revert an auto-settled record; re-settling an already-settled
     all scope → 409.
@@ -71,6 +72,14 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   `isPartnerAccount` true/false. (Vitest `node` env: `sessionStorage` is stubbed.)
 - `constant/constant.test.js` — `PAYMENT_STATUS` pending→paid→confirmed lifecycle and
   `SETTLEMENT_STATUS` receive/pay/settled labels.
+
+## Bugs found & fixed (settlement payment status, 2026-08-18)
+
+| # | Severity | Bug | Fix |
+|---|---|---|---|
+| 8 | High | `POST /settlement/pay` returned success but paymentStatus stayed "pending" in DB. `Object.assign` on Mongoose subdocuments in arrays doesn't trigger change detection — `save()` silently persisted nothing. | Replaced `findOne` + `Object.assign` + `save` with `Settlement.updateMany` + `$set` + `arrayFilters` for atomic subdocument updates. |
+| 9 | High | `netSettle()` hardcoded `paymentStatus: 'pending'` on every netted row, discarding real status from the DB. My Payments view always showed "Pending". | `netSettle` now accepts an optional `statusMap` and resolves the consolidated status (confirmed > paid > pending). Frontend groups pass the map. |
+| 10 | High | `findOneAndUpdate` with `$` positional operator only updated 1 Settlement document, but `getSettlement` reads from primary + secondary records separately. Payment status updated on the wrong record. | `updateMany` with `arrayFilters` now updates the matching transaction in ALL scope records (primary, secondary, combined) for the month. |
 
 ## Bugs found & fixed (audit pass, 2026-08-15)
 

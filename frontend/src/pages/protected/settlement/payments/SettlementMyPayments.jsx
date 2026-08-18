@@ -45,6 +45,7 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
         if (!isSettled) return [];
         const txs = settlement?.transactions || [];
         const map = new Map();
+        const statusMap = new Map();
         for (const tx of txs) {
             const key = `${tx.from?._id || tx.from}->${tx.to?._id || tx.to}`;
             const current = map.get(key);
@@ -53,8 +54,11 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
             } else {
                 map.set(key, { ...tx });
             }
+            const statuses = statusMap.get(key) || [];
+            statuses.push(tx.paymentStatus || 'pending');
+            statusMap.set(key, statuses);
         }
-        return netSettle([...map.values()]);
+        return netSettle([...map.values()], statusMap);
     }, [isSettled, settlement?.transactions]);
 
     const myPayments = useMemo(() => (

@@ -1,4 +1,6 @@
-const netSettle = (txs) => {
+const STATUS_PRIORITY = { confirmed: 3, paid: 2, pending: 1 };
+
+const netSettle = (txs, statusMap) => {
     const balances = new Map();
     const partnerMap = new Map();
 
@@ -32,11 +34,19 @@ const netSettle = (txs) => {
     while (i < debtors.length && j < creditors.length) {
         const payment = Math.round(Math.min(debtors[i].amount, creditors[j].amount) * 100) / 100;
         if (payment > 0.01) {
+            const key = `${debtors[i].id}->${creditors[j].id}`;
+            const statuses = statusMap?.get(key) || [];
+            let resolvedStatus = 'pending';
+            for (const s of statuses) {
+                if ((STATUS_PRIORITY[s] || 0) > (STATUS_PRIORITY[resolvedStatus] || 0)) {
+                    resolvedStatus = s;
+                }
+            }
             result.push({
                 from: partnerMap.get(debtors[i].id) || { _id: debtors[i].id, name: 'Unknown' },
                 to: partnerMap.get(creditors[j].id) || { _id: creditors[j].id, name: 'Unknown' },
                 amount: payment,
-                paymentStatus: 'pending',
+                paymentStatus: resolvedStatus,
             });
         }
         debtors[i].amount = Math.round((debtors[i].amount - payment) * 100) / 100;

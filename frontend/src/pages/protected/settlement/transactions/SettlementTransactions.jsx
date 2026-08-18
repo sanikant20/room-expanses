@@ -68,6 +68,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
                 .flatMap((action) => action.transactions || []);
 
         const map = new Map();
+        const statusMap = new Map();
         for (const tx of sourceTxs) {
             const key = `${tx.from?._id || tx.from}->${tx.to?._id || tx.to}`;
             const current = map.get(key);
@@ -76,10 +77,13 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
             } else {
                 map.set(key, { ...tx });
             }
+            const statuses = statusMap.get(key) || [];
+            statuses.push(tx.paymentStatus || 'pending');
+            statusMap.set(key, statuses);
         }
         const deduped = [...map.values()];
 
-        if (category === 'all' || (category === 'secondary' && group === 'all')) return netSettle(deduped);
+        if (category === 'all' || (category === 'secondary' && group === 'all')) return netSettle(deduped, statusMap);
         return deduped;
     }, [source, settlement?.transactions, settlement?.settleActions, category, group]);
 
