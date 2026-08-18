@@ -8,7 +8,7 @@ import { useConfirmTransactionReceipt, useGetSettlement, useMarkTransactionPaid,
 import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
 import { getNepaliMonthLabel, PAYMENT_STATUS } from '../../../../constant/constant';
-import { SettlementMonthPicker } from '../SettlementShared';
+import { SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
 import netSettle from '../../../../utils/netSettle';
 import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
 import { useDialogState } from '../../../../hooks/useUIState';
@@ -84,6 +84,10 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
     const monthLabel = monthObj.bsYear && monthObj.bsMonth
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
+
+    const settledScopeLabel = settlement?.fromDate && settlement?.toDate
+        ? `${settlement.fromDate} - ${settlement.toDate}`
+        : monthLabel || 'this month';
 
     const scope = { ...monthObj };
 
@@ -307,6 +311,7 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
                         title="You Pay"
                         subtitle="Payments you need to make to your partners"
                         headerColor="#2e7d32"
+                        extra={<SettlementStatus settlement={settlement} scope={settledScopeLabel} />}
                     >
                         <DataTable
                             columns={payColumns}
@@ -321,6 +326,7 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
                         title="You Receive"
                         subtitle="Payments your partners owe you"
                         headerColor="#1976d2"
+                        extra={<SettlementStatus settlement={settlement} scope={settledScopeLabel} />}
                     >
                         <DataTable
                             columns={receiveColumns}
@@ -336,6 +342,7 @@ const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
                     icon={<CompareArrowsRounded />}
                     title="All Pays & Receives"
                     subtitle="All payment transactions for this month"
+                    extra={<SettlementStatus settlement={settlement} scope={settledScopeLabel} />}
                 >
                     <DataTable
                         columns={adminColumns}

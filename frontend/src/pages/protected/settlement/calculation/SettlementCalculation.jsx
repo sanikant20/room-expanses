@@ -41,6 +41,10 @@ const SettlementCalculation = ({ selectedMonth, onMonthChange }) => {
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
 
+    const settledScopeLabel = settlement?.fromDate && settlement?.toDate
+        ? `${settlement.fromDate} - ${settlement.toDate}`
+        : monthLabel || 'this month';
+
     const rows = data?.rows || [];
 
     const hasGroup = rows.some((row) => row.group);
@@ -93,7 +97,7 @@ const SettlementCalculation = ({ selectedMonth, onMonthChange }) => {
             icon={<CalculateRounded />}
             title="Calculations"
             subtitle={`Per-expense split breakdown for ${monthLabel || 'all months'}.`}
-            extra={<SettlementStatus settlement={settlement} />}
+            extra={<SettlementStatus settlement={settlement} scope={settledScopeLabel} />}
         >
             <DataTable
                 columns={columns}

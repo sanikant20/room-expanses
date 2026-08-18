@@ -93,6 +93,10 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
         ? `${getNepaliMonthLabel(monthObj.bsMonth)} ${monthObj.bsYear}`
         : '';
 
+    const settledScopeLabel = settlement?.fromDate && settlement?.toDate
+        ? `${settlement.fromDate} - ${settlement.toDate}`
+        : monthLabel || 'this month';
+
     const categoryLabel = category === 'primary' ? 'Primary' : category === 'secondary' ? 'Secondary' : 'Total';
     const sourceLabel = source === 'manual' ? 'Manual' : source === 'auto' ? 'Auto' : monthLabel || 'Whole Month';
     const sourceSuffix = source === 'all' ? categoryLabel : `${categoryLabel} · ${sourceLabel}`;
@@ -127,7 +131,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
             icon={<CompareArrowsRounded />}
             title="Settlement Transactions"
             subtitle={isSettled ? `Who pays whom for ${monthLabel || 'this month'} · ${sourceSuffix}.` : `Not settled yet for ${monthLabel || 'this month'} · ${categoryLabel}.`}
-            extra={<SettlementStatus settlement={settlement} />}
+            extra={<SettlementStatus settlement={settlement} scope={settledScopeLabel} />}
         >
             <DataTable
                 columns={columns}

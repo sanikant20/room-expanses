@@ -204,6 +204,7 @@ const fetchSecondaryAggregatedStatus = async (bsYear, bsMonth) => {
     status: allSettled ? "settled" : "pending",
     transactions,
     settleActions,
+    records,
   };
 };
 
@@ -223,6 +224,7 @@ export const getSettlement = asyncHandler(async (req, res) => {
   let isSettled = false;
   let aggregatedTransactions = null;
   let aggregatedSettleActions = null;
+  let settledMeta = {};
 
   if (category === null) {
     const primaryRecord = await fetchSettlementRecord(bsYear, bsMonth, "primary", null);
@@ -236,16 +238,26 @@ export const getSettlement = asyncHandler(async (req, res) => {
     if (primaryRecord?.settleActions) {
       aggregatedSettleActions = [...primaryRecord.settleActions, ...aggregatedSettleActions];
     }
+    if (primaryRecord) {
+      settledMeta = { settledBy: primaryRecord.settledBy, settledAt: primaryRecord.settledAt, fromDate: primaryRecord.fromDate, toDate: primaryRecord.toDate };
+    }
   } else if (category === "secondary" && !group) {
     const secondaryStatus = await fetchSecondaryAggregatedStatus(bsYear, bsMonth);
     isSettled = secondaryStatus.status === "settled";
     aggregatedTransactions = secondaryStatus.transactions || [];
     aggregatedSettleActions = secondaryStatus.settleActions || [];
+    if (isSettled && secondaryStatus.records?.length) {
+      const ref = secondaryStatus.records[0];
+      settledMeta = { settledBy: ref.settledBy, settledAt: ref.settledAt, fromDate: ref.fromDate, toDate: ref.toDate };
+    }
   } else {
     const record = await fetchSettlementRecord(bsYear, bsMonth, category, group);
     isSettled = record?.status === "settled";
     aggregatedTransactions = record?.transactions || null;
     aggregatedSettleActions = record?.settleActions || null;
+    if (record) {
+      settledMeta = { settledBy: record.settledBy, settledAt: record.settledAt, fromDate: record.fromDate, toDate: record.toDate };
+    }
   }
 
   for (const row of settlement.rows) {
@@ -267,6 +279,7 @@ export const getSettlement = asyncHandler(async (req, res) => {
       status: isSettled ? "settled" : "pending",
       transactions: aggregatedTransactions,
       settleActions: aggregatedSettleActions,
+      ...settledMeta,
     },
   });
 });
