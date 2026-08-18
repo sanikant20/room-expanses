@@ -1004,6 +1004,8 @@ const DataTable = ({
                                         {/* LEFT FIXED COLUMNS DATA */}
                                         {leftFixedColumns?.map((col, colIndex) => {
                                             const leftPosition = getLeftPosition(colIndex);
+                                            const cellRendered = col?.render ? col.render(row, serialNumber) : (row[col?.key] || '—');
+                                            const cellTitle = typeof cellRendered === 'string' ? cellRendered : cellRendered?.props?.label || cellRendered?.props?.title || (typeof cellRendered?.props?.children === 'string' ? cellRendered.props.children : '') || row[col?.key] || '';
 
                                             return (
                                                 <StyledTableCell
@@ -1035,32 +1037,39 @@ const DataTable = ({
                                                             },
                                                         }),
                                                     }}
-                                                    title={col?.render ? (() => { const r = col.render(row, serialNumber); return typeof r === 'string' ? r : r?.props?.label || r?.props?.title || (typeof r?.props?.children === 'string' ? r.props.children : '') || row[col?.key] || ''; })() : (row[col?.key] || '—')}
+                                                    title={cellTitle}
                                                 >
-                                                    {col?.render ? col.render(row, serialNumber) : (row[col?.key] || '—')}
+                                                    {cellRendered}
                                                 </StyledTableCell>
                                             );
                                         })}
 
                                         {/* SCROLLABLE COLUMNS DATA */}
-                                        {scrollableColumns?.map((col, colIndex) => (
-                                            <StyledTableCell
-                                                key={`scroll-${col.key}-${colIndex}`}
-                                                sx={{
-                                                    position: 'relative',
-                                                    whiteSpace: 'nowrap',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                }}
-                                                title={col?.render ? (() => { const r = col.render(row, serialNumber); return typeof r === 'string' ? r : r?.props?.label || r?.props?.title || (typeof r?.props?.children === 'string' ? r.props.children : '') || row[col?.key] || ''; })() : (row[col?.key] || '—')}
-                                            >
-                                                {col?.render ? col.render(row, serialNumber) : (row[col?.key] || '—')}
-                                            </StyledTableCell>
-                                        ))}
+                                        {scrollableColumns?.map((col, colIndex) => {
+                                            const cellRendered = col?.render ? col.render(row, serialNumber) : (row[col?.key] || '—');
+                                            const cellTitle = typeof cellRendered === 'string' ? cellRendered : cellRendered?.props?.label || cellRendered?.props?.title || (typeof cellRendered?.props?.children === 'string' ? cellRendered.props.children : '') || row[col?.key] || '';
+
+                                            return (
+                                                <StyledTableCell
+                                                    key={`scroll-${col.key}-${colIndex}`}
+                                                    sx={{
+                                                        position: 'relative',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                    }}
+                                                    title={cellTitle}
+                                                >
+                                                    {cellRendered}
+                                                </StyledTableCell>
+                                            );
+                                        })}
 
                                         {/* RIGHT FIXED COLUMNS DATA */}
                                         {rightFixedColumns?.map((col, colIndex) => {
                                             const rightPosition = getRightPosition(colIndex);
+                                            const cellRendered = col?.render ? col.render(row, serialNumber) : (row[col?.key] || '—');
+                                            const cellTitle = typeof cellRendered === 'string' ? cellRendered : cellRendered?.props?.label || cellRendered?.props?.title || (typeof cellRendered?.props?.children === 'string' ? cellRendered.props.children : '') || row[col?.key] || '';
 
                                             return (
                                                 <StyledTableCell
@@ -1092,9 +1101,9 @@ const DataTable = ({
                                                             },
                                                         }),
                                                     }}
-                                                    title={col?.render ? (() => { const r = col.render(row, serialNumber); return typeof r === 'string' ? r : r?.props?.label || r?.props?.title || (typeof r?.props?.children === 'string' ? r.props.children : '') || row[col?.key] || ''; })() : (row[col?.key] || '—')}
+                                                    title={cellTitle}
                                                 >
-                                                    {col?.render ? col.render(row, serialNumber) : (row[col?.key] || '—')}
+                                                    {cellRendered}
                                                 </StyledTableCell>
                                             );
                                         })}

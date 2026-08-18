@@ -1,7 +1,7 @@
 {
   "name": "the-roomies-frontend",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -25,7 +25,6 @@
     "dayjs": "^1.11.21",
     "file-saver": "^2.0.5",
     "formik": "^2.4.9",
-    "framer-motion": "^12.42.2",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "nepali-date-converter": "^3.4.0",

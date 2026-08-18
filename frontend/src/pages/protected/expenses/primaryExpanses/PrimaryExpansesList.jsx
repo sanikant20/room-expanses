@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
@@ -47,7 +47,7 @@ const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
     const { data: activePartners = [] } = useGetPartners({ status: 'active' });
     const { mutate: deleteExpense, isPending: isDeleting } = useDeleteExpense();
 
-    const isOwnRow = (row) => !isPartner || String(row.createdBy) === String(selfId);
+    const isOwnRow = useCallback((row) => !isPartner || String(row.createdBy) === String(selfId), [isPartner, selfId]);
 
     const invalidateAll = () => {
         queryClient.invalidateQueries({ queryKey: ['getExpenses'] });
@@ -82,7 +82,7 @@ const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
         );
     };
 
-    const columns = [
+    const columns = useMemo(() => [
         {
             key: 'actions', label: 'Actions', fixed: 'left',
             render: (row) => {
@@ -182,7 +182,7 @@ const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
                     )
             ),
         },
-    ];
+    ], [isOwnRow, isPartner, selfId, activePartners, modal, dialog]);
 
     return (
         <>

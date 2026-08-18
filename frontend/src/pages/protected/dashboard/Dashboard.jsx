@@ -255,21 +255,12 @@ const Dashboard = () => {
                             </Stack>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 'auto' }}>
-                            <Stack spacing={1} sx={{ bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 2, p: 1, backdropFilter: 'blur(4px)' }}>
+                            <Stack spacing={1} sx={{ borderRadius: 2, p: 1, backdropFilter: 'blur(4px)' }}>
                                 <NepaliYearMonthPicker
                                     value={selectedMonth}
                                     onChange={setSelectedMonth}
                                     size="small"
                                     fullWidth={false}
-                                    sx={{
-                                        width: { xs: '100%', sm: 'auto' },
-                                        '& .MuiOutlinedInput-root': {
-                                            color: 'common.white',
-                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
-                                        },
-                                        '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.7)' },
-                                        '& .MuiSvgIcon-root': { color: 'common.white' },
-                                    }}
                                 />
                             </Stack>
                         </Grid>

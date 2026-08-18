@@ -1,42 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Avatar, Chip, InputLabel, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Chip, InputLabel, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { CompareArrowsRounded } from '@mui/icons-material';
 import CustomCard from '../../../../components/custom/CustomCard';
 import DataTable from '../../../../components/table/DataTable';
 import { useGetSettlement } from '../../../../apis/settlementAPI/SettlementAPI';
 import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
-import { convertToBSFormat } from '../../../../utils/dateConverter';
-import { getNepaliMonthLabel, PAYMENT_STATUS } from '../../../../constant/constant';
-import { GroupSelector, SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
+import { getNepaliMonthLabel } from '../../../../constant/constant';
+import { GroupSelector, PartnerCell, PaymentStatusCell, SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
 import netSettle from '../../../../utils/netSettle';
-
-const PartnerCell = ({ partner }) => (
-    <Stack direction="row" alignItems="center" spacing={1}>
-        <Avatar src={partner?.image || '/noAvatar.svg'} sx={{ width: 28, height: 28 }} />
-        <Typography variant="body2" fontWeight={600}>{partner?.name || 'Unknown'}</Typography>
-    </Stack>
-);
-
-const PaymentStatusCell = ({ row }) => {
-    const found = PAYMENT_STATUS.find((s) => s.value === row.paymentStatus) || {};
-    const status = row.paymentStatus || 'pending';
-    return (
-        <Stack spacing={0.5}>
-            <Chip label={found.label || status} color={found.color || 'default'} size="small" sx={{ alignSelf: 'flex-start' }} />
-            {row.paidAt && (
-                <Typography variant="caption" color="text.secondary">
-                    Paid: {convertToBSFormat(row.paidAt)}, {new Date(row.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Typography>
-            )}
-            {row.confirmedAt && (
-                <Typography variant="caption" color="text.secondary">
-                    Confirmed: {convertToBSFormat(row.confirmedAt)}, {new Date(row.confirmedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Typography>
-            )}
-        </Stack>
-    );
-};
 
 const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', onGroupChange }) => {
     const [category, setCategory] = useState(group && group !== 'all' ? 'secondary' : 'all');
@@ -120,7 +92,7 @@ const SettlementTransactions = ({ selectedMonth, onMonthChange, group = 'all', o
             cols.push({
                 key: 'paymentStatus', label: 'Payment Status',
                 filterValue: (row) => row.paymentStatus || 'pending',
-                render: (row) => <PaymentStatusCell row={row} />,
+                render: (row) => <PaymentStatusCell row={row} showTimestamps />,
             });
         }
         return cols;

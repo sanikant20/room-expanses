@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Avatar, Box, Button, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { CheckCircleRounded, CompareArrowsRounded, PaymentsRounded, ReceiptLongRounded, ReplayRounded } from '@mui/icons-material';
 import CustomCard from '../../../../components/custom/CustomCard';
 import DataTable from '../../../../components/table/DataTable';
@@ -7,28 +7,13 @@ import CustomDialog from '../../../../components/custom/CustomDialog';
 import { useConfirmTransactionReceipt, useGetSettlement, useMarkTransactionPaid, useResetTransactionPayment } from '../../../../apis/settlementAPI/SettlementAPI';
 import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
-import { getNepaliMonthLabel, PAYMENT_STATUS } from '../../../../constant/constant';
-import { SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
+import { getNepaliMonthLabel } from '../../../../constant/constant';
+import { PartnerCell, PaymentStatusCell, SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
 import netSettle from '../../../../utils/netSettle';
 import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
 import { useDialogState } from '../../../../hooks/useUIState';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
-
-const PartnerCell = ({ partner }) => (
-    <Stack direction="row" alignItems="center" spacing={1}>
-        <Avatar src={partner?.image || '/noAvatar.svg'} sx={{ width: 28, height: 28 }} />
-        <Typography variant="body2" fontWeight={600}>{partner?.name || 'Unknown'}</Typography>
-    </Stack>
-);
-
-const PaymentStatusCell = ({ row }) => {
-    const found = PAYMENT_STATUS.find((s) => s.value === row.paymentStatus) || {};
-    const status = row.paymentStatus || 'pending';
-    return (
-        <Chip label={found.label || status} color={found.color || 'default'} size="small" sx={{ alignSelf: 'flex-start' }} />
-    );
-};
 
 const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
     const queryClient = useQueryClient();

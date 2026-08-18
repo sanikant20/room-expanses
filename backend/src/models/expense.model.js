@@ -80,5 +80,7 @@ const expenseSchema = new Schema(
 expenseSchema.index({ bsYear: 1, bsMonth: 1 });
 expenseSchema.index({ paidBy: 1 });
 expenseSchema.index({ settled: 1 });
+expenseSchema.index({ bsYear: 1, bsMonth: 1, category: 1, group: 1 });
+expenseSchema.index({ applicablePartners: 1 });
 
 export const Expense = mongoose.model("Expense", expenseSchema);

@@ -203,6 +203,7 @@ describe("settleMonth / revertSettlement guards", () => {
 
   test("settleMonth settles all secondary groups when no group specified", async () => {
     mock.method(Group, "find", () => ({ sort: async () => [{ _id: "group1" }, { _id: "group2" }] }));
+    mock.method(Partner, "find", () => ({ sort: async () => [] }));
     const err = await captureError(settleMonth, {
       user: { _id: "admin" },
       body: { bsYear: 2082, bsMonth: 4, category: "secondary" },
@@ -212,6 +213,7 @@ describe("settleMonth / revertSettlement guards", () => {
 
   test("settleMonth errors when no secondary groups exist", async () => {
     mock.method(Group, "find", () => ({ sort: async () => [] }));
+    mock.method(Partner, "find", () => ({ sort: async () => [] }));
     const err = await captureError(settleMonth, {
       user: { _id: "admin" },
       body: { bsYear: 2082, bsMonth: 4, category: "secondary" },

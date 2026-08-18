@@ -98,8 +98,10 @@ export const categoryReport = asyncHandler(async (req, res) => {
 export const settlementReport = asyncHandler(async (req, res) => {
   const { bsYear, bsMonth } = requireMonth(req);
 
-  const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
-  const expenses = await Expense.find({ bsYear, bsMonth });
+  const [activePartners, expenses] = await Promise.all([
+    Partner.find({ status: "active" }).select("name image").sort({ createdAt: -1 }),
+    Expense.find({ bsYear, bsMonth }).select("amount category group paidBy applicablePartners"),
+  ]);
 
   const settlement = computeSettlement(expenses, activePartners);
 

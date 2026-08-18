@@ -23,17 +23,36 @@ export const getSummary = asyncHandler(async (req, res) => {
   const year = Number(bsYear);
   const month = Number(bsMonth);
 
-  const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
-  const expenses = await Expense.find({ bsYear: year, bsMonth: month });
+  const monthsToFetch = 6;
+  const period = [];
+  for (let i = 0; i < monthsToFetch; i++) {
+    period.push(subtractBsMonths(year, month, i));
+  }
 
-  // Collect every partner referenced by the month's expenses (paidBy or shares)
-  // so totals reconcile even if a partner has since been deactivated.
+  const [activePartners, expenses, trendExpenses, settlementRecord] = await Promise.all([
+    Partner.find({ status: "active" }).select("name image").sort({ createdAt: -1 }),
+    Expense.find({ bsYear: year, bsMonth: month }),
+    Expense.find({
+      $or: period.map(({ bsYear: y, bsMonth: m }) => ({ bsYear: y, bsMonth: m })),
+    }).select("amount bsYear bsMonth category paidBy applicablePartners"),
+    Settlement.findOne({
+      bsYear: year,
+      bsMonth: month,
+      category: null,
+      group: null,
+    }).populate("settledBy", "name email"),
+  ]);
+
   const referencedIds = new Set();
   for (const expense of expenses) {
     if (expense.paidBy) referencedIds.add(String(expense.paidBy));
     for (const id of expense.applicablePartners || []) referencedIds.add(String(id));
   }
-  const referencedPartners = await Partner.find({ _id: { $in: [...referencedIds] } });
+
+  const referencedPartnerQuery = referencedIds.size > 0
+    ? Partner.find({ _id: { $in: [...referencedIds] } }).select("name image")
+    : Promise.resolve([]);
+  const referencedPartners = await referencedPartnerQuery;
 
   const partnerById = new Map();
   for (const partner of [...activePartners, ...referencedPartners]) {
@@ -44,26 +63,7 @@ export const getSummary = asyncHandler(async (req, res) => {
   const summary = computeSummary(expenses);
   const partnerSummaries = computePartnerSummaries(expenses, monthPartners);
   const payerTotals = computePayerTotals(expenses, monthPartners);
-
-  // Fetch expenses for the last 6 months (including the selected month) for the trend chart.
-  const monthsToFetch = 6;
-  const period = [];
-  for (let i = 0; i < monthsToFetch; i++) {
-    period.push(subtractBsMonths(year, month, i));
-  }
-
-  const trendExpenses = await Expense.find({
-    $or: period.map(({ bsYear: y, bsMonth: m }) => ({ bsYear: y, bsMonth: m })),
-  });
-
   const monthlyTrend = aggregateMonthlyTrend(trendExpenses, period);
-
-  const settlementRecord = await Settlement.findOne({
-    bsYear: year,
-    bsMonth: month,
-    category: null,
-    group: null,
-  }).populate("settledBy", "name email");
 
   const settlementStatus = settlementRecord
     ? {

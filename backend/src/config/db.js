@@ -6,18 +6,20 @@ const connectDB = async () => {
             process.env.MONGODB_URI,
             {
                 dbName: process.env.DB_NAME,
+                maxPoolSize: 10,
+                minPoolSize: 2,
+                maxIdleTimeMS: 30000,
+                serverSelectionTimeoutMS: 5000,
             }
         );
 
-        console.log(
-            `\n✅ MongoDB Connected Successfully!`
-        );
+        console.log("MongoDB Connected Successfully!");
 
-        console.log(`📦 DB Host: ${connectionInstance.connection.host}`);
-        console.log(`🗄 DB Name: ${connectionInstance.connection.name}`);
+        console.log(`DB Host: ${connectionInstance.connection.host}`);
+        console.log(`DB Name: ${connectionInstance.connection.name}`);
 
     } catch (error) {
-        console.error("❌ MongoDB connection failed:", error.message);
+        console.error("MongoDB connection failed:", error.message);
         process.exit(1);
     }
 };

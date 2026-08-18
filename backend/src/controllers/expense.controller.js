@@ -223,16 +223,15 @@ export const deleteExpense = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!isValidId(id)) throw new ApiError(400, "Invalid expense id");
 
+  const expense = await Expense.findById(id);
+  if (!expense) throw new ApiError(404, "Expense not found");
+
   if (req.userType === "partner") {
-    const existing = await Expense.findById(id);
-    if (!existing) throw new ApiError(404, "Expense not found");
-    if (String(existing.createdBy) !== String(req.user._id)) {
+    if (String(expense.createdBy) !== String(req.user._id)) {
       throw new ApiError(403, "You can only delete your own expenses");
     }
   }
 
-  const expense = await Expense.findById(id);
-  if (!expense) throw new ApiError(404, "Expense not found");
   if (expense.settled) {
     throw new ApiError(400, "Cannot delete a settled expense. Revert the settlement first.");
   }

@@ -38,6 +38,8 @@ const partnerSchema = new Schema(
   { timestamps: true }
 );
 
+partnerSchema.index({ status: 1 });
+
 partnerSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);

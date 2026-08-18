@@ -9,6 +9,7 @@ export const useGetGroups = () => useQuery({
         const response = await AxiosConfig.get(endpoint);
         return response?.data?.groups;
     },
+    staleTime: 5 * 60 * 1000,
 });
 
 export const useGetActiveGroups = () => useQuery({
@@ -17,6 +18,7 @@ export const useGetActiveGroups = () => useQuery({
         const response = await AxiosConfig.get(endpoint, { params: { status: "active" } });
         return response?.data?.groups;
     },
+    staleTime: 5 * 60 * 1000,
 });
 
 export const useGetGroup = ({ id, enabled = true }) => useQuery({

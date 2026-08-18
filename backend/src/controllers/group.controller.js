@@ -60,16 +60,18 @@ export const getGroups = asyncHandler(async (req, res) => {
 
   const groups = await withPopulates(Group.find(filter)).sort({ createdAt: -1 });
 
-  const groupsWithStats = await Promise.all(
-    groups.map(async (group) => {
-      const expenseCount = await Expense.countDocuments({ group: group._id });
-      return {
-        ...group.toObject(),
-        partnerCount: group.partners?.length || 0,
-        expenseCount,
-      };
-    })
-  );
+  const groupIds = groups.map((g) => g._id);
+  const expenseCounts = await Expense.aggregate([
+    { $match: { group: { $in: groupIds } } },
+    { $group: { _id: "$group", count: { $sum: 1 } } },
+  ]);
+  const countMap = new Map(expenseCounts.map((e) => [String(e._id), e.count]));
+
+  const groupsWithStats = groups.map((group) => ({
+    ...group.toObject(),
+    partnerCount: group.partners?.length || 0,
+    expenseCount: countMap.get(String(group._id)) || 0,
+  }));
 
   return res.status(200).json({
     success: true,

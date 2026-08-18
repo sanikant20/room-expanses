@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { Box, Card, CardContent, Chip, InputLabel, MenuItem, Stack, TextField, Typography, Skeleton, alpha, useTheme } from '@mui/material';
+import { Avatar, Box, Card, CardContent, Chip, InputLabel, MenuItem, Stack, TextField, Typography, Skeleton, alpha, useTheme } from '@mui/material';
 import { AccountBalanceWalletRounded, BalanceRounded, CheckCircleRounded, CompareArrowsRounded } from '@mui/icons-material';
 import DataTable from '../../../components/table/DataTable';
 import { NepaliYearMonthPicker } from '../../../components/date/NepaliYearMonthPicker';
 import { formatToNepaliCurrency } from '../../../utils/currencyFormat';
 import { convertToBSFormat } from '../../../utils/dateConverter';
 import { useGetActiveGroups } from '../../../apis/groupAPI/GroupAPI';
+import { PAYMENT_STATUS } from '../../../constant/constant';
 
 export const SettlementMonthPicker = ({ value, onChange }) => (
     <NepaliYearMonthPicker
@@ -197,5 +198,37 @@ export const SettlementTable = ({ data, isLoading, filename, extra, actions }) =
             extra={extra}
             actions={actions}
         />
+    );
+};
+
+export const PartnerCell = ({ partner }) => (
+    <Stack direction="row" alignItems="center" spacing={1}>
+        <Avatar src={partner?.image || '/noAvatar.svg'} sx={{ width: 28, height: 28 }} />
+        <Typography variant="body2" fontWeight={600}>{partner?.name || 'Unknown'}</Typography>
+    </Stack>
+);
+
+export const PaymentStatusCell = ({ row, showTimestamps = false }) => {
+    const found = PAYMENT_STATUS.find((s) => s.value === row.paymentStatus) || {};
+    const status = row.paymentStatus || 'pending';
+    if (!showTimestamps) {
+        return (
+            <Chip label={found.label || status} color={found.color || 'default'} size="small" sx={{ alignSelf: 'flex-start' }} />
+        );
+    }
+    return (
+        <Stack spacing={0.5}>
+            <Chip label={found.label || status} color={found.color || 'default'} size="small" sx={{ alignSelf: 'flex-start' }} />
+            {row.paidAt && (
+                <Typography variant="caption" color="text.secondary">
+                    Paid: {convertToBSFormat(row.paidAt)}, {new Date(row.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Typography>
+            )}
+            {row.confirmedAt && (
+                <Typography variant="caption" color="text.secondary">
+                    Confirmed: {convertToBSFormat(row.confirmedAt)}, {new Date(row.confirmedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Typography>
+            )}
+        </Stack>
     );
 };

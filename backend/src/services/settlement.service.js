@@ -35,7 +35,7 @@ const scopeExpenseFilter = ({ year, month, category = null, group = null, fromDa
  * Marks every affected expense as settled and links it to the record.
  * Returns { record, alreadySettled }.
  */
-export const settleScope = async ({ year, month, category = null, group = null, fromDate = null, toDate = null, settledBy = null }) => {
+export const settleScope = async ({ year, month, category = null, group = null, fromDate = null, toDate = null, settledBy = null, activePartners = null }) => {
   const filter = scopeExpenseFilter({ year, month, category, group, fromDate, toDate });
   const unsettledFilter = { ...filter, settled: false };
   const existing = await Settlement.findOne({ bsYear: year, bsMonth: month, category, group });
@@ -45,15 +45,10 @@ export const settleScope = async ({ year, month, category = null, group = null, 
     return { record: existing, alreadySettled: true };
   }
 
-  // Recompute over ALL covered expenses (already-settled + remaining) so the
-  // stored who-pays-whom net reflects the whole month. When a scope record
-  // does not exist yet (e.g. Primary/Secondary during an All Summary cascade
-  // where the All scope already settled everything), the record is still
-  // created so every scope is properly represented.
   const expenses = await Expense.find(filter);
-  const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
+  const partners = activePartners || await Partner.find({ status: "active" }).sort({ createdAt: -1 });
 
-  const settlement = computeSettlement(expenses, activePartners);
+  const settlement = computeSettlement(expenses, partners);
   const transactions = computeTransactions(settlement.rows);
   const now = new Date();
 
@@ -75,10 +70,8 @@ export const settleScope = async ({ year, month, category = null, group = null, 
   };
 
   if (unsettledCount > 0) {
-    // Append a history entry per action (manual vs auto) so the portion each
-    // settle run covered can be inspected separately in the Transactions tab.
-    const remainingExpenses = await Expense.find(unsettledFilter);
-    const remainingSettlement = computeSettlement(remainingExpenses, activePartners);
+    const remainingExpenses = expenses.filter((e) => !e.settled);
+    const remainingSettlement = computeSettlement(remainingExpenses, partners);
     update.$push = {
       settleActions: {
         source,
@@ -169,17 +162,18 @@ export const revertScope = async ({ year, month, category = null, group = null }
  */
 export const settleAllCascade = async ({ year, month, fromDate = null, toDate = null, settledBy = null }) => {
   const results = [];
+  const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
 
-  const all = await settleScope({ year, month, category: null, group: null, fromDate, toDate, settledBy });
+  const all = await settleScope({ year, month, category: null, group: null, fromDate, toDate, settledBy, activePartners });
   results.push({ scope: "all", alreadySettled: all.alreadySettled, record: all.record });
 
-  const primary = await settleScope({ year, month, category: "primary", group: null, fromDate, toDate, settledBy });
+  const primary = await settleScope({ year, month, category: "primary", group: null, fromDate, toDate, settledBy, activePartners });
   results.push({ scope: "primary", alreadySettled: primary.alreadySettled, record: primary.record });
 
   const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
 
   for (const group of activeGroups) {
-    const secondary = await settleScope({ year, month, category: "secondary", group: group._id, fromDate, toDate, settledBy });
+    const secondary = await settleScope({ year, month, category: "secondary", group: group._id, fromDate, toDate, settledBy, activePartners });
     results.push({ scope: "secondary", group: group._id, alreadySettled: secondary.alreadySettled, record: secondary.record });
   }
 

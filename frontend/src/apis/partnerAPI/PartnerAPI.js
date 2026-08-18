@@ -9,6 +9,7 @@ export const useGetPartners = ({ status = 'all' } = {}) => useQuery({
         const response = await AxiosConfig.get(endpoint, { params: { status } });
         return response?.data?.partners;
     },
+    staleTime: 5 * 60 * 1000,
 });
 
 export const useGetPartner = ({ id, enabled = true }) => useQuery({
@@ -18,6 +19,7 @@ export const useGetPartner = ({ id, enabled = true }) => useQuery({
         return response?.data?.partner;
     },
     enabled: !!id && enabled,
+    staleTime: 5 * 60 * 1000,
 });
 
 export const useCreatePartner = () => useMutation({

@@ -14,7 +14,7 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
 Last verified green: **2026-08-18** — backend 69 tests, frontend 35 tests,
-frontend lint 0/0, frontend build OK.
+frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 
 ## Test inventory
 

@@ -18,6 +18,7 @@ export const useGetExpenses = ({ bsYear, bsMonth, category, group, paidBy, searc
     },
     enabled,
     refetchInterval: 15000,
+    refetchIntervalInBackground: false,
 });
 
 export const useGetExpense = ({ id, enabled = true }) => useQuery({

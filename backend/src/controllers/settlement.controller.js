@@ -211,15 +211,17 @@ const fetchSecondaryAggregatedStatus = async (bsYear, bsMonth) => {
 export const getSettlement = asyncHandler(async (req, res) => {
   const filter = buildFilter(req);
 
-  const activePartners = await Partner.find({ status: "active" }).sort({ createdAt: -1 });
-  const expenses = await Expense.find(filter);
-
-  const settlement = computeSettlement(expenses, activePartners);
-
   const category = resolveCategory(req.query.category);
   const group = resolveGroup(req.query.group);
   const bsYear = Number(req.query.bsYear);
   const bsMonth = Number(req.query.bsMonth);
+
+  const [activePartners, expenses] = await Promise.all([
+    Partner.find({ status: "active" }).select("name image").sort({ createdAt: -1 }),
+    Expense.find(filter).select("amount category group paidBy applicablePartners bsYear bsMonth bsDate settled"),
+  ]);
+
+  const settlement = computeSettlement(expenses, activePartners);
 
   let isSettled = false;
   let aggregatedTransactions = null;
@@ -227,8 +229,10 @@ export const getSettlement = asyncHandler(async (req, res) => {
   let settledMeta = {};
 
   if (category === null) {
-    const primaryRecord = await fetchSettlementRecord(bsYear, bsMonth, "primary", null);
-    const secondaryStatus = await fetchSecondaryAggregatedStatus(bsYear, bsMonth);
+    const [primaryRecord, secondaryStatus] = await Promise.all([
+      fetchSettlementRecord(bsYear, bsMonth, "primary", null),
+      fetchSecondaryAggregatedStatus(bsYear, bsMonth),
+    ]);
     isSettled = !!primaryRecord && secondaryStatus.status === "settled";
     aggregatedTransactions = secondaryStatus.transactions || [];
     aggregatedSettleActions = secondaryStatus.settleActions || [];
@@ -333,16 +337,14 @@ const settleIfAllSubScopesSettled = async (year, month, settledBy) => {
   const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
   if (activeGroups.length === 0) return false;
 
-  for (const g of activeGroups) {
-    const groupRecord = await Settlement.findOne({
-      bsYear: year,
-      bsMonth: month,
-      category: "secondary",
-      group: g._id,
-      status: "settled",
-    });
-    if (!groupRecord) return false;
-  }
+  const settledSecondaryCount = await Settlement.countDocuments({
+    bsYear: year,
+    bsMonth: month,
+    category: "secondary",
+    group: { $in: activeGroups.map((g) => g._id) },
+    status: "settled",
+  });
+  if (settledSecondaryCount !== activeGroups.length) return false;
 
   const existingAll = await Settlement.findOne({
     bsYear: year,
@@ -388,7 +390,10 @@ export const settleMonth = asyncHandler(async (req, res) => {
   }
 
   if (category === "secondary" && !group) {
-    const activeGroups = await Group.find({ status: "active" }).sort({ createdAt: -1 });
+    const [activeGroups, activePartners] = await Promise.all([
+      Group.find({ status: "active" }).sort({ createdAt: -1 }),
+      Partner.find({ status: "active" }).sort({ createdAt: -1 }),
+    ]);
 
     if (activeGroups.length === 0) {
       throw new ApiError(400, "No active secondary groups found");
@@ -402,6 +407,7 @@ export const settleMonth = asyncHandler(async (req, res) => {
         category: "secondary",
         group: g._id,
         settledBy: req.user?._id,
+        activePartners,
       });
       if (!alreadySettled) settledAny = true;
     }

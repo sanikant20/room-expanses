@@ -30,4 +30,6 @@ const groupSchema = new Schema(
   { timestamps: true }
 );
 
+groupSchema.index({ status: 1 });
+
 export const Group = mongoose.model("Group", groupSchema);

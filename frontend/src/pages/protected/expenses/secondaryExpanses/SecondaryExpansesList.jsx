@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
@@ -62,7 +62,7 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
         : allGroups;
     const { mutate: deleteExpense, isPending: isDeleting } = useDeleteExpense();
 
-    const isOwnRow = (row) => !isPartner || String(row.createdBy) === String(selfId);
+    const isOwnRow = useCallback((row) => !isPartner || String(row.createdBy) === String(selfId), [isPartner, selfId]);
 
     useEffect(() => {
         if (groups.length > 0 && !groups.some((g) => g._id === selectedGroup)) {
@@ -105,15 +105,15 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
         );
     };
 
-    const partnerNames = (row) => {
+    const partnerNames = useCallback((row) => {
         const ids = (row.applicablePartners || []).map((p) => p?._id || p);
         return ids.map((id) => {
             const p = activePartners.find((x) => String(x._id) === String(id));
             return p?.name || String(id);
         });
-    };
+    }, [activePartners]);
 
-    const columns = [
+    const columns = useMemo(() => [
         {
             key: 'actions', label: 'Actions', fixed: 'left',
             render: (row) => {
@@ -236,7 +236,7 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
                     )
             ),
         },
-    ];
+    ], [isOwnRow, isPartner, selfId, activePartners, groups, modal, dialog, partnerNames]);
 
     return (
         <>

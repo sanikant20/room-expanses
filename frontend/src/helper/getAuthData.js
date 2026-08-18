@@ -1,11 +1,16 @@
 import { decryptData } from "../utils/encryption";
 
+let _cachedRaw = undefined;
+let _cachedResult = {};
+
 export const getAuthData = () => {
     const encryptedAuthData = sessionStorage.getItem('user');
+    if (encryptedAuthData === _cachedRaw) return _cachedResult;
+    _cachedRaw = encryptedAuthData;
     try {
         const authData = decryptData(encryptedAuthData);
         const parsed = JSON.parse(authData || '{}');
-        return {
+        _cachedResult = {
             ...parsed,
             accountType: parsed?.accountType || 'user',
             FullName: parsed?.name || parsed?.email?.split('@')[0] || 'User',
@@ -14,8 +19,14 @@ export const getAuthData = () => {
             ComID: parsed?.comId || parsed?.ComID || '',
         };
     } catch {
-        return {};
+        _cachedResult = {};
     }
+    return _cachedResult;
+};
+
+export const clearAuthCache = () => {
+    _cachedRaw = undefined;
+    _cachedResult = {};
 };
 
 export const isPartnerAccount = () => getAuthData()?.accountType === 'partner';
