@@ -194,6 +194,53 @@ describe("resetTransactionPayment", () => {
   });
 });
 
+describe("getSettlement source filter data", () => {
+  const settleAction = (source) => ({
+    _id: `action-${source}`,
+    source,
+    settledBy: null,
+    settledAt: new Date(),
+    transactions: [
+      { from: { _id: "payerA", name: "Alice" }, to: { _id: "receiverB", name: "Bob" }, amount: 100 },
+    ],
+  });
+
+  const populated = (doc) => ({ ...doc, populate: () => doc });
+
+  const mockLookups = ({ allActions = [], primaryActions = [], secondaryActions = [] }) => {
+    mock.method(Partner, "find", () => ({ select: () => ({ sort: async () => [] }) }));
+    mock.method(Expense, "find", () => ({ select: async () => [] }));
+    mock.method(Group, "find", () => ({ sort: async () => [{ _id: "g1" }] }));
+    mock.method(Settlement, "findOne", (query) => {
+      if (query.category === null) return populated({ _id: "all", status: "settled", settleActions: allActions });
+      if (query.category === "primary") return populated({ _id: "primary", status: "settled", transactions: [], settleActions: primaryActions });
+      return null;
+    });
+    const secondary = [{ _id: "sec1", status: "settled", transactions: [], settleActions: secondaryActions }];
+    mock.method(Settlement, "find", () => ({ populate: () => secondary }));
+  };
+
+  test("includes the all-record settleActions in the category=null (all) response", async () => {
+    mockLookups({ allActions: [settleAction("auto"), settleAction("manual")] });
+    const { statusCode, body } = await runHandler(getSettlement, {
+      query: { bsYear: 2083, bsMonth: 4 },
+    });
+    assert.equal(statusCode, 200);
+    assert.equal(body.settlement.settleActions.length, 2);
+    assert.deepEqual(body.settlement.settleActions.map((a) => a.source).sort(), ["auto", "manual"]);
+  });
+
+  test("source filter has data even when primary/secondary records carry no settleActions", async () => {
+    mockLookups({ allActions: [settleAction("auto")] });
+    const { body } = await runHandler(getSettlement, {
+      query: { bsYear: 2083, bsMonth: 4 },
+    });
+    assert.equal(body.settlement.settleActions.length, 1);
+    assert.equal(body.settlement.settleActions[0].source, "auto");
+    assert.equal(body.settlement.settleActions[0].transactions[0].from.name, "Alice");
+  });
+});
+
 describe("settleMonth / revertSettlement guards", () => {
   test("settleMonth requires bsYear and bsMonth", async () => {
     const err = await captureError(settleMonth, { body: {} });

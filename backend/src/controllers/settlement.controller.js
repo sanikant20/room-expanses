@@ -229,7 +229,8 @@ export const getSettlement = asyncHandler(async (req, res) => {
   let settledMeta = {};
 
   if (category === null) {
-    const [primaryRecord, secondaryStatus] = await Promise.all([
+    const [allRecord, primaryRecord, secondaryStatus] = await Promise.all([
+      fetchSettlementRecord(bsYear, bsMonth, null, null),
       fetchSettlementRecord(bsYear, bsMonth, "primary", null),
       fetchSecondaryAggregatedStatus(bsYear, bsMonth),
     ]);
@@ -239,10 +240,15 @@ export const getSettlement = asyncHandler(async (req, res) => {
     if (primaryRecord?.transactions) {
       aggregatedTransactions = [...primaryRecord.transactions, ...aggregatedTransactions];
     }
+    if (allRecord?.settleActions) {
+      aggregatedSettleActions = [...allRecord.settleActions, ...aggregatedSettleActions];
+    }
     if (primaryRecord?.settleActions) {
       aggregatedSettleActions = [...primaryRecord.settleActions, ...aggregatedSettleActions];
     }
-    if (primaryRecord) {
+    if (allRecord) {
+      settledMeta = { settledBy: allRecord.settledBy, settledAt: allRecord.settledAt, fromDate: allRecord.fromDate, toDate: allRecord.toDate };
+    } else if (primaryRecord) {
       settledMeta = { settledBy: primaryRecord.settledBy, settledAt: primaryRecord.settledAt, fromDate: primaryRecord.fromDate, toDate: primaryRecord.toDate };
     }
   } else if (category === "secondary" && !group) {

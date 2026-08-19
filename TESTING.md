@@ -13,12 +13,12 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2026-08-18** — backend 69 tests, frontend 35 tests,
+Last verified green: **2026-08-19** — backend 71 tests, frontend 35 tests,
 frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (69 tests, Node built-in runner)
+### Backend — `backend/tests/` (71 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -33,11 +33,14 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   that `POST /register` is **not** exposed.
 - `settlement-payment.test.js` — pay/confirm role guards (partner who isn't the
   payer/receiver gets 403; missing from/to gets 400) and settlement service surface.
-- `settlement-logic.test.js` (20 tests) — the settlement state machine, all with
+- `settlement-logic.test.js` (22 tests) — the settlement state machine, all with
   model mocks (no DB):
   - `isAutoSettled` — auto-settled vs manual (`settledBy` + `settleActions` cases).
   - `settleScope` — already-settled shortcut, and E11000 race retry (re-fetches the
     existing record; asserts the second `findOne` happens).
+  - `getSettlement` source-filter data — the category=null (all) view includes the
+    all-record's `settleActions` so the frontend Manual/Auto filter has rows even
+    when primary/secondary records carry none.
   - `markTransactionPaid` — admin may mark any transaction paid; the payer partner may
     mark their own; a partner who isn't the payer gets **403**; missing from/to → 400;
     no matching record → 404.
@@ -57,7 +60,7 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
     at least one applicable partner.
 
-### Frontend — `frontend/src/utils/*.test.js` + `constant`/`configurations`/`helper` (37 tests, vitest)
+### Frontend — `frontend/src/utils/*.test.js` + `constant`/`configurations`/`helper` (35 tests, vitest)
 - `nepaliDate.test.js` — BS parsing/formatting, known calendar boundaries
   (2025-04-14 = BS 2082/01/01; 2025-04-13 = BS 2081/12/31), month arithmetic,
   `getBsMonthsRange`, `isValidBsDate`, current-date helpers.
@@ -82,6 +85,7 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 | 10 | High | `findOneAndUpdate` with `$` positional operator only updated 1 Settlement document, but `getSettlement` reads from primary + secondary records separately. Payment status updated on the wrong record. | `updateMany` with `arrayFilters` now updates the matching transaction in ALL scope records (primary, secondary, combined) for the month. |
 | 11 | Medium | `getSettlement` response built a synthetic `settlement` object missing `settledBy`, `settledAt`, `fromDate`, `toDate` — so `SettlementStatus` component always showed "Auto System" and "—" for date/time. | Added `settledMeta` from the relevant record (primary for "all" scope, first settled secondary record, or the specific record) and spread into the response. `fetchSecondaryAggregatedStatus` now also returns `records`. |
 | 12 | Low | `SettlementStatus` scope prop was only passed in Summary tab; Transactions and Calculation tabs omitted it, showing no date range in the "Settled by … on …" line. | Added `settledScopeLabel` derivation and `scope` prop to all 4 tabs (Summary, Transactions, MyPayments, Calculation) for consistency. |
+| 13 | High | Transactions tab **Source filter (Manual/Auto) showed no rows** for a settled month. `getSettlement` category=null view aggregated `settleActions` only from primary + secondary records — which carry 0 because `settleAllCascade` settles the "all" scope first, so sub-scope records never get a `settleActions` push. The real source history lives on the category-null "all" record, which was never fetched. | `getSettlement` now also fetches the all-record and merges its `settleActions` into the response (`settledMeta` prefers it too). Frontend filter logic unchanged — it already reads `settlement.settleActions`. Covered by 2 new mocked unit tests. |
 
 ## Bugs found & fixed (audit pass, 2026-08-15)
 
