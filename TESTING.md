@@ -13,12 +13,13 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2026-08-19** — backend 71 tests, frontend 35 tests,
-frontend lint 0/0, frontend build OK, backend boots with 35 routes.
+Last verified green: **2083/05/04 (BS)** — backend 99 tests, frontend 44 tests,
+frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
+with the new `/api/turn` routes.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (71 tests, Node built-in runner)
+### Backend — `backend/tests/` (99 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -59,8 +60,36 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   - group controllers — name and at least one partner required, invalid `:id` rejected.
   - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
     at least one applicable partner.
+- `turn.test.js` (28 tests) — the water turn state machine, all with model mocks (no DB):
+  - `computeTurnState` — empty/inactive-partner handling; **fulfillment follows the
+    bringer** (`broughtByPartner`), not the assigned partner; absent partner stays
+    pending when covered; out-of-order completions follow completion order, not rotation
+    order; the critical scenario (order A,B,C,D; completions A then C then D then B →
+    next cycle current A); cycle advances only after every active partner is fulfilled.
+  - `completeTurn` — creates an event; throws **409** on the E11000 unique-constraint
+    double completion (index `{ rotation, cycle, broughtByPartner }`).
+  - `getTurnState` — returns `configured:false` with no rotation; returns `myStatus`
+    (inRotation/fulfilled/isCurrentTurn) for a partner requester.
+  - `createTurn` — rejects duplicate/empty/invalid partner lists; deactivates other
+    active rotations and creates the new one.
+  - `completeTurnAction` — current partner completes their own turn; a non-current
+    partner covering fulfills their **own** obligation and keeps the current turn
+    pending; 409 when already fulfilled; 403 for a non-rotation partner; admin must
+    pass a valid `partnerId`; admin can record completion for a specific partner;
+    admin marking a non-current partner fulfills that partner while the current turn
+    stays pending; admin marking an already-fulfilled or inactive partner → 409 / 403;
+    admin marking a partner outside the rotation → 403.
+  - `resetTurnEvent` — 404 for a missing event; deletes the event and returns only
+    `{ success, message }`.
+- Mutation endpoints (`POST /turn`, `PUT /turn/:id`, `POST /turn/complete`,
+  `POST /turn/reset`) return **only `{ success, message }`** — no state data. The
+  frontend refetches via query invalidation; state data is returned only by the GET
+  endpoints (`GET /`, `GET /public`, `GET /history`).
+- `routes.test.js` — also asserts the new `/api/turn` router exposes
+  `GET /public` (no auth), `GET /`, `GET /history`, `POST /`, `PUT /:id`,
+  `POST /complete`, `POST /reset`.
 
-### Frontend — `frontend/src/utils/*.test.js` + `constant`/`configurations`/`helper` (35 tests, vitest)
+### Frontend — `frontend/src/utils/*.test.js` + `constant`/`configurations`/`helper` (44 tests, vitest)
 - `nepaliDate.test.js` — BS parsing/formatting, known calendar boundaries
   (2025-04-14 = BS 2082/01/01; 2025-04-13 = BS 2081/12/31), month arithmetic,
   `getBsMonthsRange`, `isValidBsDate`, current-date helpers.
@@ -75,8 +104,46 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
   `isPartnerAccount` true/false. (Vitest `node` env: `sessionStorage` is stubbed.)
 - `constant/constant.test.js` — `PAYMENT_STATUS` pending→paid→confirmed lifecycle and
   `SETTLEMENT_STATUS` receive/pay/settled labels.
+- `turnFormat.test.js` — `getTurnPartnerStatus` (current/done/pending), `isCoveredEvent`
+  (a different carrier vs self-completion), `formatTurnDateTime` (BS date + time via
+  `convertToBSFormat`).
 
-## Bugs found & fixed (settlement payment status, 2026-08-18)
+## Water Turn feature (2083/05/04 BS)
+
+A persistent turn/queue state machine (not an index rotation). Design decisions:
+
+- **Fulfillment follows the bringer.** A partner's obligation for a cycle is fulfilled
+  only when that partner is the `broughtByPartner` of an event in the cycle. The
+  `assignedPartner` field records the partner whose turn was scheduled at the time.
+  When a non-current partner brings water for the current turn ("I Brought Water For
+  This Turn"), the record is `assigned: currentTurn, broughtBy: the partner` — the
+  current turn stays pending and the bringer fulfills their **own** obligation.
+- **Covering keeps the absent partner pending.** If A is absent and B brings water, A
+  remains outstanding and comes back as the next turn. Out-of-order completions are
+  allowed and advance only the bringer.
+- **Cycle is derived from events.** `computeTurnState` uses the latest event cycle; when
+  every active partner has fulfilled their obligation in that cycle, it advances to the
+  next cycle and everyone resets. Cycle state is never stored, so it can't drift.
+- **Concurrency.** Unique index `{ rotation, cycle, broughtByPartner }` prevents a
+  partner from fulfilling the same obligation twice; the service maps `E11000` to a 409.
+- **Inactive partners** are excluded from turn selection but their historical events
+  remain untouched.
+
+Frontend: Turn menu → `/turn/water` (single item, no children) renders `TurnTabs` with a
+single Water tab. The public landing page shows the live water turn via `GET /turn/public`
+(registered before `verifyJWT`). Admin-only "Mark Water Brought" select in the Admin Actions
+card records completion for any active, unfulfilled rotation partner; marking buttons show a
+spinner + "Marking..." while the request is in flight.
+
+Known considerations (accepted, not changed):
+- A simultaneous double-click race can record an event against a stale cycle read; the
+  unique index still prevents double-fulfillment, so this is harmless for a room app.
+- `POST /turn/reset` does not verify the event belongs to a water rotation (admin-only).
+- `assignedPartner` for an out-of-order completion records the scheduled current turn
+  (not the completing partner's own name) — intentional; the critical test outcome
+  (order A→C→D→B, next cycle A) is preserved.
+
+## Bugs found & fixed (settlement payment status, 2083/05/02 BS)
 
 | # | Severity | Bug | Fix |
 |---|---|---|---|
@@ -87,7 +154,7 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 | 12 | Low | `SettlementStatus` scope prop was only passed in Summary tab; Transactions and Calculation tabs omitted it, showing no date range in the "Settled by … on …" line. | Added `settledScopeLabel` derivation and `scope` prop to all 4 tabs (Summary, Transactions, MyPayments, Calculation) for consistency. |
 | 13 | High | Transactions tab **Source filter (Manual/Auto) showed no rows** for a settled month. `getSettlement` category=null view aggregated `settleActions` only from primary + secondary records — which carry 0 because `settleAllCascade` settles the "all" scope first, so sub-scope records never get a `settleActions` push. The real source history lives on the category-null "all" record, which was never fetched. | `getSettlement` now also fetches the all-record and merges its `settleActions` into the response (`settledMeta` prefers it too). Frontend filter logic unchanged — it already reads `settlement.settleActions`. Covered by 2 new mocked unit tests. |
 
-## Bugs found & fixed (audit pass, 2026-08-15)
+## Bugs found & fixed (audit pass, 2083/04/30 BS)
 
 | # | Severity | Bug | Fix |
 |---|---|---|---|
@@ -115,7 +182,7 @@ frontend lint 0/0, frontend build OK, backend boots with 35 routes.
 - `backend/.env` must set: `MONGODB_URI` (Atlas), `DB_NAME=room-expanses`, `ACCESS_TOKEN_SECRET`,
   `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` (= deployed frontend origin), `NODE_ENV=production`,
   `PORT`. Current values are **dev defaults**.
-- **Settlement index repair (2026-08-16)**: the `settlements` collection carried a stale
+- **Settlement index repair (2083/04/31 BS)**: the `settlements` collection carried a stale
   legacy unique index `bsYear_1_bsMonth_1_category_1` (3-field) left over from before the
   `group` field existed. It made secondary settlements of different groups collide with
   `E11000` for the same month (schema index is correctly 4-field: `+ group`). Dropped via

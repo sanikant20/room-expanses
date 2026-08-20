@@ -5,6 +5,7 @@ import {
     GroupsRounded,
     AssessmentRounded,
     BalanceRounded,
+    WaterDropRounded,
 } from "@mui/icons-material";
 
 export const MenuItemLists = [
@@ -29,6 +30,13 @@ export const MenuItemLists = [
         icon: <GroupsRounded />,
         route: '/partners',
         adminOnly: true,
+    },
+    {
+        section: 'Management',
+        menu: 'Turn',
+        translationKey: 'menu.turn',
+        icon: <WaterDropRounded />,
+        route: '/turn/water',
     },
     {
         section: 'Insights',
