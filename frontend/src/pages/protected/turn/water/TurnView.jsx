@@ -177,8 +177,8 @@ const TurnView = ({ type = 'water' }) => {
                                     <TypeIcon color="info" fontSize="small" />
                                     <Typography variant="body2">
                                         {myStatus.isCurrentTurn
-                                            ? `It is your turn to bring ${config.noun}. Tap "${config.action}" when done.`
-                                            : `The current turn is ${currentTurn?.name || 'a partner'}. You can bring ${config.noun} for this turn — it fulfills your own obligation and the current turn stays due.`}
+                                            ? `It is your turn to ${config.obligation}. Tap "${config.action}" when done.`
+                                            : `The current turn is ${currentTurn?.name || 'a partner'}. You can ${config.obligation} for this turn — it fulfills your own obligation and the current turn stays due.`}
                                     </Typography>
                                 </Stack>
                                 <Button

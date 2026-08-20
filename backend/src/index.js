@@ -6,6 +6,7 @@ import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { reportRouter } from "./routes/report.routes.js";
 import { settlementRouter } from "./routes/settlement.routes.js";
 import { turnRouter } from "./routes/turn.routes.js";
+import { notificationRouter } from "./routes/notification.routes.js";
 import mongoose from "mongoose";
 
 export const baseRoutes = (app) => {
@@ -17,6 +18,7 @@ export const baseRoutes = (app) => {
   app.use("/api/reports", reportRouter);
   app.use("/api/settlement", settlementRouter);
   app.use("/api/turn", turnRouter);
+  app.use("/api/notifications", notificationRouter);
 
   app.use("/api/health", (req, res) => {
     const dbState = mongoose.connection.readyState;

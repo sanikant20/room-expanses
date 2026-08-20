@@ -8,6 +8,7 @@ import Stack from '@mui/material/Stack';
 import MuiToolbar from '@mui/material/Toolbar';
 import { useNavigate } from 'react-router-dom';
 import OptionsMenu from './Optionsmenu';
+import NotificationBell from './NotificationBell';
 import { useThemeMode } from '../../context/useThemeMode';
 import { convertToBSFormat } from '../../utils/dateConverter';
 import MobileSideMenu from './MobileSideMenu';
@@ -158,6 +159,7 @@ export default function MobileHeader() {
                                     {mode === 'dark' ? <WbSunnyRounded sx={{ fontSize: 18 }} /> : <NightsStayRounded sx={{ fontSize: 18 }} />}
                                 </IconButton>
                             </Tooltip>
+                            <NotificationBell />
                             <OptionsMenu />
                         </Box>
                     </Stack>

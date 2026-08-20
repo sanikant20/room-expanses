@@ -13,15 +13,13 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/05 (BS)** — backend 104 tests, frontend 44 tests,
+Last verified green: **2083/05/06 (BS)** — backend **118** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
-with the `/api/turn` routes (water + rice). Landing page simplified (rotation queue
-removed; only current turn / next turn / recent shown) and public desktop menus
-removed from the header.
+with the `/api/turn` routes (water + rice + cleaning) and `/api/notifications`.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (104 tests, Node built-in runner)
+### Backend — `backend/tests/` (118 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -62,7 +60,7 @@ removed from the header.
   - group controllers — name and at least one partner required, invalid `:id` rejected.
   - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
     at least one applicable partner.
-- `turn.test.js` (33 tests) — the water turn state machine, all with model mocks (no DB):
+- `turn.test.js` (36 tests) — the water turn state machine, all with model mocks (no DB):
   - `computeTurnState` — empty/inactive-partner handling; **fulfillment follows the
     bringer** (`broughtByPartner`), not the assigned partner; absent partner stays
     pending when covered; out-of-order completions follow completion order, not rotation
@@ -87,12 +85,26 @@ removed from the header.
   `POST /turn/reset`) return **only `{ success, message }`** — no state data. The
   frontend refetches via query invalidation; state data is returned only by the GET
   endpoints (`GET /`, `GET /public`, `GET /history`).
-- `turn type handling` — resolves `rice` rotations via `?type=rice`; defaults to
-  `water`; unsupported types fall back to `water`; `createTurn` stores the requested
-  type; rice completion records correctly.
+- `turn type handling` — resolves `rice` **and `cleaning`** rotations via
+  `?type=`; defaults to `water`; unsupported types fall back to `water`;
+  `createTurn` stores the requested type; rice + cleaning completion records
+  correctly.
+- `notification.test.js` (11 tests) — the notification service + controller, all
+  with model mocks:
+  - `notifyPartner` creates an in-app notification, skips email when the partner has
+    no email address, and never throws on DB failures.
+  - `notifyPartner` omits `refKey` from the stored doc when none is provided (sparse
+    unique index can't collide on repeated `null`s) and stores it when provided.
+  - `notifyNextTurnPartner` notifies the next current partner after a completion
+    (recomputed from events) with the email sent from the app's Resend sender (no
+    partner email in `from`/`reply_to`) and does nothing when no next partner exists.
+  - controller: `getNotifications` returns own list + unreadCount; `markNotificationRead`
+    404 on missing, 403 on another partner's notification, marks own read;
+    `markAllNotificationsRead` scopes the update to the requesting partner.
 - `routes.test.js` — also asserts the new `/api/turn` router exposes
   `GET /public` (no auth), `GET /`, `GET /history`, `POST /`, `PUT /:id`,
-  `POST /complete`, `POST /reset`.
+  `POST /complete`, `POST /reset`, and the `/api/notifications` router
+  (`GET /`, `PUT /:id/read`, `PUT /read-all`) is JWT-gated.
 
 ### Frontend — `frontend/src/utils/*.test.js` + `constant`/`configurations`/`helper` (44 tests, vitest)
 - `nepaliDate.test.js` — BS parsing/formatting, known calendar boundaries
@@ -113,7 +125,8 @@ removed from the header.
   (a different carrier vs self-completion), `formatTurnDateTime` (BS date + time via
   `convertToBSFormat`).
 - `turnTypeConfig` (not unit-tested; driven by `TurnView` via props) — per-type
-  labels/verbs/icons for water and rice.
+  labels/verbs/icons for water, cleaning, and rice (order: water → cleaning → rice on
+  both the tab and the landing page).
 
 ## Water Turn feature (2083/05/04 BS)
 
@@ -164,6 +177,49 @@ Known considerations (accepted, not changed):
   (not the completing partner's own name) — intentional; the critical test outcome
   (order A→C→D→B, next cycle A) is preserved.
 
+## Cleaning turn + notifications (2083/05/06 BS)
+
+Third turn type (`"cleaning"` — flat/floor cleaning) runs on the **same state machine**
+as water/rice: rotation order, bringer-fulfillment, cycle advance, admin mark, history.
+The only behavioural difference is the **Saturday reminder**.
+
+- **Type plumbing**: enum `["water","rice","cleaning"]`; `resolveType` accepts
+  `cleaning`; type-specific error/success messages (no more hardcoded "water").
+  `turnTypeConfig.jsx` gained a `cleaning` entry (icons `CleaningServicesRounded`,
+  obligation phrase "clean the flat"); `TurnTabs` gained a Cleaning tab; the landing
+  page now **iterates `TURN_TYPES`** instead of hardcoding water+rice.
+- **In-app notifications (Option A)**: new `Notification` model (`partner`, `type`,
+  `title`, `message`, `read`, `readAt`, unique-sparse `refKey`). Routes under
+  `/api/notifications` (JWT-gated): `GET /` (own list + unreadCount), `PUT /:id/read`,
+  `PUT /read-all`. Partners see only their own; marking someone else's → 403. The
+  frontend `NotificationBell` (DesktopHeader + MobileHeader) polls every 60 s, shows a
+  badge, and lists notifications with a "Mark all read" action.
+- **Email (Option B, Resend free tier)**: `email.service.js` posts to Resend's REST API
+  with `RESEND_API_KEY`. **Best-effort** — missing key or send failure is logged, never
+  thrown, and in-app notifications still work. All emails are sent from the app's
+  Resend sender (`EMAIL_FROM`, falling back to `onboarding@resend.dev` / `RESEND_DOMAIN`)
+  — **never from a partner's personal email** (Resend requires the sending domain to be
+  verified, so partner Gmail addresses can't be the sender).
+- **Saturday 6 AM reminder** (`cleaningReminder.service.js`): cron `0 6 * * 6`
+  Asia/Kathmandu + a startup catch-up (only fires if today is a Kathmandu Saturday).
+  It loads the active cleaning rotation, computes the current turn, and notifies the
+  current partner (in-app + email). `refKey = cleaning-saturday-<date>` dedupes so a
+  restart or double-fire can't duplicate the reminder.
+- **Next-partner notification**: after a partner completes their own turn (any type),
+  `notifyNextTurnPartner` recomputes state and notifies the next current partner
+  (in-app + email). Admin-recorded completions do **not** trigger this.
+- `.env.example` documents `RESEND_API_KEY` / `EMAIL_FROM` / `RESEND_DOMAIN`.
+
+Known considerations (accepted, not changed):
+- Email requires a free Resend API key; until `EMAIL_FROM` is a verified sender domain,
+  Resend's onboarding address can only deliver to your own account email.
+- Notification route ordering: `PUT /read-all` and `PUT /:id/read` are both registered;
+  Express matches `/read-all` literally before the `:id` param route is hit for that
+  path (id validation rejects non-ObjectIds anyway).
+- The reminder fires based on the current active rotation's `currentTurn` at 6 AM
+  Saturday; if the current partner changed since the last Saturday (e.g. nobody marked
+  it), the new current partner gets the reminder.
+
 ## Landing page simplification & public header (2083/05/05 BS)
 
 - **Rotation queue card removed.** The landing page no longer lists the whole pending
@@ -188,6 +244,7 @@ Known considerations (accepted, not changed):
 | 14 | High | Partner marking buttons passed the click event to `handleComplete` (`onClick={handleComplete}`), so the event object became a truthy `partnerId` and was serialized into the request body — the API call failed and nothing was marked. | Wrapped the handlers as `onClick={() => handleComplete()}` so no argument leaks through. |
 | 15 | Medium | `LiveTurnCard` on the landing page crashed with `TypeError: Cannot read properties of undefined (reading 'toLowerCase')` — inline configs lacked the `label` field. | Switch to `getTurnTypeConfig('water' | 'rice')` from the shared config so `label`/`title`/`noun`/icons are always present. |
 | 16 | Low | Mutation endpoints (`POST /turn`, `PUT /turn/:id`, `POST /turn/complete`, `POST /turn/reset`) returned full state data that the UI never used. | All mutations now return only `{ success, message }`; the frontend refetches via query invalidation. State data is returned only by GET endpoints. |
+| 17 | High | Next-partner in-app notifications silently stopped after the first one: `notifyPartner` always wrote `refKey: null`, and MongoDB's sparse unique index still indexes `null` — so the 2nd notification hit E11000 and `notifyPartner` bailed *before* sending email. | `refKey` is now omitted from the document when not provided (`default: null` removed from the schema), so sparse-indexed docs are skipped and every next-partner notification creates + emails. Covered by 2 new tests. |
 
 ## Bugs found & fixed (settlement payment status, 2083/05/02 BS)
 
@@ -237,6 +294,18 @@ Known considerations (accepted, not changed):
 - `backend/.env` must set: `MONGODB_URI` (Atlas), `DB_NAME=room-expanses`, `ACCESS_TOKEN_SECRET`,
   `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` (= deployed frontend origin), `NODE_ENV=production`,
   `PORT`. Current values are **dev defaults**.
+- **Email notifications (2083/05/06 BS)**: optional. Set `RESEND_API_KEY` for
+  best-effort email via Resend's free tier (REST API, no npm dep). Without it, email is
+  skipped silently and only in-app notifications (the header bell) are delivered.
+  Emails always come from the app's Resend sender: `EMAIL_FROM` if set, else
+  `RESEND_DOMAIN`, else the default `onboarding@resend.dev` (which can only deliver to
+  your own account email until a domain is added). Partner emails are only ever
+  recipients (`to`) — never the sender.
+- **Cleaning reminder (2083/05/06 BS)**: cron `0 6 * * 6` Asia/Kathmandu (node-cron) plus
+  a startup catch-up that only fires on a Kathmandu Saturday. Dedup via the
+  `cleaning-saturday-<date>` refKey (unique sparse index), so restarts can't duplicate.
+  Next-partner emails/in-app notifications fire after a partner completes their own turn
+  (not on admin-recorded completions).
 - **Settlement index repair (2083/04/31 BS)**: the `settlements` collection carried a stale
   legacy unique index `bsYear_1_bsMonth_1_category_1` (3-field) left over from before the
   `group` field existed. It made secondary settlements of different groups collide with

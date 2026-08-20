@@ -1,5 +1,5 @@
 import React from 'react';
-import { LocalDrinkRounded, RiceBowlRounded, WaterDropRounded } from '@mui/icons-material';
+import { CleaningServicesRounded, LocalDrinkRounded, RiceBowlRounded, WaterDropRounded } from '@mui/icons-material';
 
 export const TURN_TYPES = {
     water: {
@@ -10,6 +10,7 @@ export const TURN_TYPES = {
         verb: 'brought water',
         action: 'I Brought Water',
         coverAction: 'I Brought Water For This Turn',
+        obligation: 'bring water',
         due: 'Water due',
         mark: 'Mark Water Brought',
         markDesc: 'Record that a partner brought water. This fulfills that partner\'s obligation for the cycle. Use it only when they genuinely brought the water.',
@@ -17,6 +18,23 @@ export const TURN_TYPES = {
         icon: WaterDropRounded,
         cardIcon: <WaterDropRounded />,
         actionIcon: <LocalDrinkRounded />,
+    },
+    cleaning: {
+        type: 'cleaning',
+        label: 'Cleaning',
+        title: 'Flat Cleaning Turn',
+        noun: 'flat cleaning',
+        verb: 'cleaned the flat',
+        action: 'I Cleaned the Flat',
+        coverAction: 'I Cleaned For This Turn',
+        obligation: 'clean the flat',
+        due: 'Cleaning due',
+        mark: 'Mark Cleaning Done',
+        markDesc: 'Record that a partner cleaned the flat. This fulfills that partner\'s obligation for the cycle. Use it only when they genuinely cleaned.',
+        historyTitle: 'Flat Cleaning History',
+        icon: CleaningServicesRounded,
+        cardIcon: <CleaningServicesRounded />,
+        actionIcon: <CleaningServicesRounded />,
     },
     rice: {
         type: 'rice',
@@ -26,6 +44,7 @@ export const TURN_TYPES = {
         verb: 'brought rice',
         action: 'I Brought Rice',
         coverAction: 'I Brought Rice For This Turn',
+        obligation: 'bring rice',
         due: 'Rice due',
         mark: 'Mark Rice Brought',
         markDesc: 'Record that a partner brought rice. This fulfills that partner\'s obligation for the cycle. Use it only when they genuinely brought the rice.',

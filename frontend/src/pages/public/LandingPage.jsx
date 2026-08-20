@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetPublicTurnState } from '../../apis/turnAPI/TurnAPI';
-import { getTurnTypeConfig } from '../../utils/turnTypeConfig';
+import { getTurnTypeConfig, TURN_TYPES } from '../../utils/turnTypeConfig';
 
 const PartnerAvatar = ({ partner, size = 56 }) => (
     <Avatar
@@ -177,14 +177,14 @@ const LiveTurnCard = ({ config, turn }) => {
 const LandingPage = () => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const turnTypes = Object.keys(TURN_TYPES);
 
     const { data: waterTurn } = useGetPublicTurnState({ type: 'water' });
     const { data: riceTurn } = useGetPublicTurnState({ type: 'rice' });
+    const { data: cleaningTurn } = useGetPublicTurnState({ type: 'cleaning' });
 
-    const turnConfigs = [
-        getTurnTypeConfig('water'),
-        getTurnTypeConfig('rice'),
-    ];
+    const turnData = { water: waterTurn, rice: riceTurn, cleaning: cleaningTurn };
+    const turnConfigs = turnTypes.map((type) => getTurnTypeConfig(type));
 
     useEffect(() => {
         window.scrollTo({ top: 0 });
@@ -198,7 +198,7 @@ const LandingPage = () => {
                         <LiveTurnCard
                             key={config.type}
                             config={config}
-                            turn={config.type === 'water' ? waterTurn : riceTurn}
+                            turn={turnData[config.type]}
                         />
                     ))}
                 </Stack>
@@ -218,7 +218,7 @@ const LandingPage = () => {
                             Sign in to manage your turns
                         </Typography>
                         <Typography color="text.secondary" sx={{ maxWidth: 560, mx: 'auto', mb: 3 }}>
-                            Room partners can mark when they bring water or rice, and the admin can configure and manage the rotation order.
+                            Room partners can mark when they bring water, rice, or clean the flat, and the admin can configure and manage the rotation order.
                         </Typography>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'center' }}>
                             <Button variant="contained" size="large" onClick={() => navigate('/login')} endIcon={<ArrowForward />} sx={{ px: 4, py: 1.2, borderRadius: 999 }}>

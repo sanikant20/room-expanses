@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Grid, Card, TextField, Button, Typography, InputAdornment, IconButton, Divider, Alert, InputLabel, Stack, ToggleButton, ToggleButtonGroup, useTheme, useMediaQuery, keyframes, alpha } from '@mui/material';
-import { FormatQuote, LoginRounded, PeopleAltTwoTone, ReceiptLongTwoTone, AccountBalanceWalletTwoTone, BarChartTwoTone, PersonTwoTone, VisibilityOffTwoTone, VisibilityTwoTone, LockTwoTone, AdminPanelSettingsRounded } from '@mui/icons-material';
+import { Box, Grid, Card, TextField, Button, Typography, InputAdornment, IconButton, Divider, Alert, InputLabel, Stack, CircularProgress, useTheme, useMediaQuery, keyframes, alpha } from '@mui/material';
+import { FormatQuote, LoginRounded, ArrowBackRounded, PeopleAltTwoTone, ReceiptLongTwoTone, AccountBalanceWalletTwoTone, BarChartTwoTone, PersonTwoTone, VisibilityOffTwoTone, VisibilityTwoTone, LockTwoTone, AdminPanelSettingsRounded, GroupsTwoTone, ShieldRounded } from '@mui/icons-material';
 import { Formik, Form } from 'formik';
 import * as yup from 'yup';
 import { useLogin, usePartnerLogin } from '../../apis/authApi/AuthAPI';
@@ -324,8 +324,32 @@ const Login = () => {
 
                     <Box sx={{ width: '100%', maxWidth: 450, position: 'relative', zIndex: 1 }}>
 
+                        <Button
+                            startIcon={<ArrowBackRounded />}
+                            onClick={() => navigate('/')}
+                            sx={{ mb: 2, textTransform: 'none', color: 'text.secondary', fontWeight: 600 }}
+                        >
+                            Back to home
+                        </Button>
+
                         {/* Animated login header */}
-                        <Box sx={{ textAlign: 'center', mb: 2 }}>
+                        <Box sx={{ textAlign: 'center', mb: 3 }}>
+                            <Box
+                                sx={{
+                                    width: 72,
+                                    height: 72,
+                                    mx: 'auto',
+                                    mb: 2,
+                                    borderRadius: 2.5,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                                    boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.35)}`,
+                                }}
+                            >
+                                {isPartnerMode ? <GroupsTwoTone sx={{ fontSize: 40, color: '#fff' }} /> : <ShieldRounded sx={{ fontSize: 40, color: '#fff' }} />}
+                            </Box>
                             <Typography
                                 variant="h4"
                                 fontWeight="bold"
@@ -339,23 +363,25 @@ const Login = () => {
                                     animation: `${slideInRight} 0.8s ease-out`,
                                 }}
                             >
-                                Welcome to The Roomies
+                                {isPartnerMode ? 'Partner Sign In' : 'Admin Sign In'}
                             </Typography>
                             <Typography
                                 variant="body1"
                                 color="text.secondary"
                                 sx={{
-                                    fontSize: '1.1rem',
+                                    fontSize: '1rem',
                                     animation: `${slideInRight} 1s ease-out`,
                                 }}
                             >
-                                Sign in to manage your shared room expenses
+                                {isPartnerMode
+                                    ? 'Sign in with the email your admin set for you'
+                                    : 'Sign in to manage the room and its members'}
                             </Typography>
                         </Box>
 
                         {/* Animated Card */}
                         <Card sx={{
-                            p: { xs: 3, md: 5 },
+                            p: { xs: 3, md: 4 },
                             boxShadow: `0 10px 40px ${alpha(theme.palette.common.black, 0.08)}`,
                             borderRadius: 3,
                             border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
@@ -371,33 +397,6 @@ const Login = () => {
                             >
                                 {({ errors, touched, handleChange, handleBlur, values, isSubmitting, dirty }) => (
                                     <Form>
-                                        <ToggleButtonGroup
-                                            value={loginMode}
-                                            exclusive
-                                            size="small"
-                                            fullWidth
-                                            onChange={(e, val) => { if (val) setLoginMode(val); }}
-                                            sx={{
-                                                mb: 3,
-                                                '& .MuiToggleButton-root': {
-                                                    textTransform: 'none',
-                                                    fontSize: '0.85rem',
-                                                    fontWeight: 600,
-                                                    py: 0.75,
-                                                },
-                                            }}
-                                        >
-                                            <ToggleButton value="partner">
-                                                <PersonTwoTone fontSize="small" sx={{ mr: 1 }} />
-                                                Partner
-                                            </ToggleButton>
-                                            <ToggleButton value="user">
-                                                <AdminPanelSettingsRounded fontSize="small" sx={{ mr: 1 }} />
-                                                Admin / Staff
-                                            </ToggleButton>
-
-                                        </ToggleButtonGroup>
-
                                         <Grid container spacing={3}>
                                             <Grid size={{ xs: 12 }}>
                                                 <Stack spacing={1}>
@@ -425,9 +424,9 @@ const Login = () => {
                                                         }}
                                                         placeholder="Enter your email"
                                                         sx={{
-                                                            animation: `${slideInRight} 1.2s ease-out`,
                                                             '& .MuiOutlinedInput-root': {
                                                                 transition: 'all 0.3s ease',
+                                                                borderRadius: 2,
                                                                 '&:hover': {
                                                                     boxShadow: `0 0 0 2px ${theme.palette.primary.main}20`,
                                                                 },
@@ -473,9 +472,9 @@ const Login = () => {
                                                         }}
                                                         placeholder="Enter your password"
                                                         sx={{
-                                                            animation: `${slideInRight} 1.4s ease-out`,
                                                             '& .MuiOutlinedInput-root': {
                                                                 transition: 'all 0.3s ease',
+                                                                borderRadius: 2,
                                                                 '&:hover': {
                                                                     boxShadow: `0 0 0 2px ${theme.palette.primary.main}20`,
                                                                 },
@@ -483,6 +482,12 @@ const Login = () => {
                                                                     boxShadow: `0 0 0 3px ${theme.palette.primary.main}30`,
                                                                 },
                                                             },
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                document.getElementById('login-submit')?.click();
+                                                            }
                                                         }}
                                                     />
                                                 </Stack>
@@ -492,6 +497,7 @@ const Login = () => {
                                                 {errorMessage && (
                                                     <Alert
                                                         severity="error"
+                                                        onClose={() => setErrorMessage('')}
                                                         sx={{
                                                             mb: 2,
                                                             animation: `${fadeIn} 0.5s ease-out`,
@@ -502,26 +508,25 @@ const Login = () => {
                                                 )}
 
                                                 <Button
+                                                    id="login-submit"
                                                     type="submit"
                                                     fullWidth
                                                     variant="contained"
-                                                    size="medium"
+                                                    size="large"
                                                     disabled={isSubmitting || isPending || isPartnerPending || !dirty}
                                                     sx={{
                                                         py: 1.5,
-                                                        mb: 3,
+                                                        mb: 2,
                                                         borderRadius: 2,
                                                         textTransform: 'none',
-                                                        fontSize: '1.1rem',
+                                                        fontSize: '1.05rem',
                                                         fontWeight: 600,
                                                         background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
                                                         boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
                                                         transition: 'all 0.3s ease',
-                                                        animation: `${slideInRight} 1.6s ease-out`,
                                                         '&:hover': {
                                                             transform: 'translateY(-2px)',
                                                             boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.4)}`,
-                                                            animation: `${pulse} 0.5s ease-in-out`,
                                                         },
                                                         '&:disabled': {
                                                             background: theme.palette.action.disabledBackground,
@@ -529,27 +534,45 @@ const Login = () => {
                                                             boxShadow: 'none'
                                                         }
                                                     }}
-                                                    startIcon={<LoginRounded />}
+                                                    startIcon={!isSubmitting && !isPending && !isPartnerPending && <LoginRounded />}
                                                 >
-                                                    {(isSubmitting || isPending || isPartnerPending) ? 'Signing in...' : 'Sign in'}
+                                                    {(isSubmitting || isPending || isPartnerPending)
+                                                        ? <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}><CircularProgress size={20} color="inherit" /> Signing in...</Box>
+                                                        : 'Sign in'}
                                                 </Button>
                                             </Grid>
                                         </Grid>
 
-                                        <Divider sx={{ my: 3 }}>
+                                        <Divider sx={{ my: 2.5 }}>
                                             <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
                                                 Secure Access
                                             </Typography>
                                         </Divider>
 
-                                        {isPartnerMode && (
-                                            <Alert severity="info" sx={{ mb: 2, animation: `${fadeIn} 0.5s ease-out` }}>
-                                                Partners sign in with the email set by the admin. The default password is
-                                                the partner's phone number, and can be reset by the admin anytime.
-                                            </Alert>
-                                        )}
+                                        <Button
+                                            fullWidth
+                                            variant="outlined"
+                                            size="medium"
+                                            onClick={() => {
+                                                setErrorMessage('');
+                                                setLoginMode(isPartnerMode ? 'user' : 'partner');
+                                            }}
+                                            startIcon={isPartnerMode ? <AdminPanelSettingsRounded /> : <GroupsTwoTone />}
+                                            sx={{
+                                                mb: 2,
+                                                py: 1,
+                                                textTransform: 'none',
+                                                fontSize: '0.95rem',
+                                                fontWeight: 600,
+                                                borderRadius: 2,
+                                                color: 'text.secondary',
+                                                borderColor: alpha(theme.palette.divider, 0.6),
+                                            }}
+                                        >
+                                            {isPartnerMode ? 'Admin Login' : 'Partner Login'}
+                                        </Button>
 
-                                        <Box sx={{ mt: 4, textAlign: 'center' }}>
+                                        <Box sx={{ mt: 2, textAlign: 'center' }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 © {new Date().getFullYear()} <span style={{ color: theme.palette.primary.main, fontWeight: 600 }}>
                                                     The Roomies</span>. All rights reserved.

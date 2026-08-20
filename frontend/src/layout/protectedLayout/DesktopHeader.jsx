@@ -13,6 +13,7 @@ import {
 import { Tooltip, Box, IconButton, Chip } from '@mui/material';
 import dayjs from 'dayjs';
 import OptionsMenu from './Optionsmenu';
+import NotificationBell from './NotificationBell';
 import { useThemeMode } from '../../context/useThemeMode';
 import { convertToBSFormat } from '../../utils/dateConverter';
 import BreadcrumbsPath from './BreadcrumbsPath';
@@ -141,6 +142,7 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                             {mode === 'dark' ? <WbSunnyRounded sx={{ fontSize: 16 }} /> : <NightsStayRounded sx={{ fontSize: 16 }} />}
                         </IconButton>
                     </Tooltip>
+                    <NotificationBell />
                     <OptionsMenu />
                 </Stack>
             </Stack>

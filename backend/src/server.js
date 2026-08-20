@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import app from "./app.js";
 import { startAutoSettleJob } from "./services/autoSettle.service.js";
+import { startCleaningReminderJob } from "./services/cleaningReminder.service.js";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const startServer = async () => {
         await connectDB();
 
         startAutoSettleJob();
+        startCleaningReminderJob();
 
         const server = app.listen(PORT, () => {
             console.log(`Server running on PORT: ${PORT}`);

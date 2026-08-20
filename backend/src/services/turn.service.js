@@ -76,7 +76,7 @@ export const completeTurn = async ({ rotation, cycle, assignedPartner, broughtBy
     });
   } catch (error) {
     if (error?.code === 11000) {
-      throw new ApiError(409, "This partner has already fulfilled their water obligation for this cycle");
+      throw new ApiError(409, "This partner has already fulfilled their obligation for this cycle");
     }
     throw error;
   }

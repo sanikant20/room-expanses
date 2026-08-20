@@ -4,6 +4,7 @@ import { Partner } from "../models/partner.model.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { computeTurnState, completeTurn } from "../services/turn.service.js";
+import { notifyNextTurnPartner } from "../services/notification.service.js";
 import mongoose from "mongoose";
 
 const eventPopulates = () => [
@@ -17,7 +18,13 @@ const rotationPopulates = () => [
 
 const resolveType = (req, fallback = "water") => {
   const type = req?.query?.type || req?.body?.type || fallback;
-  return ["water", "rice"].includes(type) ? type : fallback;
+  return ["water", "rice", "cleaning"].includes(type) ? type : fallback;
+};
+
+const typeLabels = {
+  water: { noun: "water", rotation: "water rotation" },
+  rice: { noun: "rice", rotation: "rice rotation" },
+  cleaning: { noun: "cleaning", rotation: "cleaning rotation" },
 };
 
 const fetchActiveRotation = (type = "water") =>
@@ -235,9 +242,10 @@ export const updateTurn = asyncHandler(async (req, res) => {
 
 export const completeTurnAction = asyncHandler(async (req, res) => {
   const type = resolveType(req);
+  const labels = typeLabels[type] || typeLabels.water;
   const rotation = await fetchActiveRotation(type);
   if (!rotation) {
-    throw new ApiError(400, `No active ${type} turn rotation configured`);
+    throw new ApiError(400, `No active ${labels.rotation} configured`);
   }
 
   const state = computeTurnState({ rotation, events: await fetchEvents(rotation._id) });
@@ -262,7 +270,7 @@ export const completeTurnAction = asyncHandler(async (req, res) => {
 
   const memberIds = (rotation.partners || []).map((p) => String(p._id));
   if (!memberIds.includes(String(broughtByPartner))) {
-    throw new ApiError(403, "This partner is not part of the active water rotation");
+    throw new ApiError(403, `This partner is not part of the active ${labels.rotation}`);
   }
 
   const partnerRecord = await Partner.findById(broughtByPartner);
@@ -271,7 +279,7 @@ export const completeTurnAction = asyncHandler(async (req, res) => {
   }
 
   if (state.completed.some((p) => String(p._id) === String(broughtByPartner))) {
-    throw new ApiError(409, "This partner has already fulfilled their water obligation for this cycle");
+    throw new ApiError(409, `This partner has already fulfilled their ${labels.noun} obligation for this cycle`);
   }
 
   await completeTurn({
@@ -284,8 +292,15 @@ export const completeTurnAction = asyncHandler(async (req, res) => {
 
   const message =
     String(assignedPartner) === String(broughtByPartner)
-      ? "Water turn completed successfully"
-      : "Water brought for this turn recorded successfully";
+      ? `${labels.rotation} completed successfully`
+      : `${labels.noun[0].toUpperCase()}${labels.noun.slice(1)} brought for this turn recorded successfully`;
+
+  if (req.userType === "partner") {
+    const updatedEvents = await fetchEvents(rotation._id);
+    notifyNextTurnPartner({ type, rotation, events: updatedEvents }).catch((e) =>
+      console.error("[turn] next-partner notify failed:", e.message)
+    );
+  }
 
   return res.status(201).json({
     success: true,
