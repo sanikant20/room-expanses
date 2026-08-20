@@ -4,7 +4,7 @@ const turnRotationSchema = new Schema(
   {
     type: {
       type: String,
-      enum: ["water"],
+      enum: ["water", "rice"],
       required: true,
       default: "water",
     },

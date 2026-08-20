@@ -32,9 +32,9 @@ import { useGetPartners } from '../../../../apis/partnerAPI/PartnerAPI';
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 
-const TurnRotationForm = ({ mode, onClose }) => {
+const TurnRotationForm = ({ mode, type = 'water', onClose }) => {
     const queryClient = useQueryClient();
-    const { data: turn } = useGetTurnState();
+    const { data: turn } = useGetTurnState({ type });
     const { data: partners } = useGetPartners({ status: 'all' });
     const { mutate: createTurn, isPending: isCreating } = useCreateTurn();
     const { mutate: updateTurn, isPending: isUpdating } = useUpdateTurn();
@@ -62,8 +62,8 @@ const TurnRotationForm = ({ mode, onClose }) => {
             setSubmitting(false);
             if (response?.success) {
                 toast.success(response?.message);
-                queryClient.invalidateQueries({ queryKey: ['getTurnState'] });
-                queryClient.invalidateQueries({ queryKey: ['getTurnHistory'] });
+                queryClient.invalidateQueries({ queryKey: ['getTurnState', type] });
+                queryClient.invalidateQueries({ queryKey: ['getTurnHistory', type] });
                 onClose();
             } else {
                 toast.error(response?.message || 'Operation failed');
@@ -76,9 +76,9 @@ const TurnRotationForm = ({ mode, onClose }) => {
         };
 
         if (mode === 'edit' && turn?.rotation?._id) {
-            updateTurn({ id: turn.rotation._id, partners: values.partners }, { onSuccess, onError });
+            updateTurn({ id: turn.rotation._id, type, partners: values.partners }, { onSuccess, onError });
         } else {
-            createTurn({ partners: values.partners }, { onSuccess, onError });
+            createTurn({ type, partners: values.partners }, { onSuccess, onError });
         }
     };
 
@@ -177,7 +177,7 @@ const TurnRotationForm = ({ mode, onClose }) => {
 
                 <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: alpha('#1976d2', 0.06), border: '1px dashed' }}>
                     <Typography variant="caption" color="text.secondary">
-                        Partners are placed in turn order. The first active partner who has not yet brought water in the
+                        Partners are placed in turn order. The first active partner who has not yet fulfilled their turn in the
                         cycle is the current turn. Covering for an absent partner records the event but keeps the absent
                         partner pending.
                     </Typography>

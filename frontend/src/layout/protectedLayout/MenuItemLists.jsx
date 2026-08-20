@@ -36,7 +36,7 @@ export const MenuItemLists = [
         menu: 'Turn',
         translationKey: 'menu.turn',
         icon: <WaterDropRounded />,
-        route: '/turn/water',
+        route: '/turn',
     },
     {
         section: 'Insights',

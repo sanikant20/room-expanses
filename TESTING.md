@@ -13,13 +13,15 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/04 (BS)** — backend 99 tests, frontend 44 tests,
+Last verified green: **2083/05/05 (BS)** — backend 104 tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
-with the new `/api/turn` routes.
+with the `/api/turn` routes (water + rice). Landing page simplified (rotation queue
+removed; only current turn / next turn / recent shown) and public desktop menus
+removed from the header.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (99 tests, Node built-in runner)
+### Backend — `backend/tests/` (104 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -60,7 +62,7 @@ with the new `/api/turn` routes.
   - group controllers — name and at least one partner required, invalid `:id` rejected.
   - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
     at least one applicable partner.
-- `turn.test.js` (28 tests) — the water turn state machine, all with model mocks (no DB):
+- `turn.test.js` (33 tests) — the water turn state machine, all with model mocks (no DB):
   - `computeTurnState` — empty/inactive-partner handling; **fulfillment follows the
     bringer** (`broughtByPartner`), not the assigned partner; absent partner stays
     pending when covered; out-of-order completions follow completion order, not rotation
@@ -85,6 +87,9 @@ with the new `/api/turn` routes.
   `POST /turn/reset`) return **only `{ success, message }`** — no state data. The
   frontend refetches via query invalidation; state data is returned only by the GET
   endpoints (`GET /`, `GET /public`, `GET /history`).
+- `turn type handling` — resolves `rice` rotations via `?type=rice`; defaults to
+  `water`; unsupported types fall back to `water`; `createTurn` stores the requested
+  type; rice completion records correctly.
 - `routes.test.js` — also asserts the new `/api/turn` router exposes
   `GET /public` (no auth), `GET /`, `GET /history`, `POST /`, `PUT /:id`,
   `POST /complete`, `POST /reset`.
@@ -107,6 +112,8 @@ with the new `/api/turn` routes.
 - `turnFormat.test.js` — `getTurnPartnerStatus` (current/done/pending), `isCoveredEvent`
   (a different carrier vs self-completion), `formatTurnDateTime` (BS date + time via
   `convertToBSFormat`).
+- `turnTypeConfig` (not unit-tested; driven by `TurnView` via props) — per-type
+  labels/verbs/icons for water and rice.
 
 ## Water Turn feature (2083/05/04 BS)
 
@@ -129,11 +136,25 @@ A persistent turn/queue state machine (not an index rotation). Design decisions:
 - **Inactive partners** are excluded from turn selection but their historical events
   remain untouched.
 
-Frontend: Turn menu → `/turn/water` (single item, no children) renders `TurnTabs` with a
-single Water tab. The public landing page shows the live water turn via `GET /turn/public`
-(registered before `verifyJWT`). Admin-only "Mark Water Brought" select in the Admin Actions
-card records completion for any active, unfulfilled rotation partner; marking buttons show a
-spinner + "Marking..." while the request is in flight.
+## Turn types (rice, 2083/05/05 BS)
+
+The same state machine powers multiple turn types. The `TurnRotation.type` field is the
+key (`"water"` | `"rice"`); each type keeps its own independent active rotation, events,
+cycles, and history.
+
+- **API**: type is passed as a query param on GETs (`GET /turn?type=rice`,
+  `GET /turn/history?type=rice`, `GET /turn/public?type=rice`) and in the body on
+  mutations (`POST /turn` with `{ type, partners }`, `POST /turn/complete` with
+  `{ type, partnerId? }`). Unsupported types fall back to `"water"`. `POST /turn/reset`
+  is type-agnostic (resets by `eventId`).
+- **Frontend**: Turn menu → `/turn` renders `TurnTabs` with Water + Rice tabs, both
+  driving the same generalized `TurnView` component via a type config
+  (`frontend/src/utils/turnTypeConfig.jsx` — labels, verbs, icons, actions per type).
+  The public landing page shows **both** live turns side by side.
+- Admin-only "Mark X Brought" select in the Admin Actions card records completion for
+  any active, unfulfilled rotation partner of that type; marking buttons show a
+  spinner + "Marking..." while the request is in flight.
+- The public endpoints (`GET /turn/public?type=...`) are registered before `verifyJWT`.
 
 Known considerations (accepted, not changed):
 - A simultaneous double-click race can record an event against a stale cycle read; the
@@ -142,6 +163,31 @@ Known considerations (accepted, not changed):
 - `assignedPartner` for an out-of-order completion records the scheduled current turn
   (not the completing partner's own name) — intentional; the critical test outcome
   (order A→C→D→B, next cycle A) is preserved.
+
+## Landing page simplification & public header (2083/05/05 BS)
+
+- **Rotation queue card removed.** The landing page no longer lists the whole pending
+  rotation. Each type card now shows exactly three rows: **Current turn**, **Next
+  turn**, and **Recent** (last brought). The hero still shows the live badge, cycle
+  number, and Partner Login.
+- **Cycle-ending message.** When there is no next turn (`nextTurn` is null) and a
+  current turn exists, the Next turn row shows **"Cycle ending — this is the last
+  turn, the cycle will restart next"** instead of a bare `—`. Rendered via the
+  `TurnRow` `emptyText`/`sub` props in `frontend/src/pages/public/LandingPage.jsx`.
+- **Public desktop menus removed.** The desktop header
+  (`PublicDesktopHeader.jsx`) no longer renders the Home/Features/Product/Contact nav
+  — only the logo (left) and theme toggle + login (right) remain. `PublicMenuContent`
+  was trimmed to the mobile-only list rendering (the desktop `Stack`/Button branch was
+  deleted as dead code); `PublicMenuItems` is unchanged and still drives the mobile
+  drawer menu.
+
+## Bugs found & fixed (turn feature UI, 2083/05/04 BS)
+
+| # | Severity | Bug | Fix |
+|---|---|---|---|
+| 14 | High | Partner marking buttons passed the click event to `handleComplete` (`onClick={handleComplete}`), so the event object became a truthy `partnerId` and was serialized into the request body — the API call failed and nothing was marked. | Wrapped the handlers as `onClick={() => handleComplete()}` so no argument leaks through. |
+| 15 | Medium | `LiveTurnCard` on the landing page crashed with `TypeError: Cannot read properties of undefined (reading 'toLowerCase')` — inline configs lacked the `label` field. | Switch to `getTurnTypeConfig('water' | 'rice')` from the shared config so `label`/`title`/`noun`/icons are always present. |
+| 16 | Low | Mutation endpoints (`POST /turn`, `PUT /turn/:id`, `POST /turn/complete`, `POST /turn/reset`) returned full state data that the UI never used. | All mutations now return only `{ success, message }`; the frontend refetches via query invalidation. State data is returned only by GET endpoints. |
 
 ## Bugs found & fixed (settlement payment status, 2083/05/02 BS)
 
@@ -179,6 +225,15 @@ Known considerations (accepted, not changed):
 
 ## Debug / deployment notes
 
+- **Landing/header changes (2083/05/05 BS)**: desktop public header has no nav menu;
+  mobile drawer menu still uses `PublicMenuItems`. Landing page per-type card shows
+  Current / Next / Recent rows; Next shows a "Cycle ending" message when the current
+  turn is the last of the cycle.
+- **Turn UI debug (2083/05/04 BS)**: partner buttons must not pass the click event to
+  mutation handlers (see bug #14); mutation endpoints return only `{ success,
+  message }` so the backend dev server **must be restarted** after this change to see
+  it. Dev-tools `[Violation] 'setTimeout' handler took Xms` warnings come from
+  `react-toastify`/react-query internals, not app code.
 - `backend/.env` must set: `MONGODB_URI` (Atlas), `DB_NAME=room-expanses`, `ACCESS_TOKEN_SECRET`,
   `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` (= deployed frontend origin), `NODE_ENV=production`,
   `PORT`. Current values are **dev defaults**.

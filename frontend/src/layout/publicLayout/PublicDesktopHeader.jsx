@@ -15,7 +15,6 @@ import { WbSunnyRounded, NightsStayRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../../context/useThemeMode';
 import LoginModalButton from './LoginModalButton';
-import PublicMenuContent from './PublicMenuContent';
 
 const LogoImage = styled('img')(({ theme }) => ({
     width: 40,
@@ -108,9 +107,6 @@ const PublicDesktopHeader = () => {
                             The Roomies
                         </Typography>
                     </Box>
-
-                    {/* Center - Navigation Links */}
-                    <PublicMenuContent />
 
                     {/* Right side - Theme Toggle & Login */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

@@ -7,7 +7,6 @@ import {
     CircularProgress,
     Divider,
     Grid,
-    InputLabel,
     List,
     ListItem,
     ListItemAvatar,
@@ -21,11 +20,8 @@ import {
 } from '@mui/material';
 import {
     CheckCircleRounded,
-    LocalDrinkRounded,
     PendingRounded,
-    ReplayRounded,
     VerifiedRounded,
-    WaterDropRounded,
 } from '@mui/icons-material';
 import CustomCard from '../../../../components/custom/CustomCard';
 import CustomModal from '../../../../components/custom/CustomModal';
@@ -38,6 +34,7 @@ import {
 } from '../../../../apis/turnAPI/TurnAPI';
 import { isPartnerAccount } from '../../../../helper/getAuthData';
 import { getTurnPartnerStatus } from '../../../../utils/turnFormat';
+import { getTurnTypeConfig } from '../../../../utils/turnTypeConfig';
 import TurnRotationForm from './TurnRotationForm';
 import TurnHistory from './TurnHistory';
 
@@ -51,15 +48,17 @@ const PartnerAvatar = ({ partner, size = 48 }) => (
     </Avatar>
 );
 
-const WaterTurn = () => {
+const TurnView = ({ type = 'water' }) => {
     const theme = useTheme();
     const queryClient = useQueryClient();
     const isPartner = isPartnerAccount();
+    const config = getTurnTypeConfig(type);
+    const TypeIcon = config.icon;
 
     const modal = useModalState();
     const historyModal = useModalState();
 
-    const { data: turn } = useGetTurnState();
+    const { data: turn } = useGetTurnState({ type });
     const { mutate: completeTurn, isPending: isCompleting } = useCompleteTurn();
     const [adminPartnerId, setAdminPartnerId] = useState('');
 
@@ -72,13 +71,13 @@ const WaterTurn = () => {
 
     const handleComplete = (partnerId) => {
         completeTurn(
-            partnerId ? { partnerId } : {},
+            { type, ...(partnerId ? { partnerId } : {}) },
             {
                 onSuccess: (response) => {
                     toast.success(response?.message);
                     setAdminPartnerId('');
-                    queryClient.invalidateQueries({ queryKey: ['getTurnState'] });
-                    queryClient.invalidateQueries({ queryKey: ['getTurnHistory'] });
+                    queryClient.invalidateQueries({ queryKey: ['getTurnState', type] });
+                    queryClient.invalidateQueries({ queryKey: ['getTurnHistory', type] });
                 },
                 onError: (error) => {
                     toast.error(error?.response?.data?.message || 'Something went wrong');
@@ -92,15 +91,15 @@ const WaterTurn = () => {
     const renderCurrentTurnCard = () => {
         if (!configured) {
             return (
-                <CustomCard icon={<WaterDropRounded />} title="Water Turn">
+                <CustomCard icon={config.cardIcon} title={config.title}>
                     <Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
-                        <LocalDrinkRounded sx={{ fontSize: 56, color: 'text.disabled' }} />
+                        <TypeIcon sx={{ fontSize: 56, color: 'text.disabled' }} />
                         <Typography color="text.secondary">
-                            No water turn rotation configured yet.
+                            No {config.label.toLowerCase()} turn rotation configured yet.
                         </Typography>
                         {!isPartner && (
                             <Button variant="contained" size="small" onClick={modal.openAdd}>
-                                Configure Water Turn
+                                Configure {config.title}
                             </Button>
                         )}
                     </Stack>
@@ -110,9 +109,9 @@ const WaterTurn = () => {
 
         return (
             <CustomCard
-                icon={<WaterDropRounded />}
-                title={`Water Turn — Cycle ${cycle}`}
-                subtitle={`Current turn keeps track of whose water obligation is due next.`}
+                icon={config.cardIcon}
+                title={`${config.title} — Cycle ${cycle}`}
+                subtitle={`Current turn keeps track of whose ${config.noun} obligation is due next.`}
                 headerInline
                 extra={
                     <>
@@ -129,7 +128,7 @@ const WaterTurn = () => {
                                 onClick={() => handleComplete()}
                                 disabled={isCompleting}
                             >
-                                {isCompleting ? 'Marking...' : 'I Brought Water'}
+                                {isCompleting ? 'Marking...' : config.action}
                             </Button>
                         )}
                     </>
@@ -155,7 +154,7 @@ const WaterTurn = () => {
                             {currentTurn && (
                                 <Chip
                                     icon={<VerifiedRounded />}
-                                    label="Water due"
+                                    label={config.due}
                                     color="primary"
                                     size="small"
                                     sx={{ fontWeight: 600 }}
@@ -167,7 +166,7 @@ const WaterTurn = () => {
                                 <Stack direction="row" spacing={1.5} alignItems="center">
                                     <CheckCircleRounded color="success" fontSize="small" />
                                     <Typography variant="body2">
-                                        You have already fulfilled your water obligation for this cycle. Nice work!
+                                        You have already fulfilled your {config.noun} obligation for this cycle. Nice work!
                                     </Typography>
                                 </Stack>
                             </Box>
@@ -175,22 +174,22 @@ const WaterTurn = () => {
                         {isPartner && currentTurn && myStatus && !myStatus.fulfilled && (
                             <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.08), border: `1px solid ${alpha(theme.palette.info.main, 0.25)}` }}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                    <LocalDrinkRounded color="info" fontSize="small" />
+                                    <TypeIcon color="info" fontSize="small" />
                                     <Typography variant="body2">
                                         {myStatus.isCurrentTurn
-                                            ? `It is your turn to bring water. Tap "I Brought Water" when done.`
-                                            : `The current turn is ${currentTurn?.name || 'a partner'}. You can bring water for this turn — it fulfills your own obligation and the current turn stays due.`}
+                                            ? `It is your turn to bring ${config.noun}. Tap "${config.action}" when done.`
+                                            : `The current turn is ${currentTurn?.name || 'a partner'}. You can bring ${config.noun} for this turn — it fulfills your own obligation and the current turn stays due.`}
                                     </Typography>
                                 </Stack>
                                 <Button
                                     variant="outlined"
                                     size="small"
-                                    startIcon={isCompleting ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <LocalDrinkRounded />}
+                                    startIcon={isCompleting ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : config.actionIcon}
                                     onClick={() => handleComplete()}
                                     disabled={isCompleting}
                                     sx={{ mt: 1 }}
                                 >
-                                    {isCompleting ? 'Marking...' : 'I Brought Water For This Turn'}
+                                    {isCompleting ? 'Marking...' : config.coverAction}
                                 </Button>
                             </Box>
                         )}
@@ -262,7 +261,7 @@ const WaterTurn = () => {
                         </Stack>
                     ) : (
                         <Typography variant="body2" color="text.secondary">
-                            You are not part of the active water rotation.
+                            You are not part of the active {config.label.toLowerCase()} rotation.
                         </Typography>
                     )}
                 </Stack>
@@ -278,10 +277,10 @@ const WaterTurn = () => {
             (p) => p.status === 'active' && !completedIds.includes(String(p._id))
         );
         return (
-            <CustomCard icon={<LocalDrinkRounded />} title="Admin Actions" subtitle="Configure, manage, and record water turns.">
+            <CustomCard icon={config.actionIcon} title="Admin Actions" subtitle={`Configure, manage, and record ${config.label.toLowerCase()} turns.`}>
                 <Stack spacing={1.5}>
-                    <Button variant="contained" size="small" startIcon={<WaterDropRounded />} onClick={modal.openEdit}>
-                        {configured ? 'Edit Rotation' : 'Configure Water Turn'}
+                    <Button variant="contained" size="small" startIcon={config.cardIcon} onClick={modal.openEdit}>
+                        {configured ? 'Edit Rotation' : `Configure ${config.title}`}
                     </Button>
                     <Button variant="outlined" size="small" onClick={historyModal.openView}>
                         View Turn History
@@ -298,11 +297,10 @@ const WaterTurn = () => {
                             }}
                         >
                             <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                                Mark Water Brought
+                                {config.mark}
                             </Typography>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                                Record that a partner brought water. This fulfills that partner's obligation for the
-                                cycle. Use it only when they genuinely brought the water.
+                                {config.markDesc}
                             </Typography>
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                 <TextField
@@ -365,15 +363,15 @@ const WaterTurn = () => {
                 </Grid>
             </Grid>
 
-            <CustomModal open={modal.open} onClose={modal.close} title={modal.mode === 'edit' ? 'Manage Water Rotation' : 'Configure Water Turn'} width={720}>
-                <TurnRotationForm mode={modal.mode} onClose={modal.close} />
+            <CustomModal open={modal.open} onClose={modal.close} title={modal.mode === 'edit' ? `Manage ${config.title} Rotation` : `Configure ${config.title}`} width={720}>
+                <TurnRotationForm mode={modal.mode} type={type} onClose={modal.close} />
             </CustomModal>
 
-            <CustomModal open={historyModal.open} onClose={historyModal.close} title="Water Turn History" width={720}>
-                <TurnHistory />
+            <CustomModal open={historyModal.open} onClose={historyModal.close} title={config.historyTitle} width={720}>
+                <TurnHistory type={type} />
             </CustomModal>
         </Stack>
     );
 };
 
-export default WaterTurn;
+export default TurnView;

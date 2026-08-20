@@ -21,13 +21,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGetTurnHistory, useResetTurnEvent } from '../../../../apis/turnAPI/TurnAPI';
 import { isPartnerAccount } from '../../../../helper/getAuthData';
 import { formatTurnDateTime, isCoveredEvent } from '../../../../utils/turnFormat';
+import { getTurnTypeConfig } from '../../../../utils/turnTypeConfig';
 
-const TurnHistory = () => {
+const TurnHistory = ({ type = 'water' }) => {
     const theme = useTheme();
     const queryClient = useQueryClient();
     const isPartner = isPartnerAccount();
+    const config = getTurnTypeConfig(type);
 
-    const { data: history, isLoading } = useGetTurnHistory();
+    const { data: history, isLoading } = useGetTurnHistory({ type });
     const { mutate: resetEvent, isPending: isResetting } = useResetTurnEvent();
 
     const cycles = history?.cycles || [];
@@ -38,8 +40,8 @@ const TurnHistory = () => {
             {
                 onSuccess: (response) => {
                     toast.success(response?.message);
-                    queryClient.invalidateQueries({ queryKey: ['getTurnState'] });
-                    queryClient.invalidateQueries({ queryKey: ['getTurnHistory'] });
+                    queryClient.invalidateQueries({ queryKey: ['getTurnState', type] });
+                    queryClient.invalidateQueries({ queryKey: ['getTurnHistory', type] });
                 },
                 onError: (error) => {
                     toast.error(error?.response?.data?.message || 'Something went wrong');
@@ -94,7 +96,7 @@ const TurnHistory = () => {
                                         primary={
                                             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                                                 <Typography variant="body2" fontWeight={600}>{event.broughtByPartner?.name || '—'}</Typography>
-                                                <Chip label="Brought water" color="success" size="small" variant="outlined" />
+                                                <Chip label={config.verb} color="success" size="small" variant="outlined" />
                                             </Stack>
                                         }
                                         secondary={

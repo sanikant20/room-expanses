@@ -15,7 +15,12 @@ const rotationPopulates = () => [
   { path: "partners", select: "name image status" },
 ];
 
-const fetchActiveRotation = async (type = "water") =>
+const resolveType = (req, fallback = "water") => {
+  const type = req?.query?.type || req?.body?.type || fallback;
+  return ["water", "rice"].includes(type) ? type : fallback;
+};
+
+const fetchActiveRotation = (type = "water") =>
   TurnRotation.findOne({ type, status: "active" }).populate(rotationPopulates());
 
 const fetchEvents = (rotationId) =>
@@ -70,7 +75,8 @@ const buildStateResponse = (rotation, events, requesterId = null, requesterType 
 };
 
 export const getTurnState = asyncHandler(async (req, res) => {
-  const rotation = await fetchActiveRotation();
+  const type = resolveType(req);
+  const rotation = await fetchActiveRotation(type);
   if (!rotation) {
     return res.status(200).json({
       success: true,
@@ -87,8 +93,9 @@ export const getTurnState = asyncHandler(async (req, res) => {
   });
 });
 
-export const getPublicTurnState = asyncHandler(async (_req, res) => {
-  const rotation = await fetchActiveRotation();
+export const getPublicTurnState = asyncHandler(async (req, res) => {
+  const type = resolveType(req);
+  const rotation = await fetchActiveRotation(type);
   if (!rotation) {
     return res.status(200).json({
       success: true,
@@ -106,7 +113,8 @@ export const getPublicTurnState = asyncHandler(async (_req, res) => {
 });
 
 export const getTurnHistory = asyncHandler(async (req, res) => {
-  const rotation = await fetchActiveRotation();
+  const type = resolveType(req);
+  const rotation = await fetchActiveRotation(type);
   if (!rotation) {
     return res.status(200).json({ success: true, message: "No turn history", cycles: [] });
   }
@@ -134,7 +142,8 @@ export const getTurnHistory = asyncHandler(async (req, res) => {
 });
 
 export const createTurn = asyncHandler(async (req, res) => {
-  const { type = "water", partners = [] } = req.body;
+  const type = resolveType(req);
+  const { partners = [] } = req.body;
 
   if (!Array.isArray(partners) || partners.length === 0) {
     throw new ApiError(400, "At least one partner is required");
@@ -225,9 +234,10 @@ export const updateTurn = asyncHandler(async (req, res) => {
 });
 
 export const completeTurnAction = asyncHandler(async (req, res) => {
-  const rotation = await fetchActiveRotation();
+  const type = resolveType(req);
+  const rotation = await fetchActiveRotation(type);
   if (!rotation) {
-    throw new ApiError(400, "No active water turn rotation configured");
+    throw new ApiError(400, `No active ${type} turn rotation configured`);
   }
 
   const state = computeTurnState({ rotation, events: await fetchEvents(rotation._id) });
