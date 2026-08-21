@@ -13,13 +13,13 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/06 (BS)** — backend **118** tests, frontend 44 tests,
+Last verified green: **2083/05/06 (BS)** — backend **121** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
 with the `/api/turn` routes (water + rice + cleaning) and `/api/notifications`.
 
 ## Test inventory
 
-### Backend — `backend/tests/` (118 tests, Node built-in runner)
+### Backend — `backend/tests/` (121 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -220,6 +220,32 @@ Known considerations (accepted, not changed):
   Saturday; if the current partner changed since the last Saturday (e.g. nobody marked
   it), the new current partner gets the reminder.
 
+## Cloudinary image storage (2083/05/07 BS)
+
+Partner profile images are uploaded to **Cloudinary** (free tier: 25 GB storage, 25K
+transformations/mo) under the `we-roomies` folder. Only the Cloudinary URL is stored in
+MongoDB — no base64 in the database.
+
+- **Backend flow**: partner create/update routes accept `multipart/form-data` via multer
+  (memory storage, 500 KB limit, images only). The controller uploads the buffer to
+  Cloudinary (`uploadBuffer`), which returns a secure URL. The URL is stored in the
+  partner's `image` field. Old images are deleted from Cloudinary on update/delete
+  (`deleteImage` — best-effort, never throws).
+- **Cloudinary config** (`config/cloudinary.js`): uses `CLOUDINARY_CLOUD_NAME`,
+  `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` env vars. If missing, image uploads are
+  silently skipped and the existing URL (or null) is kept.
+- **Frontend flow**: `CustomFileUpload` passes the raw `File` object to the parent via
+  `onFileSelect`. `PartnerForm` stores it in `imageFile` state; on submit, if a file is
+  selected, a `FormData` is built and sent as multipart (multer parses it on the backend).
+  If no file is selected, the existing URL string is sent as JSON (backward-compatible).
+- **Migration**: `scripts/migrate-images.js` uploads existing base64 images to Cloudinary
+  and replaces the stored value with the URL. Run once: `node scripts/migrate-images.js`.
+- **Display**: all `<Avatar src>` and `<img src>` usages already work with URLs — no
+  frontend display changes needed. The `noAvatar.svg` fallback is used when `image` is
+  null/undefined.
+- `.env.example` / `.env.production.example` document `CLOUDINARY_CLOUD_NAME`,
+  `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
+
 ## Landing page simplification & public header (2083/05/05 BS)
 
 - **Rotation queue card removed.** The landing page no longer lists the whole pending
@@ -293,7 +319,8 @@ Known considerations (accepted, not changed):
   `react-toastify`/react-query internals, not app code.
 - `backend/.env` must set: `MONGODB_URI` (Atlas), `DB_NAME=room-expanses`, `ACCESS_TOKEN_SECRET`,
   `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` (= deployed frontend origin), `NODE_ENV=production`,
-  `PORT`. Current values are **dev defaults**.
+  `PORT`. Current values are **dev defaults**. Optional: `CLOUDINARY_CLOUD_NAME`,
+  `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` for avatar uploads.
 - **Email notifications (2083/05/06 BS)**: optional. Set `RESEND_API_KEY` for
   best-effort email via Resend's free tier (REST API, no npm dep). Without it, email is
   skipped silently and only in-app notifications (the header bell) are delivered.
@@ -301,6 +328,10 @@ Known considerations (accepted, not changed):
   `RESEND_DOMAIN`, else the default `onboarding@resend.dev` (which can only deliver to
   your own account email until a domain is added). Partner emails are only ever
   recipients (`to`) — never the sender.
+- **Cloudinary image storage (2083/05/07 BS)**: optional. Set `CLOUDINARY_CLOUD_NAME`,
+  `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` for avatar uploads. Without them, image
+  uploads are silently skipped. Old base64 images can be migrated via
+  `node scripts/migrate-images.js`.
 - **Cleaning reminder (2083/05/06 BS)**: cron `0 6 * * 6` Asia/Kathmandu (node-cron) plus
   a startup catch-up that only fires on a Kathmandu Saturday. Dedup via the
   `cleaning-saturday-<date>` refKey (unique sparse index), so restarts can't duplicate.

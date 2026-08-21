@@ -27,6 +27,7 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
     const queryClient = useQueryClient();
     const isPartner = isPartnerAccount();
     const [showPassword, setShowPassword] = useState(false);
+    const [imageFile, setImageFile] = useState(null);
 
     const { mutate: createPartner, isPending: isCreating } = useCreatePartner();
     const { mutate: updatePartner, isPending: isUpdating } = useUpdatePartner();
@@ -73,9 +74,15 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
             toast.error(error?.response?.data?.message || 'Something went wrong');
         };
 
-        const payload = {
-            ...values,
-        };
+        const payload = imageFile ? (() => {
+            const fd = new FormData();
+            fd.append('image', imageFile);
+            Object.entries(values).forEach(([key, val]) => {
+                if (key === 'image') return;
+                if (val !== undefined && val !== null) fd.append(key, val);
+            });
+            return fd;
+        })() : { ...values };
 
         if (mode === 'edit') {
             updatePartner({ id: selectedData?._id, values: payload }, { onSuccess, onError });
@@ -117,6 +124,7 @@ const PartnerForm = ({ selectedData, mode, onClose }) => {
                                 label="Profile Image"
                                 value={values.image}
                                 onChange={(val) => setFieldValue('image', val)}
+                                onFileSelect={setImageFile}
                                 onBlur={handleBlur}
                                 compact
                                 maxSize={500 * 1024}

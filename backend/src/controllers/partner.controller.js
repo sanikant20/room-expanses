@@ -3,12 +3,23 @@ import { Expense } from "../models/expense.model.js";
 import { Group } from "../models/group.model.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { uploadBuffer, deleteImage } from "../services/upload.service.js";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const hashPassword = async (password) => bcrypt.hash(password, 10);
+
+/**
+ * Upload image buffer to Cloudinary and return the URL.
+ * If no file or Cloudinary is down, returns the existing image (or null).
+ */
+const resolveImageUrl = async (file, existingImage = null) => {
+  if (!file) return existingImage;
+  const url = await uploadBuffer(file.buffer, `partner-${Date.now()}`);
+  return url || existingImage;
+};
 
 export const createPartner = asyncHandler(async (req, res) => {
   const { name, phone, email, image, bsJoiningDate, notes, password } = req.body;
@@ -22,11 +33,13 @@ export const createPartner = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Phone number or password is required to set a partner login");
   }
 
+  const imageUrl = await resolveImageUrl(req.file, image || null);
+
   await Partner.create({
     name,
     phone,
     email,
-    image,
+    image: imageUrl,
     bsJoiningDate,
     status: "active",
     notes,
@@ -77,11 +90,16 @@ export const updatePartner = asyncHandler(async (req, res) => {
 
   const { name, phone, email, image, bsJoiningDate, status, notes, password } = req.body;
 
+  const existing = await Partner.findById(id);
+  if (!existing) throw new ApiError(404, "Partner not found");
+
+  const imageUrl = await resolveImageUrl(req.file, image || existing.image);
+
   const update = {
     name,
     phone,
     email,
-    image,
+    image: imageUrl,
     bsJoiningDate,
     status,
     notes,
@@ -91,13 +109,11 @@ export const updatePartner = asyncHandler(async (req, res) => {
     update.password = await hashPassword(password);
   }
 
-  const partner = await Partner.findByIdAndUpdate(
-    id,
-    update,
-    { runValidators: true }
-  );
+  await Partner.findByIdAndUpdate(id, update, { runValidators: true });
 
-  if (!partner) throw new ApiError(404, "Partner not found");
+  if (req.file && existing.image && existing.image !== imageUrl) {
+    deleteImage(existing.image);
+  }
 
   return res.status(200).json({
     success: true,
@@ -124,6 +140,10 @@ export const deletePartner = asyncHandler(async (req, res) => {
 
   const partner = await Partner.findByIdAndDelete(id);
   if (!partner) throw new ApiError(404, "Partner not found");
+
+  if (partner.image) {
+    deleteImage(partner.image);
+  }
 
   return res.status(200).json({
     success: true,

@@ -31,6 +31,7 @@ const CustomFileUpload = ({
     name,
     value,
     onChange,
+    onFileSelect,
     accept = 'image/*',
     maxSize = 500 * 1024,
     label,
@@ -84,6 +85,10 @@ const CustomFileUpload = ({
         setFileName(file.name);
         setFileType(isPdf ? 'PDF' : getFileExtension(file.name));
 
+        if (onFileSelect) {
+            onFileSelect(file);
+        }
+
         const reader = new FileReader();
         reader.onload = (e) => {
             onChange(e.target.result);
@@ -120,6 +125,7 @@ const CustomFileUpload = ({
 
     const handleRemove = () => {
         onChange('');
+        if (onFileSelect) onFileSelect(null);
         setFileName('');
         setFileType('');
         if (fileInputRef.current) {
