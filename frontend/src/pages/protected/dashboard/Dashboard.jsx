@@ -220,8 +220,8 @@ const Dashboard = () => {
         },
     ];
 
-    const highestPayer = data?.highestPayer;
-    const lowestPayer = data?.lowestPayer;
+    const highestPayers = data?.highestPayers || [];
+    const lowestPayers = data?.lowestPayers || [];
 
     return (
         <Box sx={{ width: '100%' }}>
@@ -320,13 +320,19 @@ const Dashboard = () => {
                             </Stack>
                             {isLoading ? (
                                 <Skeleton height={40} />
-                            ) : highestPayer?.partner ? (
-                                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Box>
-                                        <Typography variant="body1" fontWeight={600}>{highestPayer.partner?.name}</Typography>
-                                        <Typography variant="caption" color="text.secondary">Paid the most this month</Typography>
-                                    </Box>
-                                    <Chip label={formatToNepaliCurrency(highestPayer.paid)} color="success" />
+                            ) : highestPayers.length > 0 ? (
+                                <Stack spacing={1.25}>
+                                    {highestPayers.map((row) => (
+                                        <Stack key={String(row.partner?._id)} direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Box>
+                                                <Typography variant="body1" fontWeight={600}>{row.partner?.name}</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {highestPayers.length > 1 ? 'Tied for most paid this month' : 'Paid the most this month'}
+                                                </Typography>
+                                            </Box>
+                                            <Chip label={formatToNepaliCurrency(row.paid)} color="success" size={highestPayers.length > 1 ? 'small' : 'medium'} />
+                                        </Stack>
+                                    ))}
                                 </Stack>
                             ) : (
                                 <Typography variant="body2" color="text.secondary">No expenses recorded for this month.</Typography>
@@ -343,16 +349,22 @@ const Dashboard = () => {
                             </Stack>
                             {isLoading ? (
                                 <Skeleton height={40} />
-                            ) : lowestPayer?.partner ? (
-                                <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Box>
-                                        <Typography variant="body1" fontWeight={600}>{lowestPayer.partner?.name}</Typography>
-                                        <Typography variant="caption" color="text.secondary">Paid the least this month</Typography>
-                                    </Box>
-                                    <Chip label={formatToNepaliCurrency(lowestPayer.paid)} color="warning" />
+                            ) : lowestPayers.length > 0 ? (
+                                <Stack spacing={1.25}>
+                                    {lowestPayers.map((row) => (
+                                        <Stack key={String(row.partner?._id)} direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Box>
+                                                <Typography variant="body1" fontWeight={600}>{row.partner?.name}</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {lowestPayers.length > 1 ? 'Tied for least paid this month' : 'Paid the least this month'}
+                                                </Typography>
+                                            </Box>
+                                            <Chip label={formatToNepaliCurrency(row.paid)} color="warning" size={lowestPayers.length > 1 ? 'small' : 'medium'} />
+                                        </Stack>
+                                    ))}
                                 </Stack>
                             ) : (
-                                <Typography variant="body2" color="text.secondary">No expenses recorded for this month.</Typography>
+                                <Typography variant="body2" color="text.secondary">No partners to compare.</Typography>
                             )}
                         </CardContent>
                     </Card>

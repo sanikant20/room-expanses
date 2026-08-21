@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../../context/themeModeContext';
 import LoginModalButton from './LoginModalButton';
 import PublicMenuContent from './PublicMenuContent';
+import HealthStatus from '../../components/HealthStatus';
 
 const LogoImage = styled('img')(({ theme }) => ({
     width: 40,
@@ -126,6 +127,9 @@ const PublicMobileHeader = ({ mobileMenuOpen, onMenuClose }) => {
 
                     {/* Right side */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {/* Server status (dot only) */}
+                        <HealthStatus compact />
+
                         {/* Theme Toggle */}
                         <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>
                             <IconButton

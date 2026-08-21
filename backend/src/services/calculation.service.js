@@ -166,16 +166,21 @@ export const computePayerTotals = (expenses, partners) => {
   return rows;
 };
 
-export const findHighestPayer = (payerTotals) => {
+// All partners tied for the most paid (only partners who actually paid something).
+export const findHighestPayers = (payerTotals) => {
   const payers = (payerTotals || []).filter((row) => (row.paid || 0) > 0);
-  if (payers.length === 0) return null;
-  return payers.reduce((a, b) => (b.paid > a.paid ? b : a));
+  if (payers.length === 0) return [];
+  const max = Math.max(...payers.map((row) => row.paid));
+  return payers.filter((row) => row.paid === max);
 };
 
-export const findLowestPayer = (payerTotals) => {
-  const payers = (payerTotals || []).filter((row) => (row.paid || 0) > 0);
-  if (payers.length === 0) return null;
-  return payers.reduce((a, b) => (b.paid < a.paid ? b : a));
+// All partners tied for the least paid — partners with 0 are included,
+// so someone who paid nothing can be the lowest payer.
+export const findLowestPayers = (payerTotals) => {
+  const payers = payerTotals || [];
+  if (payers.length === 0) return [];
+  const min = Math.min(...payers.map((row) => row.paid || 0));
+  return payers.filter((row) => (row.paid || 0) === min);
 };
 
 export const computeTransactions = (rows) => {  const debtors = rows

@@ -8,8 +8,8 @@ import {
   computePartnerSummaries,
   computePayerTotals,
   computeSummary,
-  findHighestPayer,
-  findLowestPayer,
+  findHighestPayers,
+  findLowestPayers,
   subtractBsMonths,
 } from "../services/calculation.service.js";
 
@@ -86,8 +86,8 @@ export const getSummary = asyncHandler(async (req, res) => {
       { name: "Primary", value: summary.primaryTotal },
       { name: "Secondary", value: summary.secondaryTotal },
     ],
-    highestPayer: findHighestPayer(payerTotals),
-    lowestPayer: findLowestPayer(payerTotals),
+    highestPayers: findHighestPayers(payerTotals),
+    lowestPayers: findLowestPayers(payerTotals),
     monthlyTrend,
     settlementStatus,
   });

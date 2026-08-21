@@ -7,6 +7,7 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { keyframes } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import {
     SettingsRounded,
@@ -18,6 +19,26 @@ import {
 } from '@mui/icons-material';
 import { Avatar, Badge, Tooltip, useMediaQuery } from '@mui/material';
 import { useAuthData } from '../../context/authContext';
+import { useGetHealthStatus } from '../../apis/healthApi/HealthAPI';
+
+const pulse = keyframes`
+    0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+    70% { box-shadow: 0 0 0 6px transparent; opacity: 0.85; }
+    100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+`;
+
+const HealthBadge = styled(Badge)(({ theme }) => ({
+    '& .MuiBadge-dot': {
+        width: 12,
+        height: 12,
+        borderRadius: '50%',
+        border: '2px solid white',
+        [theme.breakpoints.down('md')]: {
+            width: 10,
+            height: 10,
+        },
+    },
+}));
 
 // Styled Components with responsive adjustments
 const MenuItem = styled(MuiMenuItem)(({ theme }) => ({
@@ -123,6 +144,19 @@ export default function OptionsMenu() {
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const authData = useAuthData();
+    const { data: health, isPending: healthLoading, isError: healthError } = useGetHealthStatus();
+
+    const healthOk = !healthLoading && !healthError && health?.status === 'ok';
+    const healthColor = healthLoading
+        ? theme.palette.grey[500]
+        : healthOk
+            ? theme.palette.success.main
+            : theme.palette.error.main;
+    const healthText = healthLoading
+        ? 'Checking server…'
+        : healthOk
+            ? 'Server connected'
+            : 'Server unreachable';
 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -177,22 +211,25 @@ export default function OptionsMenu() {
 
     return (
         <React.Fragment>
-            <Tooltip title="User Profile" arrow>
-                <Badge
+            <Tooltip
+                title={
+                    <>
+                        <strong>{healthText}</strong>
+                        <br />
+                        Click for profile options
+                    </>
+                }
+                arrow
+            >
+                <HealthBadge
                     overlap="circular"
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                     variant="dot"
-                    color="success"
                     sx={{
                         '& .MuiBadge-dot': {
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            border: '2px solid white',
-                            [theme.breakpoints.down('md')]: {
-                                width: 10,
-                                height: 10,
-                            },
+                            backgroundColor: healthColor,
+                            color: healthColor,
+                            ...(healthOk && { animation: `${pulse} 2s ease-out infinite` }),
                         },
                     }}
                 >
@@ -203,7 +240,7 @@ export default function OptionsMenu() {
                     >
                         {userData.name.split(' ').map(n => n[0]).join('')}
                     </UserAvatar>
-                </Badge>
+                </HealthBadge>
             </Tooltip>
 
             {/* MAIN MENU */}

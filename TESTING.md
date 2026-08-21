@@ -13,14 +13,16 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/07 (BS)** — backend **121** tests, frontend 44 tests,
+Last verified green: **2083/05/06 (BS)** — backend **124** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
-with the `/api/turn` routes (water + rice + cleaning) and `/api/notifications`.
-Both admin and partner login flows verified working with cookie-based auth.
+with the `/api/turn` routes (water + rice + cleaning), `/api/notifications`,
+`GET /api/health`, and `PUT /api/auth/profile`.
+Both admin and partner login flows verified working with API-driven cookie auth.
+Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np`).
 
 ## Test inventory
 
-### Backend — `backend/tests/` (121 tests, Node built-in runner)
+### Backend — `backend/tests/` (124 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -29,7 +31,10 @@ Both admin and partner login flows verified working with cookie-based auth.
   - `computePartnerSummaries` per-partner totals reconcile with the grand total.
   - `aggregateMonthlyTrend` buckets by BS year/month, sorts chronologically.
   - `subtractBsMonths` rolls over year boundaries (2082/01 − 1 = 2081/12).
-  - `computePayerTotals` / `findHighestPayer` / `findLowestPayer` — payer-based dashboard math.
+  - `computePayerTotals` / `findHighestPayers` / `findLowestPayers` — payer-based
+    dashboard math; both helpers are **tie-aware** (return every tied partner) and
+    `findLowestPayers` includes zero-paid partners (someone who paid nothing can be
+    the lowest payer); highest ignores zero payers and returns `[]` when nobody paid.
 - `routes.test.js` — boots the Express app on an ephemeral port, asserts all core
   routes exist (incl. auth `POST /refresh`, `POST /logout`, settlement `POST /pay`,
   `POST /confirm`, `POST /reset`) and that `POST /register` is **not** exposed.
@@ -52,12 +57,13 @@ Both admin and partner login flows verified working with cookie-based auth.
   - Guard coverage — `settleMonth`/`revertSettlement` reject invalid scope/category
     (400) and refuse to revert an auto-settled record; re-settling an already-settled
     all scope → 409.
-- `validation.test.js` (18 tests) — request-validation guards (all pure 400s, no DB):
+- `validation.test.js` (19 tests) — request-validation guards (all pure 400s, no DB):
   - `parseBsDate` — slash/dash formats, single-digit parts, null for malformed and
     out-of-range year/month.
   - `login` / `partnerLogin` / `changePassword` — require email+password / old+new.
   - partner controllers — name required, phone-or-password for login, invalid `:id`
-    rejected, `togglePartnerStatus` validates the status value.
+    rejected, `togglePartnerStatus` validates the status value; `updateProfile`
+    requires a name (email is immutable).
   - group controllers — name and at least one partner required, invalid `:id` rejected.
   - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
     at least one applicable partner.
@@ -247,6 +253,40 @@ MongoDB — no base64 in the database.
 - `.env.example` / `.env.production.example` document `CLOUDINARY_CLOUD_NAME`,
   `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
 
+## Health status, payer ties & upload hardening (2083/05/06 BS)
+
+- **Server health indicator** (`frontend/src/components/HealthStatus.jsx` +
+  `useGetHealthStatus` hook): polls the public `GET /api/health` every 60 s
+  (retry ×1). Three states — **Checking…** (spinner), **Connected** (green dot with
+  pulse animation + uptime tooltip), **Offline** (red dot; auto-retries).
+  - Public layout: labeled chip in the desktop header (left of theme toggle),
+    **dot-only** compact variant in the mobile header (space is tight).
+  - Protected layout: the status lives **directly on the OptionsMenu avatar badge**
+    (`Optionsmenu.jsx`) — grey while checking, pulsing green when connected, red
+    when unreachable; the tooltip shows server state + "Click for profile options".
+    No separate chip in the protected headers.
+  - All instances share one react-query poll (same `queryKey`).
+- **Dashboard highest/lowest payers** now return **arrays**:
+  `highestPayers` / `lowestPayers` (was singular `highestPayer` / `lowestPayer`).
+  - Ties show **all** tied partners ("Tied for most/least paid this month").
+  - Lowest includes partners who paid **0**; highest still ignores zero payers.
+  - Empty month → highest shows "No expenses recorded", lowest lists all-at-zero ties.
+- **Upload middleware hardening** (`upload.middleware.js`):
+  - Strict mime whitelist — only `image/jpeg`, `image/png`, `image/webp`
+    (matches the frontend hook; GIF/BMP/SVG rejected server-side).
+  - Multer errors are wrapped as clean JSON **400** ApiErrors
+    ("Image must be smaller than 500 KB" / "Only JPG, PNG, or WebP images are
+    allowed") instead of unhandled HTML 500s.
+  - Cloudinary `public_id` no longer double-timestamps — callers pass a plain name
+    (`"partner"` / `"user"`), the service appends the single timestamp.
+- **Email logging**: every send logs `[email] sending … from … to …`, success logs
+  `[email] SENT ✓`, failures log `[email] FAILED (<status>)` with Resend's body;
+  partners without an email log `[notify] partner "X" has no email — in-app
+  notification only` instead of skipping silently.
+- **Auth perf**: AuthProvider context value is memoized; after a profile save the
+  mutation response feeds `setUser(response.user)` directly — no extra `/me`
+  round-trip.
+
 ## Landing page simplification & public header (2083/05/05 BS)
 
 - **Rotation queue card removed.** The landing page no longer lists the whole pending
@@ -330,6 +370,12 @@ for synchronous frontend access.
 - **`getAuthData()`** reads from the `user` cookie via `document.cookie` instead of
   `sessionStorage`. The encryption layer (`encryption.js`) is no longer used.
 - **`AuthProvider`** checks `document.cookie` for the `user` key on mount.
+  **Superseded (2083/05/06 BS)**: auth state is now **API-driven** — AuthProvider
+  calls `GET /auth/me` on mount and keeps the user in an in-memory store
+  (`getAuthData.js`); cookies are never sniffed to decide login state. The `user`
+  cookie is still set for convenience but is not trusted by the frontend. A failing
+  `/me` is the expected "not logged in" signal and does NOT trigger the logout
+  redirect (guarded via `isAuthMeRequest` in `axiosConfig.js`).
 - **Backward compatibility**: `verifyJWT` still reads `Authorization: Bearer` header
   as a fallback (for Postman/testing). `POST /logout` no longer requires
   `verifyUserOnly` — any authenticated user/partner can log out.
@@ -368,7 +414,14 @@ for synchronous frontend access.
   Emails always come from the app's Resend sender: `EMAIL_FROM` if set, else
   `RESEND_DOMAIN`, else the default `onboarding@resend.dev` (which can only deliver to
   your own account email until a domain is added). Partner emails are only ever
-  recipients (`to`) — never the sender.
+  recipients (`to`) — never the sender. **Domain verified (2083/05/06 BS)**:
+  `mail.sanikant.com.np` is verified in Resend; `.env` sets
+  `EMAIL_FROM="We Roomies <noreply@mail.sanikant.com.np>"` so all partner inboxes
+  receive mail. Every send/failure is visible in backend logs (`[email] …` lines).
+- **Health endpoint**: `GET /api/health` is public (no auth) and returns
+  `{ success, status, db, uptime, timestamp }`; the frontend polls it every 60 s for
+  the header/avatar status indicator. App.jsx also pings it every 5 min
+  (`HealthPoller`) to keep free-tier hosts awake.
 - **Cloudinary image storage (2083/05/07 BS)**: optional. Set `CLOUDINARY_CLOUD_NAME`,
   `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` for avatar uploads. Without them, image
   uploads are silently skipped. Old base64 images can be migrated via

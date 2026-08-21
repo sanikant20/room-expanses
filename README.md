@@ -1,20 +1,36 @@
-# Room Expenses
+# Room Expenses (The Roomies)
 
-A room expenses management app with Nepali (Bikram Sambat) date support. Track shared expenses, generate reports, and settle monthly balances between roommates.
+A room expenses management app with Nepali (Bikram Sambat) date support. Track shared
+expenses, manage rotating duties (water/rice/cleaning turns), get notified in-app and by
+email, and settle monthly balances between roommates.
 
 ## Features
 
-- Expenses in BS (Bikram Sambat) dates only
+- Expenses in BS (Bikram Sambat) dates only, with a BS month picker everywhere
 - Partner, category, and month-wise reports
-- Monthly settlement with who-pays-whom transactions
-- Dashboard with partner expense summaries
+- Monthly settlement with who-pays-whom transactions, manual/auto settle + revert
+- **Turn rotations** — water, rice, and flat-cleaning share one state machine:
+  bringer-fulfillment, cycle advance, admin "mark brought", history, and live public
+  status on the landing page
+- **Notifications** — in-app bell (unread badge, mark read/all) plus best-effort email
+  via Resend: next-partner alerts on turn completion and Saturday cleaning reminders
+- **Cookie-based auth** — httpOnly access/refresh tokens with silent refresh and token
+  rotation; auth state is API-driven (`GET /auth/me`), never sniffed from cookies
+- **Profile editing** — name/phone updates and avatar upload straight to Cloudinary
+  (old image replaced server-side)
+- **Server health indicator** — polled every 60 s; shown as a chip in public headers and
+  as a pulsing dot on the profile avatar in the app
+- Dashboard with partner summaries and highest/lowest payers (ties shown together,
+  zero-paid partners included as lowest)
 - Nepali currency formatting
 
 ## Tech Stack
 
 - **Frontend**: React 19, Vite, MUI (Material UI), React Query, Formik, Recharts, PWA
-- **Backend**: Node.js, Express 5, Mongoose, JWT auth
+- **Backend**: Node.js, Express 5, Mongoose, JWT auth (httpOnly cookies), node-cron
 - **Database**: MongoDB (Atlas)
+- **Media**: Cloudinary (avatar storage)
+- **Email**: Resend REST API (free tier, no npm dependency)
 - **Dates**: Nepali date converters (`nepali-date-converter`, `@sbmdkl/nepali-datepicker-reactjs`)
 
 ## Getting Started
@@ -30,7 +46,7 @@ A room expenses management app with Nepali (Bikram Sambat) date support. Track s
 # Backend
 cd backend
 npm install
-cp .env.example .env    # fill in MONGO_URI, JWT_SECRET, etc.
+cp .env.example .env    # fill in MONGODB_URI, token secrets, etc.
 npm start               # runs nodemon on port 5000
 
 # Frontend
@@ -46,8 +62,22 @@ npm run dev             # Vite dev server (proxies /api to :5000)
 | `npm run dev` | `npm start` (nodemon) |
 | `npm run build` | `npm run seed` |
 | `npm run lint` | |
-| `npm test` / `npm run test:watch` | |
+| `npm test` / `npm run test:watch` | `npm test` |
 
 ## Environment
 
-Frontend and backend each read a local `.env` file (see `backend/.env.example`). Secret files such as `*.env` and `atlas-credentials.env` are git-ignored and must never be committed.
+Frontend and backend each read a local `.env` file (see `backend/.env.example`). Secret
+files such as `*.env` and `atlas-credentials.env` are git-ignored and must never be committed.
+
+Backend keys:
+
+| Key | Required | Purpose |
+| --- | --- | --- |
+| `MONGODB_URI`, `DB_NAME` | yes | Atlas connection |
+| `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET` | yes | JWT signing |
+| `CORS_ORIGIN`, `PORT`, `NODE_ENV` | yes | Server config |
+| `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | optional | Avatar uploads (skipped if missing) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | optional | Email notifications (skipped if missing) |
+
+See [`TESTING.md`](./TESTING.md) for the full test/audit record — how to verify every
+feature and what has already been covered (124 backend tests, 44 frontend tests).

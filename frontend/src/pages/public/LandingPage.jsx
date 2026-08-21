@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import {
     ArrowForward,
-    CheckCircleRounded,
     LoginRounded,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';

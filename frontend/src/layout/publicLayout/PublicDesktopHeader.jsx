@@ -15,6 +15,7 @@ import { WbSunnyRounded, NightsStayRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../../context/themeModeContext';
 import LoginModalButton from './LoginModalButton';
+import HealthStatus from '../../components/HealthStatus';
 
 const LogoImage = styled('img')(({ theme }) => ({
     width: 40,
@@ -108,8 +109,9 @@ const PublicDesktopHeader = () => {
                         </Typography>
                     </Box>
 
-                    {/* Right side - Theme Toggle & Login */}
+                    {/* Right side - Server status, Theme Toggle & Login */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <HealthStatus />
                         <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>
                             <IconButton
                                 onClick={toggleThemeMode}
