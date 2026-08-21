@@ -23,6 +23,10 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   }
 
   try {
+    const from = fromAddress();
+    const recipients = Array.isArray(to) ? to : [to];
+    console.log(`[email] sending "${subject}" from ${from} to ${recipients.join(", ")}`);
+
     const response = await fetch(RESEND_URL, {
       method: "POST",
       headers: {
@@ -30,8 +34,8 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: fromAddress(),
-        to: Array.isArray(to) ? to : [to],
+        from,
+        to: recipients,
         subject,
         ...(html ? { html } : {}),
         ...(text ? { text } : {}),
@@ -40,14 +44,14 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 
     if (!response.ok) {
       const body = await response.text();
-      console.error(`[email] send failed (${response.status}): ${body}`);
+      console.error(`[email] FAILED (${response.status}) to ${recipients.join(", ")} — "${subject}": ${body}`);
       return { skipped: false, error: body };
     }
 
-    console.log(`[email] sent to ${to} — "${subject}"`);
+    console.log(`[email] SENT ✓ to ${recipients.join(", ")} — "${subject}"`);
     return { skipped: false, sent: true };
   } catch (error) {
-    console.error("[email] send error:", error.message);
+    console.error(`[email] ERROR sending "${subject}":`, error.message);
     return { skipped: false, error: error.message };
   }
 };

@@ -231,7 +231,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     const previousImage = partner.image;
     let imageUrl = previousImage;
     if (req.file) {
-      imageUrl = await uploadBuffer(req.file.buffer, `partner-${Date.now()}`);
+      imageUrl = await uploadBuffer(req.file.buffer, "partner");
     }
 
     partner.name = String(name).trim();
@@ -256,7 +256,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   const previousImage = user.image;
   let imageUrl = previousImage;
   if (req.file) {
-    imageUrl = await uploadBuffer(req.file.buffer, `user-${Date.now()}`);
+    imageUrl = await uploadBuffer(req.file.buffer, "user");
   }
 
   user.name = String(name).trim();

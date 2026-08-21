@@ -17,7 +17,7 @@ const hashPassword = async (password) => bcrypt.hash(password, 10);
  */
 const resolveImageUrl = async (file, existingImage = null) => {
   if (!file) return existingImage;
-  const url = await uploadBuffer(file.buffer, `partner-${Date.now()}`);
+  const url = await uploadBuffer(file.buffer, "partner");
   return url || existingImage;
 };
 

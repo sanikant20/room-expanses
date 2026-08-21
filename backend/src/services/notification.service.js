@@ -30,9 +30,15 @@ export const notifyPartner = async ({ partnerId, type = "system", title, message
   }
 
   const partner = await Partner.findById(partnerId).select("name email phone").catch(() => null);
-  if (partner?.email) {
-    await sendEmail({ to: partner.email, subject: title, html: `<p>${message}</p>` });
+  if (!partner) {
+    console.warn(`[notify] partner ${partnerId} not found — email skipped`);
+    return;
   }
+  if (!partner.email) {
+    console.log(`[notify] partner "${partner.name}" has no email — in-app notification only`);
+    return;
+  }
+  await sendEmail({ to: partner.email, subject: title, html: `<p>${message}</p>` });
 };
 
 /**

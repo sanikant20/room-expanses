@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AxiosConfig from '../configurations/axiosConfig';
 import { setAuthData, getAuthData, clearAuthCache } from '../helper/getAuthData';
 
@@ -39,16 +39,25 @@ export const AuthProvider = ({ children }) => {
         }
     }, [checkAuth]);
 
+    // Update cached user data directly (e.g. after a profile edit) without
+    // an extra /me round-trip.
+    const setUserFromResponse = useCallback((freshUser) => {
+        if (!freshUser) return;
+        setAuthData(freshUser);
+        setUser(getAuthData());
+    }, []);
+
     useEffect(() => {
         checkAuth().then(setIsAuthenticatedState);
     }, [checkAuth]);
 
+    const value = useMemo(
+        () => ({ isAuthenticated, setIsAuthenticated, user, setUser: setUserFromResponse }),
+        [isAuthenticated, setIsAuthenticated, user, setUserFromResponse]
+    );
+
     return (
-        <AuthContext.Provider value={{
-            isAuthenticated,
-            setIsAuthenticated,
-            user,
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

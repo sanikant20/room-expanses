@@ -32,7 +32,7 @@ import {
     AdminPanelSettingsRounded,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import { useAuthData, useIsPartner, useAuth } from '../../../context/authContext';
+import { useAuth, useIsPartner } from '../../../context/authContext';
 import { useUpdateProfile } from '../../../apis/authApi/AuthAPI';
 import CustomCard from '../../../components/custom/CustomCard';
 import CustomAvatarFileUpload from '../../../components/custom/CustomAvatarFileUpload';
@@ -40,9 +40,8 @@ import { convertToBSFormat } from '../../../utils/dateConverter';
 
 const Profile = () => {
     const theme = useTheme();
-    const authData = useAuthData();
+    const { user: authData, setUser } = useAuth();
     const isPartner = useIsPartner();
-    const { setIsAuthenticated } = useAuth();
     const { mutate: updateProfile, isPending } = useUpdateProfile();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -101,10 +100,10 @@ const Profile = () => {
         updateProfile(
             { formData },
             {
-                onSuccess: async (response) => {
+                onSuccess: (response) => {
                     if (response?.success) {
+                        setUser(response?.user);
                         toast.success(response?.message || 'Profile updated successfully');
-                        await setIsAuthenticated(true);
                         cancelEditing();
                     } else {
                         toast.error(response?.message || 'Failed to update profile');
