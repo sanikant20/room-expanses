@@ -1,32 +1,22 @@
-import { decryptData } from "../utils/encryption";
+let authData = {};
 
-let _cachedRaw = undefined;
-let _cachedResult = {};
-
-export const getAuthData = () => {
-    const encryptedAuthData = sessionStorage.getItem('user');
-    if (encryptedAuthData === _cachedRaw) return _cachedResult;
-    _cachedRaw = encryptedAuthData;
-    try {
-        const authData = decryptData(encryptedAuthData);
-        const parsed = JSON.parse(authData || '{}');
-        _cachedResult = {
-            ...parsed,
-            accountType: parsed?.accountType || 'user',
-            FullName: parsed?.name || parsed?.email?.split('@')[0] || 'User',
-            Email: parsed?.email || parsed?.Email || '',
-            Phone: parsed?.phone || parsed?.Phone || '',
-            ComID: parsed?.comId || parsed?.ComID || '',
-        };
-    } catch {
-        _cachedResult = {};
-    }
-    return _cachedResult;
+export const setAuthData = (data) => {
+    authData = {
+        _id: data?._id || '',
+        name: data?.name || data?.email?.split('@')[0] || '',
+        email: data?.email || '',
+        phone: data?.phone || '',
+        image: data?.image || '',
+        accountType: data?.accountType || 'user',
+        role: data?.role || '',
+        status: data?.status || '',
+        bsJoiningDate: data?.bsJoiningDate || '',
+        createdAt: data?.createdAt || null,
+    };
 };
+
+export const getAuthData = () => authData;
 
 export const clearAuthCache = () => {
-    _cachedRaw = undefined;
-    _cachedResult = {};
+    authData = {};
 };
-
-export const isPartnerAccount = () => getAuthData()?.accountType === 'partner';

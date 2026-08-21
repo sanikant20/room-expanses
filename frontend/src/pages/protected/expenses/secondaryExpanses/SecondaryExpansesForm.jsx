@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { NepaliDatePickerComponent } from '../../../../components/date/NepaliDatePicker';
 import { useCreateExpense, useUpdateExpense } from '../../../../apis/expenseAPI/ExpenseAPI';
-import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
+import { useAuthData, useIsPartner } from '../../../../context/authContext';
 
 const SecondaryExpansesForm = ({
     mode,
@@ -30,8 +30,8 @@ const SecondaryExpansesForm = ({
     defaultGroup = '',
 }) => {
     const queryClient = useQueryClient();
-    const isPartner = isPartnerAccount();
-    const selfId = getAuthData()?._id;
+    const isPartner = useIsPartner();
+    const selfId = useAuthData()?._id;
 
     const { mutate: createExpense, isPending: isCreating } = useCreateExpense();
     const { mutate: updateExpense, isPending: isUpdating } = useUpdateExpense();

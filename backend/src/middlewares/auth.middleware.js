@@ -5,12 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 
 export const verifyJWT = async (req, res, next) => {
   try {
-    const authHeader = req.headers?.authorization;
-    let token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-    if (!token) {
-      token = req.cookies?.accessToken;
-    }
+    const token = req.cookies?.accessToken || req.headers?.authorization?.replace("Bearer ", "");
 
     if (!token) throw new ApiError(401, "Unauthorized");
 
@@ -33,6 +28,7 @@ export const verifyJWT = async (req, res, next) => {
     req.userType = "user";
     next();
   } catch (error) {
+    if (error instanceof ApiError) return next(error);
     next(new ApiError(401, "Invalid or expired token"));
   }
 };

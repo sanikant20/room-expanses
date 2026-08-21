@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { BalanceRounded, CalculateRounded, CompareArrowsRounded, ReceiptLongRounded } from '@mui/icons-material';
 import CustomTab from '../../../components/custom/CustomTab';
 import { formatYearMonthString, getCurrentBsYearMonth } from '../../../utils/nepaliDate';
-import { isPartnerAccount } from '../../../helper/getAuthData';
+import { useIsPartner } from '../../../context/authContext';
 import SettlementSummary from './summary/SettlementSummary';
 import SettlementCalculation from './calculation/SettlementCalculation';
 import SettlementTransactions from './transactions/SettlementTransactions';
 import SettlementMyPayments from './payments/SettlementMyPayments';
 
 const SettlementTabs = () => {
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const current = getCurrentBsYearMonth();
         return formatYearMonthString(current);

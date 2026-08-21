@@ -20,7 +20,7 @@ import {
 import { brandColors } from "./ThemeColors";
 import CustomCard from "../components/custom/CustomCard";
 import { CheckCircleRounded, DarkModeRounded, LightModeRounded, RestartAltRounded } from "@mui/icons-material";
-import { useThemeMode } from "../context/useThemeMode";
+import { useThemeMode } from "../context/themeModeContext";
 
 // Create a utility function for text formatting
 const formatNameCase = (text) => {

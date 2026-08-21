@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { WbSunnyRounded, NightsStayRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useThemeMode } from '../../context/useThemeMode';
+import { useThemeMode } from '../../context/themeModeContext';
 import LoginModalButton from './LoginModalButton';
 
 const LogoImage = styled('img')(({ theme }) => ({

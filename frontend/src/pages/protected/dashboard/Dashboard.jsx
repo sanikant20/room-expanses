@@ -26,7 +26,7 @@ import {
     ScheduleRounded,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { getAuthData } from '../../../helper/getAuthData';
+import { useAuthData } from '../../../context/authContext';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import CustomCard from '../../../components/custom/CustomCard';
 import AutoSettleBanner from '../../../components/custom/AutoSettleBanner';
@@ -92,7 +92,7 @@ const StatCard = ({ title, value, subtitle, icon, color }) => {
 const Dashboard = () => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const authData = getAuthData();
+    const authData = useAuthData();
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -247,7 +247,7 @@ const Dashboard = () => {
                                     The Roomies
                                 </Typography>
                                 <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
-                                    {getGreeting()}, {authData?.FullName?.split(' ')[0] || 'there'}
+                                    {getGreeting()}, {authData?.name?.split(' ')[0] || 'there'}
                                 </Typography>
                                 <Typography variant="body1" sx={{ maxWidth: 640, opacity: 0.95 }}>
                                     Here's your room expense overview for {monthLabel || 'the selected Nepali month'}.

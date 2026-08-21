@@ -30,6 +30,7 @@ const partnerSchema = new Schema(
       select: false,
     },
     notes: { type: String },
+    refreshToken: { type: String },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -55,6 +56,14 @@ partnerSchema.methods.generateAccessToken = function () {
     { _id: this._id, email: this.email, name: this.name, type: "partner" },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+  );
+};
+
+partnerSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    { _id: this._id, type: "partner" },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
 };
 

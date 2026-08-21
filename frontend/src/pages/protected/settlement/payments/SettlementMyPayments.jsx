@@ -10,15 +10,15 @@ import { parseYearMonthString } from '../../../../utils/nepaliDate';
 import { getNepaliMonthLabel } from '../../../../constant/constant';
 import { PartnerCell, PaymentStatusCell, SettlementMonthPicker, SettlementStatus } from '../SettlementShared';
 import netSettle from '../../../../utils/netSettle';
-import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
+import { useAuthData, useIsPartner } from '../../../../context/authContext';
 import { useDialogState } from '../../../../hooks/useUIState';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 
 const SettlementMyPayments = ({ selectedMonth, onMonthChange }) => {
     const queryClient = useQueryClient();
-    const isPartner = isPartnerAccount();
-    const myId = getAuthData()?._id;
+    const isPartner = useIsPartner();
+    const myId = useAuthData()?._id;
 
     const monthObj = parseYearMonthString(selectedMonth);
     const { data, isLoading } = useGetSettlement({ ...monthObj, category: undefined });

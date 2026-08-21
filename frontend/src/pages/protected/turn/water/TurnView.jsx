@@ -32,7 +32,7 @@ import {
     useCompleteTurn,
     useGetTurnState,
 } from '../../../../apis/turnAPI/TurnAPI';
-import { isPartnerAccount } from '../../../../helper/getAuthData';
+import { useIsPartner } from '../../../../context/authContext';
 import { getTurnPartnerStatus } from '../../../../utils/turnFormat';
 import { getTurnTypeConfig } from '../../../../utils/turnTypeConfig';
 import TurnRotationForm from './TurnRotationForm';
@@ -51,7 +51,7 @@ const PartnerAvatar = ({ partner, size = 48 }) => (
 const TurnView = ({ type = 'water' }) => {
     const theme = useTheme();
     const queryClient = useQueryClient();
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
     const config = getTurnTypeConfig(type);
     const TypeIcon = config.icon;
 

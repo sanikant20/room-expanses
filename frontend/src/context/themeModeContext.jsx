@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { ThemeModeContext } from './themeModeContext';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+
+const ThemeModeContext = createContext();
 
 export const ThemeModeProvider = ({ children }) => {
   const [mode, setMode] = useState(() => {
@@ -20,4 +21,12 @@ export const ThemeModeProvider = ({ children }) => {
       {children}
     </ThemeModeContext.Provider>
   );
+};
+
+export const useThemeMode = () => {
+    const context = useContext(ThemeModeContext);
+    if (!context) {
+        throw new Error('useThemeMode must be used within a ThemeModeProvider');
+    }
+    return context;
 };

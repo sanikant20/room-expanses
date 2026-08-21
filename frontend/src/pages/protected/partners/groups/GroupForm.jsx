@@ -16,14 +16,14 @@ import {
 } from '@mui/material';
 import { useCreateGroup, useUpdateGroup } from '../../../../apis/groupAPI/GroupAPI';
 import { useGetPartners } from '../../../../apis/partnerAPI/PartnerAPI';
-import { isPartnerAccount } from '../../../../helper/getAuthData';
+import { useIsPartner } from '../../../../context/authContext';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 
 const GroupForm = ({ selectedData, mode, onClose }) => {
     const queryClient = useQueryClient();
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
 
     const { data: partners } = useGetPartners({ status: 'all' });
     const { mutate: createGroup, isPending: isCreating } = useCreateGroup();

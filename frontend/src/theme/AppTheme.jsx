@@ -7,7 +7,7 @@ import { navigationCustomizations } from './customizations/Navigation';
 import { surfacesCustomizations } from './customizations/Surfaces';
 
 import { datePickersCustomizations } from './customizations/DatePicker';
-import { useThemeMode } from '../context/useThemeMode';
+import { useThemeMode } from '../context/themeModeContext';
 import { getDesignTokens } from './ThemePrimitives';
 
 export default function AppTheme(props) {

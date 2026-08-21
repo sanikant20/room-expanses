@@ -17,7 +17,7 @@ import {
     useLocation
 } from 'react-router-dom';
 
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/authContext';
 
 class ErrorBoundaryClass extends React.Component {
     constructor(props) {

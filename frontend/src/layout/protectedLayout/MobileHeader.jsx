@@ -9,7 +9,7 @@ import MuiToolbar from '@mui/material/Toolbar';
 import { useNavigate } from 'react-router-dom';
 import OptionsMenu from './Optionsmenu';
 import NotificationBell from './NotificationBell';
-import { useThemeMode } from '../../context/useThemeMode';
+import { useThemeMode } from '../../context/themeModeContext';
 import { convertToBSFormat } from '../../utils/dateConverter';
 import MobileSideMenu from './MobileSideMenu';
 

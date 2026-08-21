@@ -19,14 +19,14 @@ import { HistoryRounded, ReplayRounded } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetTurnHistory, useResetTurnEvent } from '../../../../apis/turnAPI/TurnAPI';
-import { isPartnerAccount } from '../../../../helper/getAuthData';
+import { useIsPartner } from '../../../../context/authContext';
 import { formatTurnDateTime, isCoveredEvent } from '../../../../utils/turnFormat';
 import { getTurnTypeConfig } from '../../../../utils/turnTypeConfig';
 
 const TurnHistory = ({ type = 'water' }) => {
     const theme = useTheme();
     const queryClient = useQueryClient();
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
     const config = getTurnTypeConfig(type);
 
     const { data: history, isLoading } = useGetTurnHistory({ type });

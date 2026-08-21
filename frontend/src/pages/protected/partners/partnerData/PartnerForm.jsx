@@ -21,11 +21,11 @@ import { useCreatePartner, useUpdatePartner } from '../../../../apis/partnerAPI/
 import { NepaliDatePickerComponent } from '../../../../components/date/NepaliDatePicker';
 import { convertToBSFormat } from '../../../../utils/dateConverter';
 import { getCurrentBsDate } from '../../../../utils/nepaliDate';
-import { isPartnerAccount } from '../../../../helper/getAuthData';
+import { useIsPartner } from '../../../../context/authContext';
 
 const PartnerForm = ({ selectedData, mode, onClose }) => {
     const queryClient = useQueryClient();
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
     const [showPassword, setShowPassword] = useState(false);
     const [imageFile, setImageFile] = useState(null);
 

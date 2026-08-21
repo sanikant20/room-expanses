@@ -2,11 +2,9 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Slide, ToastContainer } from 'react-toastify';
-import { AuthProvider } from './context/AuthProvider';
-import { useAuth } from './context/useAuth';
-import { AuthExpirationProvider } from './context/AuthExpirationProvider';
-import { useAuthExpiration } from './context/useAuthExpiration';
-import { ThemeModeProvider } from './context/ThemeModeProvider';
+import { AuthProvider } from './context/authContext';
+import { useAuth } from './context/authContext';
+import { ThemeModeProvider } from './context/themeModeContext';
 import { CssBaseline } from '@mui/material';
 
 // Component imports
@@ -24,7 +22,6 @@ import { RenderRoutes } from './routes/RenderRoutes';
 // Network status imports
 import { useGetNetworkStatus } from './hooks/useNetworkStatus';
 import { OfflineContainer } from './components/offlineContainer';
-import { setAuthExpirationHandler } from './configurations/axiosConfig';
 import AxiosConfig from './configurations/axiosConfig';
 
 // Theme imports
@@ -42,8 +39,6 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60 * 1000,
       gcTime: 5 * 60 * 1000,
-      // staleTime: 0,
-      // gcTime: 0,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -55,16 +50,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const AxiosInterceptorSetup = () => {
-  const { showExpirationDialog } = useAuthExpiration();
-
-  useEffect(() => {
-    setAuthExpirationHandler(showExpirationDialog);
-  }, [showExpirationDialog]);
-
-  return null;
-};
 
 const HealthPoller = () => {
   useEffect(() => {
@@ -99,17 +84,14 @@ const App = () => {
             pauseOnHover
           />
           <AuthProvider>
-            <AuthExpirationProvider>
-              <Router>
-                <Suspense fallback={<RouteAwareSkeleton />}>
-                  <AxiosInterceptorSetup />
-                  <HealthPoller />
-                  <ErrorBoundary>
-                    <AppRoutes />
-                  </ErrorBoundary>
-                </Suspense>
-              </Router>
-            </AuthExpirationProvider>
+            <Router>
+              <Suspense fallback={<RouteAwareSkeleton />}>
+                <HealthPoller />
+                <ErrorBoundary>
+                  <AppRoutes />
+                </ErrorBoundary>
+              </Suspense>
+            </Router>
           </AuthProvider>
         </QueryClientProvider>
       </AppTheme>

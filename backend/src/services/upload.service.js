@@ -1,6 +1,6 @@
 import { cloudinary, isConfigured } from "../config/cloudinary.js";
 
-const FOLDER = "we-roomies";
+const FOLDER = process.env.NODE_ENV === "production" ? "we-roomies" : "we-roomies-test";
 
 /**
  * Upload a buffer to Cloudinary.

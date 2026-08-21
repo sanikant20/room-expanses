@@ -18,7 +18,7 @@ import CustomDialog from '../../../../components/custom/CustomDialog';
 import CustomImagePreview from '../../../../components/custom/CustomImagePreview';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
-import { isPartnerAccount } from '../../../../helper/getAuthData';
+import { useIsPartner } from '../../../../context/authContext';
 import {
     useDeletePartner,
     useGetPartners,
@@ -33,7 +33,7 @@ const Partners = () => {
     const modal = useModalState();
     const dialog = useDialogState();
     const preview = usePreviewState();
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
 
     const { data: partners, isLoading } = useGetPartners({ status: 'all' });
     const { mutate: deletePartner, isPending: isDeleting } = useDeletePartner();

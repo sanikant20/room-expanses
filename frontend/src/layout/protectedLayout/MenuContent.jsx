@@ -4,7 +4,7 @@ import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Coll
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuItemLists, secondaryListItems } from './MenuItemLists';
 import { ClearRounded, ExpandLess, ExpandMore, SearchRounded, FiberManualRecord } from '@mui/icons-material';
-import { isPartnerAccount } from '../../helper/getAuthData';
+import { useIsPartner } from '../../context/authContext';
 
 const generateKey = (item, parentIndex = '', level = 0) => {
     return `${parentIndex}-${level}-${item.menu}`.replace(/\s+/g, '-');
@@ -14,6 +14,7 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
+    const isPartner = useIsPartner();
 
     const computeOpenStates = useCallback(() => {
         const states = {};
@@ -178,7 +179,7 @@ export default function MenuContent({ sidebarCollapsed = false, onMenuSelect }) 
     };
 
     const filteredMainItems = (searchTerm ? MenuItemLists.filter(item => itemMatchesSearch(item)) : MenuItemLists)
-        .filter(item => !(item.adminOnly && isPartnerAccount()));
+        .filter(item => !(item.adminOnly && isPartner));
     const filteredSecondaryItems = searchTerm ? secondaryListItems.filter(item => getMenuText(item).toLowerCase().includes(searchTerm.toLowerCase())) : secondaryListItems;
 
     const renderMenuItems = (items, level = 0, parentIndex = '') => {

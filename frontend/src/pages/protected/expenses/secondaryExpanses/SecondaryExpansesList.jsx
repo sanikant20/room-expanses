@@ -37,7 +37,7 @@ import { useGetActiveGroups } from '../../../../apis/groupAPI/GroupAPI';
 import { useDialogState, useModalState } from '../../../../hooks/useUIState';
 import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
-import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
+import { useAuthData, useIsPartner } from '../../../../context/authContext';
 import SecondaryExpansesForm from './SecondaryExpansesForm';
 
 const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
@@ -45,8 +45,8 @@ const SecondaryExpansesList = ({ selectedMonth, onMonthChange }) => {
     const modal = useModalState();
     const dialog = useDialogState();
     const [selectedGroup, setSelectedGroup] = useState('');
-    const isPartner = isPartnerAccount();
-    const selfId = getAuthData()?._id;
+    const isPartner = useIsPartner();
+    const selfId = useAuthData()?._id;
 
     const selectedMonthObj = parseYearMonthString(selectedMonth);
     const groupFilter = selectedGroup || undefined;

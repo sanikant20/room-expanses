@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { NotificationsNoneRounded, NotificationsActiveRounded, DoneAllRounded } from '@mui/icons-material';
 import { useGetNotifications, useMarkAllNotificationsRead, useMarkNotificationRead } from '../../apis/notificationAPI/NotificationAPI';
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/authContext';
 
 const typeIcon = (type) => {
     switch (type) {
@@ -119,13 +119,21 @@ export default function NotificationBell() {
                 sx={{
                     '& .MuiPaper-root': {
                         width: isMobile ? 300 : 360,
-                        maxHeight: '80vh',
+                        maxHeight: { xs: '70vh', md: '480px' },
                         borderRadius: 2,
                         boxShadow: theme.shadows[4],
                         border: `1px solid ${theme.palette.divider}`,
-                        overflow: 'visible',
                         display: 'flex',
                         flexDirection: 'column',
+                        overflow: 'hidden',
+                    },
+                    '& .MuiList-root': {
+                        padding: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                     },
                 }}
             >
@@ -155,7 +163,7 @@ export default function NotificationBell() {
                     )}
                 </Box>
 
-                <Box sx={{ overflowY: 'auto', flex: 1 }}>
+                <Box sx={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
                     {isLoading && (
                         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                             <CircularProgress size={24} />

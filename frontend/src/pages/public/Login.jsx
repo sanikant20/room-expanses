@@ -5,8 +5,7 @@ import { Formik, Form } from 'formik';
 import * as yup from 'yup';
 import { useLogin, usePartnerLogin } from '../../apis/authApi/AuthAPI';
 import { toast } from 'react-toastify';
-import { encryptData } from '../../utils/encryption';
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/authContext';
 import { useNavigate } from 'react-router-dom';
 
 // Animation keyframes
@@ -42,11 +41,6 @@ const slideUp = keyframes`
     100% { transform: translateY(0); opacity: 1; }
 `;
 
-const initialValues = {
-    email: '',
-    password: '',
-};
-
 const Login = () => {
     const theme = useTheme();
     const navigate = useNavigate();
@@ -72,14 +66,11 @@ const Login = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    const handleSubmit = async (values, { setSubmitting }) => {
+    const handleSubmit = (values, { setSubmitting }) => {
         const mutate = isPartnerMode ? partnerLogin : login;
         mutate({ values }, {
             onSuccess: (response) => {
                 if (response?.success) {
-                    const { token, user } = response;
-                    sessionStorage.setItem('auth', token);
-                    sessionStorage.setItem('user', encryptData(JSON.stringify(user)));
                     setIsAuthenticated(true);
                     setSubmitting(false);
                 } else {
@@ -391,7 +382,7 @@ const Login = () => {
                         }}>
                             <Formik
                                 key={loginMode}
-                                initialValues={isPartnerMode ? { email: '', password: '' } : initialValues}
+                                initialValues={{ email: '', password: '' }}
                                 validationSchema={validationSchema}
                                 onSubmit={handleSubmit}
                             >

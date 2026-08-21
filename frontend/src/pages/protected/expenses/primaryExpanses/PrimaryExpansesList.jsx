@@ -32,15 +32,15 @@ import { useGetPartners } from '../../../../apis/partnerAPI/PartnerAPI';
 import { useDialogState, useModalState } from '../../../../hooks/useUIState';
 import { formatToNepaliCurrency } from '../../../../utils/currencyFormat';
 import { parseYearMonthString } from '../../../../utils/nepaliDate';
-import { getAuthData, isPartnerAccount } from '../../../../helper/getAuthData';
+import { useAuthData, useIsPartner } from '../../../../context/authContext';
 import PrimaryExpansesForm from './PrimaryExpansesForm';
 
 const PrimaryExpansesList = ({ selectedMonth, onMonthChange }) => {
     const queryClient = useQueryClient();
     const modal = useModalState();
     const dialog = useDialogState();
-    const isPartner = isPartnerAccount();
-    const selfId = getAuthData()?._id;
+    const isPartner = useIsPartner();
+    const selfId = useAuthData()?._id;
 
     const selectedMonthObj = parseYearMonthString(selectedMonth);
     const { data: expenses, isLoading } = useGetExpenses({ ...selectedMonthObj, category: 'primary' });

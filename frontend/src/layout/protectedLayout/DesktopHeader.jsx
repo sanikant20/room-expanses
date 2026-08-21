@@ -14,10 +14,10 @@ import { Tooltip, Box, IconButton, Chip } from '@mui/material';
 import dayjs from 'dayjs';
 import OptionsMenu from './Optionsmenu';
 import NotificationBell from './NotificationBell';
-import { useThemeMode } from '../../context/useThemeMode';
+import { useThemeMode } from '../../context/themeModeContext';
 import { convertToBSFormat } from '../../utils/dateConverter';
 import BreadcrumbsPath from './BreadcrumbsPath';
-import { getAuthData } from '../../helper/getAuthData';
+import { useAuthData } from '../../context/authContext';
 
 const InfoChip = ({ label, color = 'primary' }) => {
     const theme = useTheme();
@@ -59,7 +59,7 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
         if (hour < 17) return 'Good Afternoon';
         return 'Good Evening';
     };
-    const authData = getAuthData();
+    const authData = useAuthData();
 
     const getGreetingIcon = () => {
         const hour = currentTime.hour();
@@ -119,7 +119,7 @@ export default function DesktopHeader({ onToggleSidebar, sidebarOpen }) {
                     <InfoChip label={convertToBSFormat(new Date()) || ''} icon={<CalendarTodayRounded sx={{ fontSize: 16 }} />} />
                     <InfoChip label={currentTime.format('HH:mm:ss')} icon={<AccessTimeRounded sx={{ fontSize: 16 }} />} />
                     <InfoChip
-                        label={`${getGreeting()}, ${authData?.FullName?.split(' ')[0] || 'User'}!`}
+                        label={`${getGreeting()}, ${authData?.name?.split(' ')[0] || 'User'}!`}
                         icon={getGreetingIcon()}
                     />
                     <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} arrow>

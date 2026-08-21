@@ -8,7 +8,7 @@ import Avatar from '@mui/material/Avatar';
 import OptionsMenu from './Optionsmenu';
 import MenuContent from './MenuContent';
 import { useNavigate } from 'react-router-dom';
-import { getAuthData } from '../../helper/getAuthData';
+import { useAuthData } from '../../context/authContext';
 
 const drawerWidth = 280;
 const collapsedDrawerWidth = 80;
@@ -78,7 +78,7 @@ const UserSection = styled(Stack, { shouldForwardProp: (prop) => prop !== 'open'
 export default function DesktopSideBar({ open }) {
     const theme = useTheme();
     const navigate = useNavigate();
-    const authData = getAuthData();
+    const authData = useAuthData();
 
     return (
         <Drawer variant="permanent" open={open} sx={{ display: { xs: 'none', md: 'block' } }}>
@@ -142,7 +142,7 @@ export default function DesktopSideBar({ open }) {
                                 letterSpacing: '-0.3px',
                             }}
                         >
-                            {authData?.FullName || 'User'}
+                            {authData?.name || 'User'}
                         </Typography>
                         <Typography
                             variant="caption"
@@ -156,7 +156,7 @@ export default function DesktopSideBar({ open }) {
                                 fontSize: '0.7rem',
                             }}
                         >
-                            {authData?.Email || authData?.Phone || authData?.ComID || ''}
+                            {authData?.email || authData?.phone || ''}
                         </Typography>
                     </Box>
                 )}

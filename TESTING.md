@@ -13,9 +13,10 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/06 (BS)** — backend **121** tests, frontend 44 tests,
+Last verified green: **2083/05/07 (BS)** — backend **121** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
 with the `/api/turn` routes (water + rice + cleaning) and `/api/notifications`.
+Both admin and partner login flows verified working with cookie-based auth.
 
 ## Test inventory
 
@@ -30,8 +31,8 @@ with the `/api/turn` routes (water + rice + cleaning) and `/api/notifications`.
   - `subtractBsMonths` rolls over year boundaries (2082/01 − 1 = 2081/12).
   - `computePayerTotals` / `findHighestPayer` / `findLowestPayer` — payer-based dashboard math.
 - `routes.test.js` — boots the Express app on an ephemeral port, asserts all core
-  routes exist (incl. settlement `POST /pay`, `POST /confirm`, `POST /reset`) and
-  that `POST /register` is **not** exposed.
+  routes exist (incl. auth `POST /refresh`, `POST /logout`, settlement `POST /pay`,
+  `POST /confirm`, `POST /reset`) and that `POST /register` is **not** exposed.
 - `settlement-payment.test.js` — pay/confirm role guards (partner who isn't the
   payer/receiver gets 403; missing from/to gets 400) and settlement service surface.
 - `settlement-logic.test.js` (22 tests) — the settlement state machine, all with
@@ -117,8 +118,8 @@ with the `/api/turn` routes (water + rice + cleaning) and `/api/notifications`.
   `POST /partner-login` (used by the interceptor so invalid credentials show the inline
   alert instead of the "Session Ended" dialog).
 - `helper/getAuthData.test.js` — `getAuthData` default-filled shape for empty/corrupt
-  storage, plain-JSON and encrypted round-trips, FullName fallback to email local-part;
-  `isPartnerAccount` true/false. (Vitest `node` env: `sessionStorage` is stubbed.)
+  cookie, plain-JSON round-trips, FullName fallback to email local-part;
+  `isPartnerAccount` true/false. (Vitest `node` env: `document.cookie` is stubbed.)
 - `constant/constant.test.js` — `PAYMENT_STATUS` pending→paid→confirmed lifecycle and
   `SETTLEMENT_STATUS` receive/pay/settled labels.
 - `turnFormat.test.js` — `getTurnPartnerStatus` (current/done/pending), `isCoveredEvent`
@@ -290,7 +291,7 @@ MongoDB — no base64 in the database.
 | 1 | High | `POST /api/auth/register` was public and created users with `role: req.body.role \|\| 'admin'` — anyone could self-register an admin. Frontend never used it. | Removed route, controller, and unused `useRegister` hook. |
 | 2 | Medium | Duplicate `POST` and `PUT /change-password` routes; frontend only calls `PUT`. | Removed the `POST` route. |
 | 3 | Medium | Login form pre-filled `admin@room.local` / `Admin@123` in Formik `initialValues`. | Cleared to empty values. |
-| 4 | High | Missing `VITE_ENCRYPTION_KEY` **crashes login** (`CryptoJS.AES.encrypt(..., undefined)` throws). No frontend `.env*` existed. | Added `frontend/.env.example` documenting the required var; **must be set in the build env**. |
+| 4 | High | Missing `VITE_ENCRYPTION_KEY` **crashes login** (`CryptoJS.AES.encrypt(..., undefined)` throws). No frontend `.env*` existed. | Encryption layer removed (cookie-based auth); `VITE_ENCRYPTION_KEY` no longer needed. |
 | 5 | Low | `backend/.env.example` pointed `MONGODB_URI` at localhost. | Changed to Atlas `mongodb+srv://` template (Atlas-only storage). |
 | 6 | Low | 10 ESLint warnings (react-hooks/react-refresh). | All fixed — see `git log`/diff: context-hook splits, DataTable ref-guard, SettlementTransactions useMemo, AppTheme dep, ThemeColorSelection exports. |
 | 7 | Low | Dead code: `expenseCalculation.js`, `setupEnterAsTab.js`, `getComID.js`, `getBrowserDetails.js` + 11 unused exports (−670 lines). | Removed (verified zero importers). |
@@ -302,9 +303,49 @@ MongoDB — no base64 in the database.
 - `login`/`partnerLogin` return `404 "User/Partner not found"` → user enumeration; prefer a uniform `401`.
 - `useGetExpenses` polls every **15 s** (`refetchInterval: 15000`).
 - `dashboard.getSummary` (6 queries) and `getGroups` (per-group count) are N+1-ish — fine at current scale.
-- Access token is 1-day; refresh-token/cookie infra exists but is unused (token lives in `sessionStorage`).
 - Backend has **no lint script** — add one if desired.
 - Both `.env.example` files are gitignored by the root `.env.*` rule; add `!.env.example` if they should ship.
+- `encryption.js` is dead code (zero importers) — can be removed in a future cleanup.
+
+## Cookie-based auth (2083/05/07 BS)
+
+Access and refresh tokens are stored in **httpOnly cookies** instead of
+`sessionStorage`. User profile data is stored in a regular (non-httpOnly) cookie
+for synchronous frontend access.
+
+- **Both User and Partner models** now have a `refreshToken` field and
+  `generateRefreshToken()` method. Partner JWT refresh tokens include
+  `{ _id, type: "partner" }` so the refresh endpoint can distinguish user vs partner.
+- **Cookies set by backend** on login/partnerLogin:
+  - `accessToken` — httpOnly, `sameSite: Lax`, `path: /`, maxAge 1 day
+  - `refreshToken` — httpOnly, `sameSite: Lax`, `path: /api/auth`, maxAge 30 days
+  - `user` — non-httpOnly (JS-readable), `sameSite: Lax`, maxAge 30 days
+- **Frontend** sends `withCredentials: true` on all requests; browser auto-attaches
+  cookies. No manual `Authorization` header. No more `sessionStorage` for auth.
+- **Token refresh** (`POST /api/auth/refresh`): on 401, the axios interceptor calls
+  the refresh endpoint (reads `refreshToken` cookie), rotates both tokens, and retries
+  the original request. If refresh fails, redirects to `/logout`.
+- **Logout** (`POST /api/auth/logout`): clears the refresh token in DB + clears all
+  cookies. Frontend fallback clears cookies client-side if the API call fails.
+- **`getAuthData()`** reads from the `user` cookie via `document.cookie` instead of
+  `sessionStorage`. The encryption layer (`encryption.js`) is no longer used.
+- **`AuthProvider`** checks `document.cookie` for the `user` key on mount.
+- **Backward compatibility**: `verifyJWT` still reads `Authorization: Bearer` header
+  as a fallback (for Postman/testing). `POST /logout` no longer requires
+  `verifyUserOnly` — any authenticated user/partner can log out.
+
+## Context consolidation & cleanup (2083/05/07 BS)
+
+- **Auth context** merged into a single `authContext.jsx` (was: `authContext.js` +
+  `AuthProvider.jsx` + `useAuth.js`). Exports `AuthProvider` and `useAuth`.
+- **Theme context** merged into a single `themeModeContext.jsx` (was: `themeModeContext.js`
+  + `ThemeModeProvider.jsx` + `useThemeMode.js`). Exports `ThemeModeProvider` and
+  `useThemeMode`.
+- **AuthExpirationProvider removed** — the inactivity timer, session-expiry dialog, and
+  the `setAuthExpirationHandler` bridge in `axiosConfig.js` are all deleted. Refresh
+  failure now redirects straight to `/logout` with no dialog.
+- **`AxiosInterceptorSetup`** component removed from `App.jsx` (no longer needed).
+- `encryption.js` is dead code (zero importers) — can be removed in a future cleanup.
 
 ## Debug / deployment notes
 
@@ -344,11 +385,13 @@ MongoDB — no base64 in the database.
   `backend/src/scripts/repair-settlement-index.js` (`node src/scripts/repair-settlement-index.js`).
   `settleScope` also now retries on `code 11000` by re-fetching the existing record so a
   concurrent upsert (auto-settle cron racing a manual settle) can't 500 mid-cascade.
-- Frontend build env needs `VITE_ENCRYPTION_KEY` (required — see item 4 above). `VITE_BASE_URL`
-  defaults to `/api` (dev proxy: Vite → `http://localhost:5000`).
-- Auth flow: JWT in `sessionStorage['auth']` → `Authorization: Bearer` via axios interceptor;
-  401 → `authExpirationHandler()` → `/logout`. `verifyJWT` accepts user and partner tokens;
-  `verifyUserOnly` gates admin-only routes.
+- Frontend build env needs `VITE_BASE_URL` (defaults to `/api`; dev proxy: Vite → `http://localhost:5000`).
+- Auth flow: httpOnly cookies (`accessToken` + `refreshToken`) set by backend on login;
+  `withCredentials: true` on all axios requests; 401 triggers `POST /api/auth/refresh`
+  which rotates tokens and retries. User profile in a non-httpOnly `user` cookie,
+  read by `getAuthData()`. Logout calls `POST /api/auth/logout` to clear cookies +
+  DB refresh token. `verifyJWT` reads `req.cookies.accessToken` first, falls back to
+  `Authorization: Bearer` header.
 - Auto-settle: cron `30 0 * * *` Asia/Kathmandu, fires on BS day 1, settles the previous BS month
   (All + Primary + each group's Secondary). Auto-settled settlements cannot be reverted.
 - Settlement math is paise-exact (`splitPaise`); legacy records without `settleActions`

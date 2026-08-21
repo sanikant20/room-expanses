@@ -16,14 +16,14 @@ import CustomDialog from '../../../../components/custom/CustomDialog';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDeleteGroup, useGetGroups, useUpdateGroup } from '../../../../apis/groupAPI/GroupAPI';
-import { isPartnerAccount } from '../../../../helper/getAuthData';
+import { useIsPartner } from '../../../../context/authContext';
 import GroupForm from './GroupForm';
 
 const GroupList = () => {
     const queryClient = useQueryClient();
     const modal = useModalState();
     const dialog = useDialogState();
-    const isPartner = isPartnerAccount();
+    const isPartner = useIsPartner();
 
     const { data: groups, isLoading } = useGetGroups();
     const { mutate: deleteGroup, isPending: isDeleting } = useDeleteGroup();

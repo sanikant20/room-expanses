@@ -17,7 +17,7 @@ import {
     PersonRounded
 } from '@mui/icons-material';
 import { Avatar, Badge, Tooltip, useMediaQuery } from '@mui/material';
-import { getAuthData } from '../../helper/getAuthData';
+import { useAuthData } from '../../context/authContext';
 
 // Styled Components with responsive adjustments
 const MenuItem = styled(MuiMenuItem)(({ theme }) => ({
@@ -122,7 +122,7 @@ export default function OptionsMenu() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
-    const authData = getAuthData();
+    const authData = useAuthData();
 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
@@ -141,11 +141,10 @@ export default function OptionsMenu() {
     };
 
     const userData = {
-        name: `${authData?.FullName}`,
-        email: authData?.Email || authData?.Phone || '',
+        name: authData?.name || '',
+        email: authData?.email || authData?.phone || '',
         role: authData?.accountType === 'partner' ? 'Partner' : 'Admin',
         avatar: authData?.image || '',
-        username: `${authData?.ComID}`
     };
 
     // Menu items configuration
@@ -235,7 +234,7 @@ export default function OptionsMenu() {
                 {/* User Info */}
                 <UserInfo>
                     <UserName variant="subtitle1">{userData?.name}</UserName>
-                    <UserEmail variant="body2">{userData?.email ? userData?.email : userData?.username}</UserEmail>
+                    <UserEmail variant="body2">{userData?.email}</UserEmail>
                     <RoleContainer>
                         <AdminPanelSettingsRounded sx={{
                             fontSize: isMobile ? 14 : 16,
