@@ -13,16 +13,17 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/06 (BS)** — backend **124** tests, frontend 44 tests,
+Last verified green: **2083/05/07 (BS)** — backend **130** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
 with the `/api/turn` routes (water + rice + cleaning), `/api/notifications`,
 `GET /api/health`, and `PUT /api/auth/profile`.
-Both admin and partner login flows verified working with API-driven cookie auth.
+Both admin and partner login flows verified working with API-driven cookie auth,
+locally through the Vite proxy **and** against the production Atlas DB.
 Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np`).
 
 ## Test inventory
 
-### Backend — `backend/tests/` (124 tests, Node built-in runner)
+### Backend — `backend/tests/` (130 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -67,6 +68,16 @@ Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np
   - group controllers — name and at least one partner required, invalid `:id` rejected.
   - `createExpense` — title/amount/paidBy/bsDate required, amount > 0, valid BS date,
     at least one applicable partner.
+- `partnerLogin.test.js` (6 tests) — first-ever coverage of the partner-login
+  **success path** plus the production cookie contract, all with model mocks:
+  - Success: 200, refresh token persisted on the partner record, and **all three
+    cookies** set correctly (`accessToken` path `/`, `refreshToken` path `/api/auth`,
+    non-httpOnly `user` cookie containing only public fields — never password/token).
+  - Failure matrix: 400 missing fields, 404 unknown email, 403 deactivated, 401
+    wrong password.
+  - Cookie-flag environment matrix: `NODE_ENV=development` → `SameSite=Lax`
+    + not Secure; `NODE_ENV=production` → `SameSite=None; Secure` (required for the
+    cross-origin Render deployment). Uses cache-busting `import("…?env=production")`.
 - `turn.test.js` (36 tests) — the water turn state machine, all with model mocks (no DB):
   - `computeTurnState` — empty/inactive-partner handling; **fulfillment follows the
     bringer** (`broughtByPartner`), not the assigned partner; absent partner stays
@@ -304,6 +315,26 @@ MongoDB — no base64 in the database.
   deleted as dead code); `PublicMenuItems` is unchanged and still drives the mobile
   drawer menu.
 
+## Bugs found & fixed (partner login in production, 2083/05/07 BS)
+
+Symptom: partner login returned a bare **500** on production *and* locally through
+the Vite dev proxy — while admin login worked fine in the same browser. The 500 had
+an **empty body** and produced **no backend log line**, meaning the request never
+reached Express's error handler.
+
+| # | Severity | Bug | Fix |
+|---|---|---|---|
+| 18 | Critical | **Five partner records carried base64 data-URI images (146–506 KB) stored raw in MongoDB.** On login, `publicPartner` serialized the blob into the JSON `user` cookie → ~150 KB `Set-Cookie` header. Every intermediary rejected it: Vite's http-proxy locally and Render's router in production returned an empty-body 500; Node silently dropped the oversized header server-side (direct `curl :5000` showed 200 with only 2 of 3 cookies). Admin was unaffected because the admin user has no image. | Three layers: **write guard** (`partner.controller.js`) — only `http(s)` URLs are persisted as images now, client-sent base64/data-URI strings are dropped; **read guard** (`auth.controller.js`) — `safeImage()` strips non-http image values from `publicUser`/`publicPartner`, so cookie payloads can never blow up again even if bad data exists; **one-time DB cleanup** cleared all 5 poisoned records from Atlas (partners re-upload avatars normally). |
+| 19 | High | **Cookie flags broke cross-origin auth**: cookies were hardcoded `SameSite=Lax`, which browsers refuse to send when frontend and backend live on different origins (the Render deployment). Production logins failed for *everyone* once deployed cross-site. | Cookie options follow `NODE_ENV`: production → `SameSite=None; Secure`; development → `Lax`. `clearAuthCookies` repeats the exact same flags via shared factories so cross-site clearing actually works. Pinned by the env-matrix test in `partnerLogin.test.js`. |
+| 20 | Medium | **errorHandler logged nothing** — every failure (4xx and 5xx) vanished without a trace, which is why this bug was nearly undiagnosable ("500 with no logs"). | `errorHandler.js` now logs `[error] METHOD /url -> status: message` for every error, plus the full stack for status ≥ 500. |
+| 21 | Medium | **Partner-login success path had zero test coverage** — only the validation guards were tested, so nothing would have caught the broken success path. | New `partnerLogin.test.js` (6 tests): full success-path assertions (refresh token persisted + all three cookies with correct paths/httpOnly), 400/401/403/404 matrix, and the dev-vs-production cookie-flag contract. |
+
+Debugging lesson recorded for posterity: when a request 500s but the backend log is
+**silent**, the request never reached the app — look at whatever sits in front of it
+(dev proxy, host router), and compare direct-to-port vs proxied responses.
+
+
+
 ## Bugs found & fixed (turn feature UI, 2083/05/04 BS)
 
 | # | Severity | Bug | Fix |
@@ -357,9 +388,13 @@ for synchronous frontend access.
   `generateRefreshToken()` method. Partner JWT refresh tokens include
   `{ _id, type: "partner" }` so the refresh endpoint can distinguish user vs partner.
 - **Cookies set by backend** on login/partnerLogin:
-  - `accessToken` — httpOnly, `sameSite: Lax`, `path: /`, maxAge 1 day
-  - `refreshToken` — httpOnly, `sameSite: Lax`, `path: /api/auth`, maxAge 30 days
-  - `user` — non-httpOnly (JS-readable), `sameSite: Lax`, maxAge 30 days
+  - `accessToken` — httpOnly, `path: /`, maxAge 1 day
+  - `refreshToken` — httpOnly, `path: /api/auth`, maxAge 30 days
+  - `user` — non-httpOnly (JS-readable), maxAge 30 days
+  - **Superseded (2083/05/07 BS)**: `SameSite` is no longer hardcoded `Lax` —
+    flags follow `NODE_ENV`: production → `SameSite=None; Secure` (required because
+    the deployed frontend and backend are on different origins), development →
+    `Lax`. See bug #18–19 and the env-matrix test in `partnerLogin.test.js`.
 - **Frontend** sends `withCredentials: true` on all requests; browser auto-attaches
   cookies. No manual `Authorization` header. No more `sessionStorage` for auth.
 - **Token refresh** (`POST /api/auth/refresh`): on 401, the axios interceptor calls

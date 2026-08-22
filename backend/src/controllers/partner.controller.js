@@ -15,10 +15,17 @@ const hashPassword = async (password) => bcrypt.hash(password, 10);
  * Upload image buffer to Cloudinary and return the URL.
  * If no file or Cloudinary is down, returns the existing image (or null).
  */
+/**
+ * Only http(s) URLs are valid persisted images. Anything else (base64 data
+ * URIs, blobs) would bloat documents and blow up cookie-sized responses.
+ */
+const isSafeImageUrl = (value) =>
+  typeof value === "string" && /^https?:\/\//i.test(value);
+
 const resolveImageUrl = async (file, existingImage = null) => {
-  if (!file) return existingImage;
+  if (!file) return isSafeImageUrl(existingImage) ? existingImage : null;
   const url = await uploadBuffer(file.buffer, "partner");
-  return url || existingImage;
+  return url || null;
 };
 
 export const createPartner = asyncHandler(async (req, res) => {

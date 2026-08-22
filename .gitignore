@@ -3,6 +3,9 @@ atlas-credentials.env
 .env
 .env.*
 *.env
+# Safe-to-commit env templates only (real env files stay local)
+!**/.env.example
+!**/.env.production.example
 *.log
 
 # Test files stay local-only (record kept in TESTING.md)

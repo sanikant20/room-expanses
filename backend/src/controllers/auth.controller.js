@@ -10,24 +10,27 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // Token cookies must be invisible to JavaScript; the user cookie holds only
 // public profile data and must stay readable by document.cookie.
-const tokenCookieOptions = (maxAge, path = "/") => ({
-  httpOnly: true,
+// In production the API and frontend live on different origins, so cookies
+// must be SameSite=None + Secure or the browser won't send them at all.
+const cookieOptions = (httpOnly) => (maxAge, path = "/") => ({
+  httpOnly,
   secure: isProduction,
-  sameSite: "Lax",
+  sameSite: isProduction ? "none" : "lax",
   maxAge,
   path,
 });
 
-const userCookieOptions = (maxAge, path = "/") => ({
-  httpOnly: false,
-  secure: isProduction,
-  sameSite: "Lax",
-  maxAge,
-  path,
-});
+const tokenCookieOptions = cookieOptions(true);
+const userCookieOptions = cookieOptions(false);
 
 const ACCESS_MAX_AGE = 24 * 60 * 60 * 1000; // 1 day
 const REFRESH_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+// This object is serialized into the `user` cookie. An oversized image value
+// (e.g. a base64 data URI) breaks Set-Cookie headers and every proxy in front
+// of the API, so only real http(s) URLs are allowed through.
+const safeImage = (image) =>
+  typeof image === "string" && /^https?:\/\//i.test(image) ? image : undefined;
 
 const publicUser = (user) => ({
   _id: user._id,
@@ -35,7 +38,7 @@ const publicUser = (user) => ({
   email: user.email,
   phone: user.phone,
   role: user.role,
-  image: user.image,
+  image: safeImage(user.image),
   isActive: user.isActive,
   createdAt: user.createdAt,
   accountType: "user",
@@ -46,7 +49,7 @@ const publicPartner = (partner) => ({
   name: partner.name,
   email: partner.email,
   phone: partner.phone,
-  image: partner.image,
+  image: safeImage(partner.image),
   status: partner.status,
   bsJoiningDate: partner.bsJoiningDate,
   notes: partner.notes,
@@ -61,9 +64,9 @@ const setAuthCookies = (res, accessToken, refreshToken, user) => {
 };
 
 const clearAuthCookies = (res) => {
-  res.clearCookie("accessToken", { path: "/" });
-  res.clearCookie("refreshToken", { path: "/api/auth" });
-  res.clearCookie("user", { path: "/" });
+  res.clearCookie("accessToken", tokenCookieOptions(0));
+  res.clearCookie("refreshToken", tokenCookieOptions(0, "/api/auth"));
+  res.clearCookie("user", userCookieOptions(0));
 };
 
 export const login = asyncHandler(async (req, res) => {
