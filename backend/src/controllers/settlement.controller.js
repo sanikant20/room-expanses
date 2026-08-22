@@ -18,6 +18,7 @@ import {
   settleAllCascade,
   settleScope,
 } from "../services/settlement.service.js";
+import { notifySettlementCompleted, notifyPartner, bsPeriodLabel } from "../services/notification.service.js";
 
 const populateOptions = () => [
   { path: "paidBy", select: "name image" },
@@ -99,6 +100,64 @@ const updateTransactionPayment = async (scope, updates) => {
   }
 };
 
+/**
+ * Best-effort payment notification — additive only, never blocks the response
+ * and never changes the pay/confirm outcome.
+ */
+const firePaymentNotification = (partnerId, title, message) =>
+  notifyPartner({ partnerId, type: "payment", title, message }).catch(() => {});
+
+const notifyTransactionStatus = async ({ scope, status }) => {
+  try {
+    const filter = {
+      bsYear: scope.year,
+      bsMonth: scope.month,
+      status: "settled",
+      "transactions.from": scope.from,
+      "transactions.to": scope.to,
+    };
+    if (scope.category != null) filter.category = scope.category;
+    if (scope.group != null) filter.group = scope.group;
+
+    const record = await Settlement.findOne(filter).populate([
+      { path: "transactions.from", select: "name email" },
+      { path: "transactions.to", select: "name email" },
+    ]);
+
+    const tx = (record?.transactions || []).find(
+      (t) =>
+        String(t.from?._id || t.from) === scope.from &&
+        String(t.to?._id || t.to) === scope.to
+    );
+
+    const fromPartner = tx?.from;
+    const toPartner = tx?.to;
+    if (!fromPartner || !toPartner) return;
+
+    const amount = `Rs ${Number(tx.amount || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+    const period = bsPeriodLabel(scope.month, scope.year);
+
+    if (status === "paid") {
+      await firePaymentNotification(
+        toPartner._id,
+        `Payment marked paid — ${period}`,
+        `${fromPartner.name} marked the ${amount} payment to you as paid (${period}). Please confirm receipt from the Transactions tab.`
+      );
+    } else if (status === "confirmed") {
+      await firePaymentNotification(
+        fromPartner._id,
+        `Payment confirmed — ${period}`,
+        `${toPartner.name} confirmed receiving your ${amount} payment for ${period}.`
+      );
+    }
+  } catch (error) {
+    console.error(`[notify] ${status} notification failed:`, error.message);
+  }
+};
+
 export const markTransactionPaid = asyncHandler(async (req, res) => {
   const scope = resolveTransactionScope(req);
 
@@ -110,6 +169,7 @@ export const markTransactionPaid = asyncHandler(async (req, res) => {
     paymentStatus: "paid",
     paidAt: new Date(),
   });
+  await notifyTransactionStatus({ scope, status: "paid" });
 
   return res.status(200).json({
     success: true,
@@ -157,6 +217,7 @@ export const confirmTransactionReceipt = asyncHandler(async (req, res) => {
     confirmedBy: req.user?._id || null,
     confirmedByType: req.userType || null,
   });
+  await notifyTransactionStatus({ scope, status: "confirmed" });
 
   return res.status(200).json({
     success: true,
@@ -235,16 +296,24 @@ export const getSettlement = asyncHandler(async (req, res) => {
       fetchSecondaryAggregatedStatus(bsYear, bsMonth),
     ]);
     isSettled = !!primaryRecord && secondaryStatus.status === "settled";
-    aggregatedTransactions = secondaryStatus.transactions || [];
-    aggregatedSettleActions = secondaryStatus.settleActions || [];
-    if (primaryRecord?.transactions) {
-      aggregatedTransactions = [...primaryRecord.transactions, ...aggregatedTransactions];
+
+    // The combined record is the authoritative ledger for the "All" scope:
+    // settleAllCascade computes it over every expense at once, so its netting
+    // can differ from per-scope records (a pair may exist only there).
+    // Payment updates (updateMany without category/group) also hit it.
+    // Prefer it; stitch primary + secondary only as a fallback when absent.
+    if (allRecord) {
+      aggregatedTransactions = allRecord.transactions || [];
+      aggregatedSettleActions = allRecord.settleActions || [];
+    } else {
+      aggregatedTransactions = secondaryStatus.transactions || [];
+      aggregatedSettleActions = secondaryStatus.settleActions || [];
+      if (primaryRecord?.transactions) {
+        aggregatedTransactions = [...primaryRecord.transactions, ...aggregatedTransactions];
+      }
     }
-    if (allRecord?.settleActions) {
-      aggregatedSettleActions = [...allRecord.settleActions, ...aggregatedSettleActions];
-    }
-    if (primaryRecord?.settleActions) {
-      aggregatedSettleActions = [...primaryRecord.settleActions, ...aggregatedSettleActions];
+    if (primaryRecord?.settleActions && !allRecord) {
+      aggregatedSettleActions = [...(primaryRecord.settleActions || []), ...aggregatedSettleActions];
     }
     if (allRecord) {
       settledMeta = { settledBy: allRecord.settledBy, settledAt: allRecord.settledAt, fromDate: allRecord.fromDate, toDate: allRecord.toDate };
@@ -388,6 +457,7 @@ export const settleMonth = asyncHandler(async (req, res) => {
     }
 
     await settleAllCascade({ year, month, settledBy: req.user?._id });
+    await notifySettlementCompleted({ year, month, source: "manual" });
 
     return res.status(200).json({
       success: true,
@@ -423,6 +493,7 @@ export const settleMonth = asyncHandler(async (req, res) => {
     }
 
     const allCreated = await settleIfAllSubScopesSettled(year, month, req.user?._id);
+    if (allCreated) await notifySettlementCompleted({ year, month, source: "manual" });
 
     return res.status(200).json({
       success: true,
@@ -444,6 +515,7 @@ export const settleMonth = asyncHandler(async (req, res) => {
   }
 
   const allCreated = await settleIfAllSubScopesSettled(year, month, req.user?._id);
+  if (allCreated) await notifySettlementCompleted({ year, month, source: "manual" });
 
   return res.status(200).json({
     success: true,

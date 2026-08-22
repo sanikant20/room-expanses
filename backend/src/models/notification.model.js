@@ -9,7 +9,7 @@ const notificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["water", "rice", "cleaning", "system"],
+      enum: ["water", "rice", "cleaning", "system", "payment", "settlement", "settlement-auto"],
       default: "system",
     },
     title: { type: String, required: true },

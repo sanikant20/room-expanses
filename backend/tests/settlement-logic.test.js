@@ -207,16 +207,30 @@ describe("getSettlement source filter data", () => {
 
   const populated = (doc) => ({ ...doc, populate: () => doc });
 
-  const mockLookups = ({ allActions = [], primaryActions = [], secondaryActions = [] }) => {
+  const mockLookups = ({
+    allActions = [],
+    primaryActions = [],
+    secondaryActions = [],
+    allTransactions,
+    primaryTransactions = [],
+    secondaryTransactions = [],
+    noAllRecord = false,
+  } = {}) => {
     mock.method(Partner, "find", () => ({ select: () => ({ sort: async () => [] }) }));
     mock.method(Expense, "find", () => ({ select: async () => [] }));
     mock.method(Group, "find", () => ({ sort: async () => [{ _id: "g1" }] }));
+    // mongoose queries are .populate()-chainable even when they resolve null
+    const nullDoc = () => ({ populate: async () => null });
     mock.method(Settlement, "findOne", (query) => {
-      if (query.category === null) return populated({ _id: "all", status: "settled", settleActions: allActions });
-      if (query.category === "primary") return populated({ _id: "primary", status: "settled", transactions: [], settleActions: primaryActions });
-      return null;
+      if (query.category === null) {
+        return noAllRecord
+          ? nullDoc()
+          : populated({ _id: "all", status: "settled", transactions: allTransactions || [], settleActions: allActions });
+      }
+      if (query.category === "primary") return populated({ _id: "primary", status: "settled", transactions: primaryTransactions, settleActions: primaryActions });
+      return nullDoc();
     });
-    const secondary = [{ _id: "sec1", status: "settled", transactions: [], settleActions: secondaryActions }];
+    const secondary = [{ _id: "sec1", status: "settled", transactions: secondaryTransactions, settleActions: secondaryActions }];
     mock.method(Settlement, "find", () => ({ populate: () => secondary }));
   };
 
@@ -238,6 +252,36 @@ describe("getSettlement source filter data", () => {
     assert.equal(body.settlement.settleActions.length, 1);
     assert.equal(body.settlement.settleActions[0].source, "auto");
     assert.equal(body.settlement.settleActions[0].transactions[0].from.name, "Alice");
+  });
+
+  test("uses the combined record's transactions for the All scope when it exists (bug #22)", async () => {
+    // Combined netting differs from per-scope netting: this pair exists ONLY
+    // in the all-record, and its payment status was marked paid there.
+    mockLookups({
+      allTransactions: [
+        { from: { _id: "payerC" }, to: { _id: "receiverD" }, amount: 683.8, paymentStatus: "paid" },
+      ],
+      primaryTransactions: [{ from: { _id: "x" }, to: { _id: "y" }, amount: 1 }],
+      secondaryTransactions: [{ from: { _id: "z" }, to: { _id: "w" }, amount: 2 }],
+    });
+    const { body } = await runHandler(getSettlement, {
+      query: { bsYear: 2083, bsMonth: 4 },
+    });
+    assert.equal(body.settlement.transactions.length, 1);
+    assert.equal(body.settlement.transactions[0].paymentStatus, "paid");
+    assert.equal(String(body.settlement.transactions[0].from._id), "payerC");
+  });
+
+  test("falls back to stitched primary + secondary transactions without a combined record", async () => {
+    mockLookups({
+      noAllRecord: true,
+      primaryTransactions: [{ from: { _id: "x" }, to: { _id: "y" }, amount: 1 }],
+      secondaryTransactions: [{ from: { _id: "z" }, to: { _id: "w" }, amount: 2 }],
+    });
+    const { body } = await runHandler(getSettlement, {
+      query: { bsYear: 2083, bsMonth: 4 },
+    });
+    assert.equal(body.settlement.transactions.length, 2);
   });
 });
 

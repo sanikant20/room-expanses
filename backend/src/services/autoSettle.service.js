@@ -3,6 +3,7 @@ import NepaliDateModule from "nepali-date-converter";
 import { Expense } from "../models/expense.model.js";
 import { Settlement } from "../models/settlement.model.js";
 import { settleAllCascade } from "./settlement.service.js";
+import { notifySettlementCompleted } from "./notification.service.js";
 
 const NepaliDate = NepaliDateModule.default || NepaliDateModule;
 
@@ -40,6 +41,8 @@ const settleMonth = async (bsYear, bsMonth, source) => {
     month: bsMonth,
     settledBy: null,
   });
+
+  await notifySettlementCompleted({ year: bsYear, month: bsMonth, source: "auto" });
 
   const summary = results.map(({ scope, group, alreadySettled: done }) => ({
     scope,

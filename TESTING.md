@@ -13,7 +13,7 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/07 (BS)** — backend **130** tests, frontend 44 tests,
+Last verified green: **2083/05/07 (BS)** — backend **139** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
 with the `/api/turn` routes (water + rice + cleaning), `/api/notifications`,
 `GET /api/health`, and `PUT /api/auth/profile`.
@@ -23,7 +23,7 @@ Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np
 
 ## Test inventory
 
-### Backend — `backend/tests/` (130 tests, Node built-in runner)
+### Backend — `backend/tests/` (139 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -78,6 +78,20 @@ Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np
   - Cookie-flag environment matrix: `NODE_ENV=development` → `SameSite=Lax`
     + not Secure; `NODE_ENV=production` → `SameSite=None; Secure` (required for the
     cross-origin Render deployment). Uses cache-busting `import("…?env=production")`.
+- `settlementNotify.test.js` (7 tests) — settlement & payment notifications:
+  - **Settlement completed**: every active partner gets an in-app notification
+    (per-partner `refKey` so cron/manual races can't duplicate) plus — with an
+    email on file — the full-ledger email mirroring the Transactions tab
+    (From / To / Amount in `Rs x,xxx.xx` en-IN format / Status, "Total to move"
+    footer, BS period in the subject). Auto-settle uses `settlement-auto`.
+  - No combined-scope record → silent no-op; no-email partner → in-app only;
+    an E11000 for one partner never blocks the others or their emails; the
+    helper never throws (DB failures logged only).
+  - **Payment status**: payer marks **paid** → receiver notified; receiver
+    **confirms** → payer notified (`type: "payment"`, additive hooks after the
+    existing update paths — never affecting API outcomes).
+  - Emails captured by stubbing `globalThis.fetch` with a fake API key.
+
 - `turn.test.js` (36 tests) — the water turn state machine, all with model mocks (no DB):
   - `computeTurnState` — empty/inactive-partner handling; **fulfillment follows the
     bringer** (`broughtByPartner`), not the assigned partner; absent partner stays
@@ -315,6 +329,30 @@ MongoDB — no base64 in the database.
   deleted as dead code); `PublicMenuItems` is unchanged and still drives the mobile
   drawer menu.
 
+## Settlement completion emails & notifications (2083/05/07 BS)
+
+When a BS month finishes settling, **every active partner is notified** — in-app
+and by email — with the **full ledger**, mirroring the Transactions tab.
+
+- **Trigger points**: manual `POST /settlement/settle` (all-scope cascade and
+  both sub-scope paths when they create the combined record) and the auto-settle
+  cron/catch-up (`autoSettle.service.js`).
+- **`notifySettlementCompleted({ year, month, source })`**
+  (`notification.service.js`): reads the combined-scope Settlement record with
+  populated `transactions.from/to`, loops active partners, creates an in-app
+  notification per partner (`refKey = settlement-<year>-<month>-<partnerId>`,
+  so cron/manual races can't duplicate), then emails each partner with an email.
+- **Email content**: branded header ("We Roomies — Settlement Completed"), BS
+  period label (e.g. *Bhadra 2083*), the complete From → To → Amount → Status
+  table (en-IN currency formatting, colored status badges), a "Total to move"
+  footer row, and the settled-at timestamp (Asia/Kathmandu). Statuses shown are
+  live values — partners mark paid/confirmed in the app.
+- **Best-effort contract**: never throws; DB/email failures are logged only.
+  A partner without an email gets the in-app notification alone. Re-settling a
+  month after a revert sends a fresh email (ledger changed) while the in-app
+  refKey keeps that feed deduplicated.
+- Covered by `settlementNotify.test.js` (5 tests) — see inventory above.
+
 ## Bugs found & fixed (partner login in production, 2083/05/07 BS)
 
 Symptom: partner login returned a bare **500** on production *and* locally through
@@ -328,6 +366,8 @@ reached Express's error handler.
 | 19 | High | **Cookie flags broke cross-origin auth**: cookies were hardcoded `SameSite=Lax`, which browsers refuse to send when frontend and backend live on different origins (the Render deployment). Production logins failed for *everyone* once deployed cross-site. | Cookie options follow `NODE_ENV`: production → `SameSite=None; Secure`; development → `Lax`. `clearAuthCookies` repeats the exact same flags via shared factories so cross-site clearing actually works. Pinned by the env-matrix test in `partnerLogin.test.js`. |
 | 20 | Medium | **errorHandler logged nothing** — every failure (4xx and 5xx) vanished without a trace, which is why this bug was nearly undiagnosable ("500 with no logs"). | `errorHandler.js` now logs `[error] METHOD /url -> status: message` for every error, plus the full stack for status ≥ 500. |
 | 21 | Medium | **Partner-login success path had zero test coverage** — only the validation guards were tested, so nothing would have caught the broken success path. | New `partnerLogin.test.js` (6 tests): full success-path assertions (refresh token persisted + all three cookies with correct paths/httpOnly), 400/401/403/404 matrix, and the dev-vs-production cookie-flag contract. |
+| 22 | High | **Payment status "not updating" for a partner (bug #10 relapse, read-side)**: the mark/confirm *write* hits every scope record (`updateMany`), but `getSettlement` for the All scope stitched its transaction list from primary + secondary records and **never read the combined record's transactions**. Combined netting differs from per-scope netting, so some pairs exist *only* in the combined record — their paid/confirmed status was invisible to every tab even though it persisted. Notifications exposed the mismatch: they read the combined record and fired correctly while the UI showed stale statuses. | `getSettlement` (category=null) now uses the combined record's transactions/settleActions as the authoritative ledger when that record exists, falling back to the primary+secondary stitch only when it doesn't. Read, write, and notification paths all target the same record. Regression tests: combined-record transactions win; stitch still used without a combined record. |
+| 23 | High | **MUI `RovingTabIndexContext is missing` crash** (full-page error boundary). In MUI v9, `Tab`/`ToggleButton`/`MenuItem` throw when their roving-tabindex provider (`Tabs`/`ToggleButtonGroup`/`MenuList`) isn't visible in the React context chain. Full audit found every usage correctly wrapped (`Tab`s inside `Tabs`, `MenuItem`s inside `Menu`/`Select`, no bare `ToggleButton`s) — the crash came from **module duplication, not JSX**: a stale Vite dep-optimize cache (`node_modules/.vite`) from the MUI 9.2→9.3 upgrade window served old prebundled chunks alongside fresh ones, so two copies of the context module existed — the provider wrote to copy A, the consumer read copy B → `undefined` → throw. The Express-served `frontend/build` was also ~20 min older than HEAD. | Cleared `node_modules/.vite`, rebuilt `frontend/build`. Prevention: after any `npm install` that bumps `@mui/*`, delete `.vite` and restart Vite; rebuild the SPA before serving it through Express so single-origin users never run a bundle older than the API they talk to. |
 
 Debugging lesson recorded for posterity: when a request 500s but the backend log is
 **silent**, the request never reached the app — look at whatever sits in front of it
