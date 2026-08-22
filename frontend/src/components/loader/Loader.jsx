@@ -49,7 +49,7 @@ const loadingMessages = [
     'Preparing your expense insights...',
     'Syncing settlements and reports...',
     'Almost ready for your room team...',
-    'The Roomies - Room Expenses Management...'
+    'We Roomies - Room Expenses Management...'
 ];
 
 const Loader = ({
@@ -194,7 +194,7 @@ const Loader = ({
                 <Box
                     component="img"
                     src={logo}
-                    alt="The Roomies"
+                    alt="We Roomies"
                     sx={{
                         width: logoSize - 10,
                         height: logoSize - 10,
@@ -301,7 +301,7 @@ const Loader = ({
                     mx: 'auto',
                 }}
             >
-                "The Roomies - Powering fair room expense sharing"
+                "We Roomies - Powering fair room expense sharing"
             </Typography>
         </Box>
     );

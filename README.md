@@ -1,4 +1,4 @@
-# Room Expenses (The Roomies)
+# We Roomies — Room Expenses Management
 
 A room expenses management app with Nepali (Bikram Sambat) date support. Track shared
 expenses, manage rotating duties (water/rice/cleaning turns), get notified in-app and by
@@ -79,5 +79,28 @@ Backend keys:
 | `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | optional | Avatar uploads (skipped if missing) |
 | `RESEND_API_KEY`, `EMAIL_FROM` | optional | Email notifications (skipped if missing) |
 
+## Deployment (single origin)
+
+Production runs as **one Render Web Service** that serves both the API and the
+built React app from the same origin — auth cookies stay first-party, so
+cross-site cookie blocking never applies.
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | *(blank)* |
+| Build command | `npm run render-build` |
+| Start command | `npm run render-start` |
+
+The `render-*` scripts live in the root `package.json` (Render's build-command
+input rejects `&&`, so the real commands are kept there):
+- `render-build`: `cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install`
+- `render-start`: `cd backend && node -r dotenv/config src/server.js`
+
+- `--include=dev` is required: with `NODE_ENV=production`, npm skips devDependencies (`vite`).
+- Production starts plain `node` — `nodemon` is a devDependency and must not be used.
+- Do **not** set `VITE_BASE_URL` in production; the build defaults to relative `/api`.
+- Express serves `frontend/build` automatically when it exists (see `backend/src/app.js`);
+  local dev is unaffected.
+
 See [`TESTING.md`](./TESTING.md) for the full test/audit record — how to verify every
-feature and what has already been covered (124 backend tests, 44 frontend tests).
+feature and what has already been covered (130 backend tests, 44 frontend tests).

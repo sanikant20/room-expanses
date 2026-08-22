@@ -1,0 +1,9 @@
+{
+  "name": "we-roomies",
+  "private": true,
+  "version": "2.0.0",
+  "scripts": {
+    "render-build": "cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install",
+    "render-start": "cd backend && node -r dotenv/config src/server.js"
+  }
+}

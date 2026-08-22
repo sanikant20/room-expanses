@@ -31,8 +31,8 @@ const ProductLinks = [
 
 const ContactInfo = [
     { icon: <LocationOnOutlinedIcon fontSize="small" />, label: 'Kathmandu, Nepal' },
-    { icon: <PhoneOutlinedIcon fontSize="small" />, label: '+977 1 4000000 (placeholder)' },
-    { icon: <EmailOutlinedIcon fontSize="small" />, label: 'support@theroomies.app (placeholder)' },
+    { icon: <PhoneOutlinedIcon fontSize="small" />, label: '+977 9815203820' },
+    { icon: <EmailOutlinedIcon fontSize="small" />, label: 'kushsani508@gmail.com' },
 ];
 
 const PublicFooter = () => {
@@ -54,7 +54,7 @@ const PublicFooter = () => {
                     {/* Company Info */}
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <Typography variant="h6" gutterBottom fontWeight="bold" color="text.primary">
-                            The Roomies
+                            We Roomies
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
                             Track shared expenses, settle balances, and stay organized in Nepali months.
@@ -144,7 +144,7 @@ const PublicFooter = () => {
                         © {new Date().getFullYear()} <span
                             onClick={() => window.open('https://easysoftware.com.np/', '_blank')}
                             style={{ color: theme.palette.primary.main, fontWeight: 600, cursor: 'pointer' }}>
-                            The Roomies
+                            We Roomies
                         </span> All rights reserved.
                     </Typography>
                 </Box>

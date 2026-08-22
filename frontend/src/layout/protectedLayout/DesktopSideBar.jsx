@@ -107,7 +107,7 @@ export default function DesktopSideBar({ open }) {
                                     color: 'text.primary',
                                 }}
                             >
-                                The Roomies
+                                We Roomies
                             </Typography>
                             <Typography
                                 variant="caption"

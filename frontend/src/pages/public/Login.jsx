@@ -161,7 +161,7 @@ const Login = () => {
                             <Box
                                 component="img"
                                 src="/logo.png"
-                                alt="The Roomies Logo"
+                                alt="We Roomies Logo"
                                 sx={{
                                     width: 80,
                                     height: 80,
@@ -174,7 +174,7 @@ const Login = () => {
                                 }}
                             />
                             <Typography variant="h3" fontWeight="bold" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, textAlign: { xs: 'center', sm: 'left' } }}>
-                                The Roomies
+                                We Roomies
                             </Typography>
                         </Box>
                         <Typography variant="h5" sx={{ opacity: 0.9, fontSize: { xs: '1rem', md: '1.25rem' } }}>
@@ -566,7 +566,7 @@ const Login = () => {
                                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 © {new Date().getFullYear()} <span style={{ color: theme.palette.primary.main, fontWeight: 600 }}>
-                                                    The Roomies</span>. All rights reserved.
+                                                    We Roomies</span>. All rights reserved.
                                             </Typography>
                                         </Box>
                                     </Form>

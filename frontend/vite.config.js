@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.png'],
       manifest: {
-        name: 'The Roomies',
-        short_name: 'The Roomies',
-        description: 'The Roomies | Room Expenses Management',
+        name: 'We Roomies',
+        short_name: 'We Roomies',
+        description: 'We Roomies | Room Expenses Management',
         icons: [
           {
             src: 'logo.png',

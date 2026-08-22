@@ -85,12 +85,12 @@ const PublicDesktopHeader = () => {
                         onClick={handleLogoClick}
                         role="link"
                         tabIndex={0}
-                        aria-label="The Roomies"
+                        aria-label="We Roomies"
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogoClick(); } }}
                     >
                         <LogoImage
                             src="/logo.png"
-                            alt="The Roomies logo"
+                            alt="We Roomies logo"
                             onError={(e) => {
                                 e.target.style.display = 'none';
                             }}
@@ -105,7 +105,7 @@ const PublicDesktopHeader = () => {
                                 lineHeight: 1.2,
                             }}
                         >
-                            The Roomies
+                            We Roomies
                         </Typography>
                     </Box>
 

@@ -1,4 +1,4 @@
-# The Roomies — Room Expenses Management
+# We Roomies — Room Expenses Management
 
 A modern room-expenses management app built with React, Vite, and Material UI. The app includes a polished dashboard experience, role-based UI sections, and reusable components for tracking shared expenses and settling balances in Nepali months.
 

@@ -439,10 +439,20 @@ for synchronous frontend access.
   message }` so the backend dev server **must be restarted** after this change to see
   it. Dev-tools `[Violation] 'setTimeout' handler took Xms` warnings come from
   `react-toastify`/react-query internals, not app code.
-- `backend/.env` must set: `MONGODB_URI` (Atlas), `DB_NAME=room-expanses`, `ACCESS_TOKEN_SECRET`,
-  `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` (= deployed frontend origin), `NODE_ENV=production`,
-  `PORT`. Current values are **dev defaults**. Optional: `CLOUDINARY_CLOUD_NAME`,
-  `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` for avatar uploads.
+- **Single-origin Render deploy (2083/05/07 BS)**: one Web Service (`we-roomies`)
+  serves the API **and** the built SPA from `https://we-roomies.onrender.com` —
+  build `npm run render-build`, start `npm run render-start`, Root Directory blank.
+  (Render's command input rejects `&&`/`=`, so the real commands live in the root
+  `package.json`: frontend install with `--include=dev` + vite build + backend install;
+  production starts plain node, not nodemon.)
+  Same-origin cookies are first-party, so browser third-party-cookie blocking no
+  longer applies; the old split-domain services (`housenotfound` static site +
+  `rooomnotfound`) were retired — their cross-site cookies were discarded by
+  browsers even with `SameSite=None; Secure`, which broke `/me` after login.
+- Backend prod `.env` must set: `MONGODB_URI` (Atlas), `DB_NAME`, `ACCESS_TOKEN_SECRET`,
+  `REFRESH_TOKEN_SECRET`, `NODE_ENV=production`; `CORS_ORIGIN` is now only a
+  fallback (set it to the service's own URL). Optional: `RESEND_*` / `EMAIL_FROM`
+  for email, `CLOUDINARY_*` for avatars.
 - **Email notifications (2083/05/06 BS)**: optional. Set `RESEND_API_KEY` for
   best-effort email via Resend's free tier (REST API, no npm dep). Without it, email is
   skipped silently and only in-app notifications (the header bell) are delivered.
@@ -473,7 +483,8 @@ for synchronous frontend access.
   `backend/src/scripts/repair-settlement-index.js` (`node src/scripts/repair-settlement-index.js`).
   `settleScope` also now retries on `code 11000` by re-fetching the existing record so a
   concurrent upsert (auto-settle cron racing a manual settle) can't 500 mid-cascade.
-- Frontend build env needs `VITE_BASE_URL` (defaults to `/api`; dev proxy: Vite → `http://localhost:5000`).
+- Frontend build env: `VITE_BASE_URL` defaults to `/api` — leave it unset in
+  production (single origin); dev uses the Vite proxy (`:5173` → `http://localhost:5000`).
 - Auth flow: httpOnly cookies (`accessToken` + `refreshToken`) set by backend on login;
   `withCredentials: true` on all axios requests; 401 triggers `POST /api/auth/refresh`
   which rotates tokens and retries. User profile in a non-httpOnly `user` cookie,

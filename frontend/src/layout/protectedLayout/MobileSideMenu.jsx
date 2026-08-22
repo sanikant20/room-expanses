@@ -10,14 +10,10 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MenuContent from './MenuContent';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
-import { PersonRounded } from '@mui/icons-material';
-import { Avatar } from '@mui/material';
-import { useAuthData } from '../../context/authContext';
 
 export default function MobileSideMenu({ open, toggleDrawer }) {
     const theme = useTheme();
     const navigate = useNavigate();
-    const authData = useAuthData();
 
     const handleLogout = () => {
         navigate('/logout');
@@ -82,7 +78,7 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
                                     color: 'text.primary',
                                 }}
                             >
-                                The Roomies
+                                We Roomies
                             </Typography>
                             <Typography
                                 variant="caption"
@@ -94,43 +90,6 @@ export default function MobileSideMenu({ open, toggleDrawer }) {
                             >
                                 Room Expenses Management
                             </Typography>
-                            <Stack direction="row" sx={{ gap: 1, alignItems: 'center', mt: 0.5 }}>
-                                <Avatar
-                                    src={authData?.image || ''}
-                                    alt={authData?.name}
-                                    sx={{ width: 28, height: 28, fontSize: 14, bgcolor: 'primary.main', color: 'primary.contrastText' }}
-                                >
-                                    {authData?.name?.charAt(0) || 'U'}
-                                </Avatar>
-                                <Stack sx={{ minWidth: 0 }}>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            color: 'text.primary',
-                                            lineHeight: 1.2,
-                                            fontWeight: 600,
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                        }}
-                                    >
-                                        {authData?.name || 'User'}
-                                    </Typography>
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            color: 'text.secondary',
-                                            lineHeight: 1.2,
-                                            fontSize: '0.65rem',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                        }}
-                                    >
-                                        {authData?.email || ''}
-                                    </Typography>
-                                </Stack>
-                            </Stack>
                         </Stack>
                     </Stack>
 
