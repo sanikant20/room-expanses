@@ -17,6 +17,7 @@ import {
     useMediaQuery,
 } from '@mui/material';
 import { NotificationsNoneRounded, NotificationsActiveRounded, DoneAllRounded } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useGetNotifications, useMarkAllNotificationsRead, useMarkNotificationRead } from '../../apis/notificationAPI/NotificationAPI';
 import { useAuth } from '../../context/authContext';
 
@@ -25,6 +26,9 @@ const typeIcon = (type) => {
         case 'water': return '💧';
         case 'rice': return '🍚';
         case 'cleaning': return '🧹';
+        case 'payment': return '💰';
+        case 'settlement':
+        case 'settlement-auto': return '📊';
         default: return '🔔';
     }
 };
@@ -45,7 +49,7 @@ const EmptyState = () => (
     <Box sx={{ p: 3, textAlign: 'center' }}>
         <NotificationsNoneRounded sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
         <Typography variant="body2" color="text.secondary">
-            No notifications yet
+            No unread notifications
         </Typography>
     </Box>
 );
@@ -54,10 +58,11 @@ export default function NotificationBell() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
-    const { data, isLoading, isFetching } = useGetNotifications({ enabled: isAuthenticated });
+    const { data, isLoading, isFetching } = useGetNotifications({ enabled: isAuthenticated, status: 'unread' });
     const markReadMutation = useMarkNotificationRead();
     const markAllMutation = useMarkAllNotificationsRead();
 
@@ -216,10 +221,20 @@ export default function NotificationBell() {
                 </Box>
 
                 <Divider />
-                <Box sx={{ px: 2, py: 1 }}>
+                <Box sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Typography variant="caption" color="text.secondary">
                         {isFetching ? 'Refreshing…' : `Last checked just now`}
                     </Typography>
+                    <Button
+                        size="small"
+                        onClick={() => {
+                            handleClose();
+                            navigate('/notifications');
+                        }}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        View read notifications
+                    </Button>
                 </Box>
             </Menu>
         </React.Fragment>

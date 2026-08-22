@@ -1,5 +1,6 @@
 import {
     DashboardRounded,
+    NotificationsRounded,
     SettingsRounded,
     ReceiptLongRounded,
     GroupsRounded,
@@ -15,6 +16,13 @@ export const MenuItemLists = [
         translationKey: 'menu.dashboard',
         icon: <DashboardRounded />,
         route: '/dashboard',
+    },
+    {
+        section: 'Overview',
+        menu: 'Notifications',
+        translationKey: 'menu.notifications',
+        icon: <NotificationsRounded />,
+        route: '/notifications',
     },
     {
         section: 'Management',

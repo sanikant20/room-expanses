@@ -1,5 +1,7 @@
 import { Router } from "express";
 import {
+  deleteExpiredNotifications,
+  deleteNotification,
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -11,5 +13,7 @@ export const notificationRouter = Router();
 notificationRouter.use(verifyJWT);
 
 notificationRouter.get("/", getNotifications);
-notificationRouter.put("/:id/read", markNotificationRead);
 notificationRouter.put("/read-all", markAllNotificationsRead);
+notificationRouter.put("/:id/read", markNotificationRead);
+notificationRouter.delete("/read/expired", deleteExpiredNotifications);
+notificationRouter.delete("/:id", deleteNotification);

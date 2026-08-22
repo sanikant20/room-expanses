@@ -13,7 +13,7 @@ audited, so the whole suite never needs to be re-derived from scratch.
 | `cd frontend && npm run build` | Production build (must pass) |
 | `cd backend && node --check src/*.js src/**/*.js` | Backend syntax (no lint script configured) |
 
-Last verified green: **2083/05/07 (BS)** — backend **139** tests, frontend 44 tests,
+Last verified green: **2083/05/07 (BS)** — backend **148** tests, frontend 44 tests,
 frontend lint 0 errors / 2 pre-existing warnings, frontend build OK, backend boots
 with the `/api/turn` routes (water + rice + cleaning), `/api/notifications`,
 `GET /api/health`, and `PUT /api/auth/profile`.
@@ -23,7 +23,7 @@ Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np
 
 ## Test inventory
 
-### Backend — `backend/tests/` (139 tests, Node built-in runner)
+### Backend — `backend/tests/` (148 tests, Node built-in runner)
 - `calculation.test.js` — the money math that drives everything:
   - `splitPaise` splits any amount into exact integer paise shares summing to the total.
   - `expenseShares` always sums to `amount × 100` and is independent of partner-array order.
@@ -91,6 +91,13 @@ Resend email verified end-to-end from the verified domain (`mail.sanikant.com.np
     **confirms** → payer notified (`type: "payment"`, additive hooks after the
     existing update paths — never affecting API outcomes).
   - Emails captured by stubbing `globalThis.fetch` with a fake API key.
+
+- `notificationDelete.test.js` (9 tests) — notification list filters &
+  deletion policy: `?status=unread|read` filtering with `unreadCount` always
+  computed unfiltered; single delete guard matrix (404 unknown / 403 not-owner
+  / 409 unread / 409 read <14 days / 200 at ≥14 days) and the bulk
+  `DELETE /read/expired` query shape (`read:true` + `readAt ≤ now−30d`,
+  `$ne:null`).
 
 - `turn.test.js` (36 tests) — the water turn state machine, all with model mocks (no DB):
   - `computeTurnState` — empty/inactive-partner handling; **fulfillment follows the
@@ -328,6 +335,39 @@ MongoDB — no base64 in the database.
   was trimmed to the mobile-only list rendering (the desktop `Stack`/Button branch was
   deleted as dead code); `PublicMenuItems` is unchanged and still drives the mobile
   drawer menu.
+
+## Notification menu, popup & deletion policy (2083/05/07 BS)
+
+The bell popup now shows **unread notifications only**; read ones live on the
+new `/notifications` page (sidebar → Overview → Notifications, also linked
+from the popup footer as "View read notifications").
+
+- **List filtering**: `GET /api/notifications?status=unread|read` — `unreadCount`
+  in every response is always computed unfiltered, so the bell badge stays
+  correct no matter which list is open.
+- **Deletion rule (server-enforced)**: a notification may be deleted only when
+  `read === true` AND `readAt` is at least **30 days old**
+  (`DELETE /api/notifications/:id`). Otherwise: 409 "Unread notifications
+  cannot be deleted" / 409 "Read notifications can be deleted two weeks after
+  being read"; partners can only delete their own (403 otherwise).
+- **Bulk delete**: `DELETE /api/notifications/read/expired` removes *all* of the
+  caller's notifications matching the same rule (`read:true`,
+  `readAt ≤ now−30d`, `$ne:null`) and returns `deletedCount`. UI exposes it as
+  the "Delete Expired (n)" button with a confirm dialog; per-row delete is
+  disabled with an explanatory tooltip until the 30 days have passed.
+- **Read At column**: rendered in BS date + time via `convertToBSFormat`
+  (`2083/05/07, 10:45:30`), same pattern as the settlement status line.
+- **Verified against the live DB** by driving the real controllers: unread/read
+  filters, unreadCount independence, full single-delete guard matrix (404/403/
+  409-unread/409-fresh-read → 200 at 31 days), ownership guard, bulk removing
+  expired while keeping freshly-read rows. Plus unit tests in
+  `notificationDelete.test.js`; suite at **150 tests**.
+- **Auto-purge**: `purgeOldNotifications()` in `autoSettle.service.js` runs on
+  server startup and is wired next to the auto-settle job — deletes every
+  read notification whose `readAt` is older than **90 days** (retention window
+  in `NOTIFICATION_PURGE_MS`). Best-effort: failures are logged, never thrown.
+  Manual deletion unlocks earlier (30 days) so users can tidy up before the
+  system purge.
 
 ## Settlement completion emails & notifications (2083/05/07 BS)
 

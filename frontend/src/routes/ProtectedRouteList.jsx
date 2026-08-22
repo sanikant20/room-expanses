@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 
 const Dashboard = lazy(() => import('../pages/protected/dashboard/Dashboard'));
+const Notifications = lazy(() => import('../pages/protected/notifications/NotificationsPage'));
 const Expenses = lazy(() => import('../pages/protected/expenses/ExpansesTab'));
 const Partners = lazy(() => import('../pages/protected/partners/PartnerTab'));
 const Reports = lazy(() => import('../pages/protected/reports/ReportTabs'));
@@ -13,6 +14,7 @@ const ThemeColorSelection = lazy(() => import('../theme/ThemeColorSelection'));
 
 export const ProtectedRouteList = [
   { path: 'dashboard', element: <Dashboard /> },
+  { path: 'notifications', element: <Notifications /> },
   { path: 'expenses', element: <Expenses /> },
   { path: 'partners', element: <Partners /> },
   { path: 'reports', element: <Reports /> },

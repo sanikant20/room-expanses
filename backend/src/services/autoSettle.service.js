@@ -2,6 +2,7 @@ import cron from "node-cron";
 import NepaliDateModule from "nepali-date-converter";
 import { Expense } from "../models/expense.model.js";
 import { Settlement } from "../models/settlement.model.js";
+import { Notification } from "../models/notification.model.js";
 import { settleAllCascade } from "./settlement.service.js";
 import { notifySettlementCompleted } from "./notification.service.js";
 
@@ -9,6 +10,12 @@ const NepaliDate = NepaliDateModule.default || NepaliDateModule;
 
 const AUTO_SETTLE_CRON = "15 8 * * *";
 const AUTO_SETTLE_TIMEZONE = "Asia/Kathmandu";
+
+/**
+ * Read notifications are auto-purged once they have been read for this long.
+ * (Manual deletion unlocks earlier — after 30 days — via notification.controller.)
+ */
+const NOTIFICATION_PURGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 /**
  * Returns today's BS date as { bsYear, bsMonth, bsDay }.
@@ -51,6 +58,26 @@ const settleMonth = async (bsYear, bsMonth, source) => {
   }));
   console.log(`[auto-settle] ${bsYear}/${bsMonth} done: ${JSON.stringify(summary)}`);
   return summary;
+};
+
+/**
+ * Best-effort housekeeping: remove read notifications older than the
+ * retention window. Never throws — failures are logged only.
+ */
+export const purgeOldNotifications = async () => {
+  try {
+    const result = await Notification.deleteMany({
+      read: true,
+      readAt: { $ne: null, $lte: new Date(Date.now() - NOTIFICATION_PURGE_MS) },
+    });
+    if (result.deletedCount > 0) {
+      console.log(`[auto-settle] Purged ${result.deletedCount} old read notification(s)`);
+    }
+    return result.deletedCount;
+  } catch (error) {
+    console.error("[auto-settle] Notification purge failed:", error.message);
+    return 0;
+  }
 };
 
 /**
@@ -109,9 +136,11 @@ export const startAutoSettleJob = () => {
   // Run both on startup so any missed months are caught up immediately
   runByBsDate();
   runCatchUp();
+  purgeOldNotifications();
 
   // Schedule daily cron
   cron.schedule(AUTO_SETTLE_CRON, runByBsDate, { timezone: AUTO_SETTLE_TIMEZONE });
+  cron.schedule(AUTO_SETTLE_CRON, purgeOldNotifications, { timezone: AUTO_SETTLE_TIMEZONE });
 
   console.log(`[auto-settle] Scheduled (${AUTO_SETTLE_CRON} ${AUTO_SETTLE_TIMEZONE}) + runs on startup`);
 };

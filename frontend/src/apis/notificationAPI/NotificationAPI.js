@@ -3,10 +3,10 @@ import AxiosConfig from "../../configurations/axiosConfig";
 
 const endpoint = "notifications";
 
-export const useGetNotifications = ({ enabled = true, refetchInterval = 60_000 } = {}) => useQuery({
-    queryKey: ["getNotifications"],
+export const useGetNotifications = ({ enabled = true, refetchInterval = 60_000, status } = {}) => useQuery({
+    queryKey: ["getNotifications", status || "all"],
     queryFn: async () => {
-        const response = await AxiosConfig.get(endpoint);
+        const response = await AxiosConfig.get(endpoint, { params: status ? { status } : {} });
         return response?.data;
     },
     enabled,
@@ -19,6 +19,34 @@ export const useMarkNotificationRead = () => {
         mutationKey: ["markNotificationRead"],
         mutationFn: async ({ id }) => {
             const response = await AxiosConfig.put(`${endpoint}/${id}/read`);
+            return response?.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["getNotifications"] });
+        },
+    });
+};
+
+export const useDeleteNotification = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationKey: ["deleteNotification"],
+        mutationFn: async ({ id }) => {
+            const response = await AxiosConfig.delete(`${endpoint}/${id}`);
+            return response?.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["getNotifications"] });
+        },
+    });
+};
+
+export const useDeleteExpiredNotifications = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationKey: ["deleteExpiredNotifications"],
+        mutationFn: async () => {
+            const response = await AxiosConfig.delete(`${endpoint}/read/expired`);
             return response?.data;
         },
         onSuccess: () => {
